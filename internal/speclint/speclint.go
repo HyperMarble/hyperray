@@ -23,11 +23,6 @@ func isWildcard(cell string) bool {
 	return c == "any" || c == "—" || c == "-" || c == ""
 }
 
-type domain struct {
-	name   string
-	values []string
-}
-
 func Check(tables []specparser.Table) ([]Issue, error) {
 	var issues []Issue
 	for _, tb := range tables {
@@ -51,7 +46,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 		return nil, nil
 	}
 
-	domains, unsupported, err := parseParams(tb.Params)
+	domains, unsupported, err := specparser.ParseParams(tb.Params)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +71,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 
 	total := 1
 	for _, d := range domains {
-		total *= len(d.values)
+		total *= len(d.Values)
 		if total > maxCombinations {
 			return nil, fmt.Errorf("too many combinations to check (>%d)", maxCombinations)
 		}
@@ -88,7 +83,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 		for c := 0; c < paramCols; c++ {
 			cell := row[c]
 			if isWildcard(cell) {
-				rowSets[r][c] = domains[c].values
+				rowSets[r][c] = domains[c].Values
 				continue
 			}
 			var set []string
@@ -97,12 +92,12 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 				if tok == "" {
 					continue
 				}
-				if !contains(domains[c].values, tok) {
+				if !contains(domains[c].Values, tok) {
 					issues = append(issues, Issue{
 						Section: tb.Section,
 						Line:    tb.Line,
 						Kind:    "undeclared-value",
-						Message: fmt.Sprintf("column %q uses value %q, not declared in Parameters", domains[c].name, tok),
+						Message: fmt.Sprintf("column %q uses value %q, not declared in Parameters", domains[c].Name, tok),
 					})
 					continue
 				}
@@ -114,7 +109,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 
 	valueDomains := make([][]string, paramCols)
 	for c := range valueDomains {
-		valueDomains[c] = domains[c].values
+		valueDomains[c] = domains[c].Values
 	}
 	combos := cartesian(valueDomains)
 
@@ -166,81 +161,6 @@ func contains(set []string, v string) bool {
 		}
 	}
 	return false
-}
-
-// parseParams parses "Parameters: `name` (v1 / v2), `name2` (v3 / v4)."
-// into one domain per parameter, in declared order. If a parameter's
-// parenthesized group contains no "/", it wasn't decomposed into
-// disjoint categorical values and its name is returned as unsupported.
-func parseParams(raw string) (doms []domain, unsupported string, err error) {
-	s := raw
-	if idx := strings.Index(s, "Parameters:"); idx >= 0 {
-		s = s[idx+len("Parameters:"):]
-	}
-
-	i := 0
-	for i < len(s) {
-		// Find next backtick-quoted name.
-		start := strings.IndexByte(s[i:], '`')
-		if start < 0 {
-			break
-		}
-		start += i
-		end := strings.IndexByte(s[start+1:], '`')
-		if end < 0 {
-			return nil, "", fmt.Errorf("unterminated backtick in Parameters line")
-		}
-		end += start + 1
-		name := s[start+1 : end]
-
-		// Find the opening paren after the name.
-		rest := s[end+1:]
-		parenStart := strings.IndexByte(rest, '(')
-		if parenStart < 0 {
-			i = end + 1
-			continue
-		}
-		depth := 0
-		parenEnd := -1
-		for p := parenStart; p < len(rest); p++ {
-			switch rest[p] {
-			case '(':
-				depth++
-			case ')':
-				depth--
-				if depth == 0 {
-					parenEnd = p
-				}
-			}
-			if parenEnd >= 0 {
-				break
-			}
-		}
-		if parenEnd < 0 {
-			return nil, "", fmt.Errorf("unterminated parenthesis for parameter %q", name)
-		}
-		content := rest[parenStart+1 : parenEnd]
-		if idx := strings.Index(content, "—"); idx >= 0 {
-			content = content[:idx]
-		}
-
-		if !strings.Contains(content, "/") {
-			return nil, name, nil
-		}
-
-		var values []string
-		for _, v := range strings.Split(content, "/") {
-			v = strings.TrimSpace(v)
-			v = strings.ReplaceAll(v, "`", "")
-			if v != "" {
-				values = append(values, v)
-			}
-		}
-		doms = append(doms, domain{name: name, values: values})
-
-		i = end + 1 + parenEnd + 1
-	}
-	return doms, "", nil
 }
 
 func cartesian(domains [][]string) [][]string {

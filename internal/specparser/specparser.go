@@ -124,3 +124,85 @@ func splitRow(line string) []string {
 	}
 	return cells
 }
+
+// Domain is one parameter's declared name and its disjoint set of
+// legal values, as declared in a Parameters: line.
+type Domain struct {
+	Name   string
+	Values []string
+}
+
+// ParseParams parses "Parameters: `name` (v1 / v2), `name2` (v3 / v4)."
+// into one Domain per parameter, in declared order. If a parameter's
+// parenthesized group contains no "/", it wasn't decomposed into
+// disjoint categorical values and its name is returned as unsupported.
+func ParseParams(raw string) (doms []Domain, unsupported string, err error) {
+	s := raw
+	if idx := strings.Index(s, "Parameters:"); idx >= 0 {
+		s = s[idx+len("Parameters:"):]
+	}
+
+	i := 0
+	for i < len(s) {
+		// Find next backtick-quoted name.
+		start := strings.IndexByte(s[i:], '`')
+		if start < 0 {
+			break
+		}
+		start += i
+		end := strings.IndexByte(s[start+1:], '`')
+		if end < 0 {
+			return nil, "", fmt.Errorf("unterminated backtick in Parameters line")
+		}
+		end += start + 1
+		name := s[start+1 : end]
+
+		// Find the opening paren after the name.
+		rest := s[end+1:]
+		parenStart := strings.IndexByte(rest, '(')
+		if parenStart < 0 {
+			i = end + 1
+			continue
+		}
+		depth := 0
+		parenEnd := -1
+		for p := parenStart; p < len(rest); p++ {
+			switch rest[p] {
+			case '(':
+				depth++
+			case ')':
+				depth--
+				if depth == 0 {
+					parenEnd = p
+				}
+			}
+			if parenEnd >= 0 {
+				break
+			}
+		}
+		if parenEnd < 0 {
+			return nil, "", fmt.Errorf("unterminated parenthesis for parameter %q", name)
+		}
+		content := rest[parenStart+1 : parenEnd]
+		if idx := strings.Index(content, "—"); idx >= 0 {
+			content = content[:idx]
+		}
+
+		if !strings.Contains(content, "/") {
+			return nil, name, nil
+		}
+
+		var values []string
+		for _, v := range strings.Split(content, "/") {
+			v = strings.TrimSpace(v)
+			v = strings.ReplaceAll(v, "`", "")
+			if v != "" {
+				values = append(values, v)
+			}
+		}
+		doms = append(doms, Domain{Name: name, Values: values})
+
+		i = end + 1 + parenEnd + 1
+	}
+	return doms, "", nil
+}
