@@ -14,6 +14,62 @@ and `FhPlexForecaster` (`sktime.forecasting.compose`). Sections 1–4 cover
 
 ---
 
+## 0. Decisions the prompt leaves implicit
+
+This is the actual work of writing this spec: the prompt reads as
+complete prose, but it does not settle these five points. Each is a
+real judgment call, made here explicitly rather than left for whoever
+writes tests or the solution to silently assume — which is exactly how
+three of the four real bugs in this task's original solution got in
+(see the regression notes in sections 2, 5, and 8: each is a place
+where an implicit assumption diverged from what the prompt actually
+required, undetected because nothing forced the question to be asked
+before code existed).
+
+1. **Is "identical column labels required" (§1, component-to-component)
+   name-sensitive?** The prompt says components need "identical column
+   labels required in order" to combine, but separately says an
+   *explicit* `columns` argument must match "including names" on
+   retention (§2) — implying name is retained but was not necessarily
+   part of *that* match test either. Decision: **name-agnostic** here
+   too, for consistency with §2's resolved behavior and because nothing
+   in the prompt singles out inter-component matching as stricter than
+   the explicit-argument case. §1's table is written accordingly.
+
+2. **What does "forward an equivalent `X`" mean (§6), given `update`
+   in the same paragraph is specified as forwarding the *exact* `y` and
+   `X`?** The prompt's own word choice shifts from "exact" to
+   "equivalent" for `predict_proba`'s `X`. Decision: **"equivalent"
+   means value-equal, not necessarily the identical object** — a
+   per-instance/per-horizon slice of the caller's `X` that has the same
+   values as what that routed forecaster should see is compliant, even
+   if it isn't the literal same object passed to `FhPlexForecaster`.
+   This is weaker than `update`'s "exact... reusing those objects,"
+   deliberately, matching the prompt's own distinct wording.
+
+3. **Capability tag state when in-sample capability is absent
+   entirely** (not `True` or `False`, just unset) **on the wrapped
+   forecaster.** Not addressed anywhere in the prompt. Decision: treated
+   identically to `True` for the purposes of §8's forcing rule — an
+   absent in-sample tag is not evidence of self-normalization, so
+   overall-`False` must still force it `False`. Any wrapped forecaster
+   that never sets the tag is exactly the "does not self-normalize"
+   case the regression note in §8 already covers.
+4. **NaN / missing values anywhere in the pipeline** — never mentioned
+   by the prompt, for either `RowwiseDistribution` or
+   `FhPlexForecaster`. Decision: **explicitly out of scope.** No row in
+   any table below asserts NaN behavior; a test that exercises NaN
+   input is testing something this spec does not cover, and per this
+   project's own gap rule, that would itself be an unfair test, not a
+   missing spec clause.
+5. **Sampling reproducibility / `random_state`.** The prompt never
+   mentions determinism. Decision: **out of scope** — §4's sampling
+   rows describe structural properties of `sample()`'s output (which
+   labels, which grouping, where sample ids appear), not value
+   reproducibility across calls.
+
+---
+
 ## 1. Construction
 
 Parameters: `n_components` (0 / 1 / 2+), `component_kind` (labelled array
@@ -26,8 +82,8 @@ differ in order or value).
 | 0 | — | — | raise `ValueError` containing "at least one component" |
 | 1+ | scalar | — | raise `ValueError` containing "labelled rows and columns" |
 | 1+ | non-distribution object | — | raise `TypeError` containing "probability distributions" |
-| 2+ | labelled array distribution | differ | raise `ValueError` containing "identical columns" |
-| 1+ | labelled array distribution | identical, in order | construct successfully; combined row index is the concatenation of each component's index, in component order |
+| 2+ | labelled array distribution | differ in value or order (name-agnostic — see §0.1) | raise `ValueError` containing "identical columns" |
+| 1+ | labelled array distribution | identical in value and order (name-agnostic — see §0.1) | construct successfully; combined row index is the concatenation of each component's index, in component order |
 
 Additional, orthogonal to the table above:
 
@@ -166,7 +222,7 @@ True / False).
 
 | call | update_params | Required behavior |
 |---|---|---|
-| predict_proba | N/A | forward an equivalent `X` and the exact `marginal` flag to every routed forecaster |
+| predict_proba | N/A | forward a value-equal `X` (see §0.2 — not necessarily the same object) and the exact `marginal` flag to every routed forecaster |
 | update | (unspecified) | forward equivalent `y` and `X` to every **existing** routed instance, reusing those same instance objects (no re-instantiation) |
 | update | False | in addition to the above: forward the exact `update_params=False` flag; fitted parameters stay unchanged; the cutoff still advances |
 
