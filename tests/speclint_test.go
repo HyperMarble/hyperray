@@ -3,6 +3,7 @@ package tests
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/HyperMarble/ray/internal/speclint"
@@ -118,5 +119,22 @@ func TestSpecLint_RealFhplexSpec(t *testing.T) {
 	issues := check(t, string(content))
 	if len(issues) != 0 {
 		t.Fatalf("got %d issues on the real fhplex spec.md: %v", len(issues), issues)
+	}
+}
+
+func TestSpecLint_SkillReferenceExamples(t *testing.T) {
+	content, err := os.ReadFile(filepath.Join("..", "skills", "spec", "references", "examples.md"))
+	if err != nil {
+		t.Skipf("skill references not found: %v", err)
+	}
+	blocks := regexp.MustCompile("(?s)```markdown\n(.*?)```").FindAllStringSubmatch(string(content), -1)
+	if len(blocks) == 0 {
+		t.Fatal("no ```markdown blocks found in the references file")
+	}
+	for i, m := range blocks {
+		issues := check(t, m[1])
+		if len(issues) != 0 {
+			t.Errorf("block %d: got %d issues, want 0: %v", i, len(issues), issues)
+		}
 	}
 }
