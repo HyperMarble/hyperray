@@ -60,7 +60,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 			Section: tb.Section,
 			Line:    tb.Line,
 			Kind:    "unsupported-domain",
-			Message: fmt.Sprintf("parameter %q has no declared value list (ordered/range domains are not yet supported)", unsupported),
+			Message: fmt.Sprintf("parameter %q has no `/`-separated value list — decompose it into disjoint categorical buckets, not a numeric/continuous range", unsupported),
 		}}, nil
 	}
 	if len(domains) != paramCols {
@@ -170,9 +170,8 @@ func contains(set []string, v string) bool {
 
 // parseParams parses "Parameters: `name` (v1 / v2), `name2` (v3 / v4)."
 // into one domain per parameter, in declared order. If a parameter's
-// parenthesized group contains no "/", its domain can't be enumerated
-// (an ordered/range domain, not yet supported) and its name is returned
-// as unsupported.
+// parenthesized group contains no "/", it wasn't decomposed into
+// disjoint categorical values and its name is returned as unsupported.
 func parseParams(raw string) (doms []domain, unsupported string, err error) {
 	s := raw
 	if idx := strings.Index(s, "Parameters:"); idx >= 0 {
