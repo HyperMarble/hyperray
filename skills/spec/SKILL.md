@@ -5,6 +5,13 @@ description: Write spec.md scoped to an existing task's instruction.md —
   exists. Use when a task has instruction.md but no spec.md yet.
 ---
 
+`spec.md` is never submitted anywhere — it's a local artifact `ray`'s
+own tools parse mechanically, before anything reaches evaluation.
+That's why every value must be deterministic and specific, never vague:
+a human reading loose wording can infer intent, `ray spec-lint` cannot.
+If a word could mean more than one thing, it's wrong here, even if it
+would be fine in `instruction.md`.
+
 Don't derive the whole spec from instruction.md in one pass. Answer
 these four questions first, then write one condition table at a time,
 running `ray spec-lint` after each one.
