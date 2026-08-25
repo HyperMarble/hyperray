@@ -111,6 +111,29 @@ func TestSpecLint_CommaInsideValueNameIsNotASeparator(t *testing.T) {
 	}
 }
 
+func TestSpecLint_SchemaMismatch(t *testing.T) {
+	content := "## 1. Test\n\nParameters: `x` (a / b), `y` (p / q).\n\n" +
+		"| x | Required behavior |\n" +
+		"|---|---|\n" +
+		"| a | ok |\n" +
+		"| b | ok |\n"
+	issues := check(t, content)
+	if len(issues) != 1 || issues[0].Kind != "schema-mismatch" {
+		t.Fatalf("got %v, want exactly one schema-mismatch issue (2 declared params, 1 table column)", issues)
+	}
+}
+
+func TestSpecLint_UnsupportedDomain(t *testing.T) {
+	content := "## 1. Test\n\nParameters: `sigma` (any positive float).\n\n" +
+		"| sigma | Required behavior |\n" +
+		"|---|---|\n" +
+		"| positive | ok |\n"
+	issues := check(t, content)
+	if len(issues) != 1 || issues[0].Kind != "unsupported-domain" {
+		t.Fatalf("got %v, want exactly one unsupported-domain issue (no `/`-separated value list)", issues)
+	}
+}
+
 func TestSpecLint_RealFhplexSpec(t *testing.T) {
 	content, err := os.ReadFile(filepath.Join("..", "examples", "fhplex-task", "spec.md"))
 	if err != nil {
