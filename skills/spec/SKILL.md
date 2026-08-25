@@ -22,11 +22,22 @@ For each clause of instruction.md:
 
 - Name the parameters it varies on — this is the actual judgment call,
   not the table syntax.
+- Declare each parameter's domain in a `Parameters:` line immediately
+  above the table: `` `name` (v1 / v2 / v3) ``, `/`-separated. This is
+  the only place values get declared — a table cell can never introduce
+  a value the `Parameters:` line didn't list.
 - Write the condition table: every row is one combination mapped to one
-  required behavior.
-- Run `ray spec-lint` immediately. It fails on two things only:
-  a combination with no row (completeness), or two rows that conflict
-  (disjointness).
+  required behavior. A cell holds exactly one of:
+  - a single declared value
+  - a `/`-separated list of declared values (a compound row covering
+    each one — same separator as the `Parameters:` line, so a value's
+    own name is free to contain a comma)
+  - `any` — every declared value of that column applies equally
+  - `—` — the column does not apply to this row at all
+- Run `ray spec-lint` immediately. It fails on three things: a
+  combination with no row (completeness), two rows that conflict
+  (disjointness), or a cell value the `Parameters:` line never declared
+  (undeclared-value).
 - Where instruction.md is silent on a combination spec-lint flags,
   resolve it and write the resolved behavior directly into the table —
   don't guess and move on.
@@ -34,14 +45,18 @@ For each clause of instruction.md:
 Full worked example: `examples/fhplex-task/spec.md`. One clause from it:
 
 ```markdown
-## 1. Construction
+Parameters: `n_components` (0 / 1 / 2+), `component_kind` (labelled
+array distribution / scalar / non-distribution object), `column_labels`
+(identical / differ).
 
 | n_components | component_kind | column_labels | Required behavior |
 |---|---|---|---|
 | 0 | — | — | raise ValueError containing "at least one component" |
-| 1+ | scalar | — | raise ValueError containing "labelled rows and columns" |
-| 2+ | labelled array distribution | differ in value or order | raise ValueError containing "identical columns" |
-| 1+ | labelled array distribution | identical in value and order | construct successfully; combined row index is the concatenation of each component's index, in component order |
+| 1 / 2+ | scalar | — | raise ValueError containing "labelled rows and columns" |
+| 1 / 2+ | non-distribution object | — | raise TypeError containing "probability distributions" |
+| 1 | labelled array distribution | — | construct successfully; combined row index is that one component's index |
+| 2+ | labelled array distribution | differ | raise ValueError containing "identical columns" |
+| 2+ | labelled array distribution | identical | construct successfully; combined row index is the concatenation of each component's index, in component order |
 ```
 
 ## Common pitfalls

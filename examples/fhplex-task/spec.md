@@ -15,13 +15,14 @@ reproducibility / `random_state`.
 
 Each table below is preceded by its own `Parameters:` line declaring
 every column's domain — the exact, disjoint set of atomic values that
-column can hold. A table cell holds exactly one of: a single declared
-value; a comma-separated list of declared values (a compound row,
-covering each listed value); `any`, meaning every declared value of
-that column applies equally; or `—`, meaning the column does not apply
-to that row at all. No other free-text phrasing is used in a cell —
-every value a row needs must be spelled out in the `Parameters:` line
-first.
+column can hold, `/`-separated. A table cell holds exactly one of: a
+single declared value; a `/`-separated list of declared values (a
+compound row, covering each listed value — the same separator the
+`Parameters:` line uses, so a value's own name is free to contain a
+comma); `any`, meaning every declared value of that column applies
+equally; or `—`, meaning the column does not apply to that row at all.
+No other free-text phrasing is used in a cell — every value a row needs
+must be spelled out in the `Parameters:` line first.
 
 ---
 
@@ -36,8 +37,8 @@ array distribution).
 | n_components | component_kind | column_labels | Required behavior |
 |---|---|---|---|
 | 0 | — | — | raise `ValueError` containing "at least one component" |
-| 1, 2+ | scalar | — | raise `ValueError` containing "labelled rows and columns" |
-| 1, 2+ | non-distribution object | — | raise `TypeError` containing "probability distributions" |
+| 1 / 2+ | scalar | — | raise `ValueError` containing "labelled rows and columns" |
+| 1 / 2+ | non-distribution object | — | raise `TypeError` containing "probability distributions" |
 | 1 | labelled array distribution | — | construct successfully; combined row index is that one component's index |
 | 2+ | labelled array distribution | differ | raise `ValueError` containing "identical columns" |
 | 2+ | labelled array distribution | identical | construct successfully; combined row index is the concatenation of each component's index, in component order |
@@ -86,8 +87,8 @@ Parameters: `stat` (mean / var / pdf / log_pdf / cdf / ppf),
 
 | stat | frame_arg_row_col_order | Required behavior |
 |---|---|---|
-| mean, var, pdf, log_pdf, cdf, ppf | matches | delegate to the owning component per row |
-| mean, var, pdf, log_pdf, cdf, ppf | reordered | align the DataFrame argument by row and column **labels** before delegating to the owning component per row |
+| mean / var / pdf / log_pdf / cdf / ppf | matches | delegate to the owning component per row |
+| mean / var / pdf / log_pdf / cdf / ppf | reordered | align the DataFrame argument by row and column **labels** before delegating to the owning component per row |
 
 Parameters: `alpha_arg` (scalar / sequence).
 
@@ -195,8 +196,8 @@ fh_contiguous), `set_params_timing` (pre-fit / post-fit).
 
 | set_params_target | set_params_timing | Required behavior |
 |---|---|---|
-| forecaster, fh_params, fh_contiguous | pre-fit | routing is affected by the replacement |
-| forecaster, fh_params, fh_contiguous | post-fit | out of scope — no behavior asserted |
+| forecaster / fh_params / fh_contiguous | pre-fit | routing is affected by the replacement |
+| forecaster / fh_params / fh_contiguous | post-fit | out of scope — no behavior asserted |
 
 | Sampling, after any of the above | Required behavior |
 |---|---|
@@ -213,9 +214,9 @@ absent means the wrapped forecaster never set the tag).
 
 | wrapped_overall_capability | wrapped_insample_capability | Required behavior |
 |---|---|---|
-| False | True, False, absent | overall capability tag is False; in-sample capability tag is **forced** False regardless of the wrapped forecaster's own in-sample tag value or its absence |
+| False | True / False / absent | overall capability tag is False; in-sample capability tag is **forced** False regardless of the wrapped forecaster's own in-sample tag value or its absence |
 | True | False | overall capability tag is True; in-sample capability tag is False; out-of-sample-only requests still work |
-| True | True, absent | both tags effectively True; all requests work |
+| True | True / absent | both tags effectively True; all requests work |
 
 If the wrapped forecaster is replaced post-construction, capability
 tags re-track the newly wrapped forecaster's actual capabilities using
@@ -230,8 +231,8 @@ is in-sample or mixed; this is the same value as
 | overall_capability | request_kind | insample_supported | Required behavior |
 |---|---|---|---|
 | False | any | — | `predict_proba`, `predict_var`, `predict_quantiles`, `predict_interval` raise `NotImplementedError` containing "does not have the capability" |
-| True | in-sample, mixed | False | raise `NotImplementedError` containing "in-sample prediction" |
-| True | in-sample, mixed | True | proceed normally |
+| True | in-sample / mixed | False | raise `NotImplementedError` containing "in-sample prediction" |
+| True | in-sample / mixed | True | proceed normally |
 | True | out-of-sample | — | proceed normally |
 
 ---
