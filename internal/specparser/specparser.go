@@ -8,6 +8,7 @@ import (
 
 type Table struct {
 	Section string
+	Params  string
 	Columns []string
 	Rows    [][]string
 	Line    int
@@ -17,21 +18,42 @@ func Parse(content string) ([]Table, error) {
 	lines := strings.Split(content, "\n")
 	var tables []Table
 	currentSection := ""
+	var paraBuf []string
+
+	flushParaAsParams := func() string {
+		para := strings.TrimSpace(strings.Join(paraBuf, " "))
+		paraBuf = nil
+		if strings.HasPrefix(para, "Parameters:") {
+			return para
+		}
+		return ""
+	}
 
 	for i := 0; i < len(lines); i++ {
 		line := lines[i]
+		trimmed := strings.TrimSpace(line)
 
 		if heading, ok := parseHeading(line); ok {
 			currentSection = heading
+			paraBuf = nil
 			continue
 		}
 
 		if !looksLikeTableRow(line) {
+			if trimmed == "" || trimmed == "---" {
+				if !strings.HasPrefix(strings.Join(paraBuf, " "), "Parameters:") {
+					paraBuf = nil
+				}
+			} else {
+				paraBuf = append(paraBuf, trimmed)
+			}
 			continue
 		}
 		if i+1 >= len(lines) || !isSeparatorRow(lines[i+1]) {
 			continue
 		}
+
+		params := flushParaAsParams()
 
 		header := splitRow(line)
 		var rows [][]string
@@ -52,6 +74,7 @@ func Parse(content string) ([]Table, error) {
 
 		tables = append(tables, Table{
 			Section: currentSection,
+			Params:  params,
 			Columns: header,
 			Rows:    rows,
 			Line:    i + 1,

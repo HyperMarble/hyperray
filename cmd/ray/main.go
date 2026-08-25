@@ -11,8 +11,9 @@ import (
 
 func main() {
 	root := &cobra.Command{
-		Use:   "ray",
-		Short: "Verify that an agent's (or human's) code logic is actually correct",
+		Use:           "ray",
+		Short:         "Verify that an agent's (or human's) code logic is actually correct",
+		SilenceErrors: true,
 	}
 	root.AddCommand(newSpecLintCmd())
 

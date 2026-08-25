@@ -33,3 +33,6 @@ go.work.sum
 
 # Build artifact from `go build ./...` at repo root
 /ray
+
+# ray check/spec-lint run output, written per task directory
+logs/
