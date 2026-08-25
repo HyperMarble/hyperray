@@ -48,6 +48,13 @@ For each clause of instruction.md:
 - Where instruction.md is silent on a combination spec-lint flags,
   resolve it and write the resolved behavior directly into the table —
   don't guess and move on.
+- If the task already has a real test file, read it alongside
+  instruction.md while writing each row — note which existing test
+  actually covers that combination, or flag it as not yet covered.
+  This is the only reliable way to tie `spec.md` to real tests: an
+  automated tool can't read arbitrary test code and know what it
+  covers, but you can, right now, while you're already looking at both.
+  Don't defer this to a separate pass — do it as each row is written.
 
 Full worked example: `examples/fhplex-task/spec.md`. One clause from it:
 
