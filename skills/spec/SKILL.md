@@ -75,10 +75,10 @@ array distribution / scalar / non-distribution object), `column_labels`
   assuming something is fair game.
 - Silently assuming behavior for a combination instruction.md never
   addressed, instead of writing the resolved decision into the table.
-- Using `any` as an actual data value instead of the grammar's reserved
-  wildcard keyword. Real example: a task whose real behavior is "up,
-  down, or any" (a genuine data value named "any") collided with
-  `any`'s reserved meaning ("every declared value of this column
-  applies"), producing a real disjointness conflict. Rename the value
-  to something specific — `unrestricted`, `no-preference`, whatever the
-  actual behavior means — never the bare word `any`.
+- `any` and `—` are reserved keywords, never data values. If the real
+  behavior needs a value that happens to be the word "any" (e.g. a
+  direction that's "up, down, or any"), name it precisely instead —
+  `unrestricted`, `no-preference`, whatever the actual behavior means —
+  never the bare word `any`. A real task hit exactly this: "any" as a
+  literal value collided with the wildcard keyword and produced a
+  disjointness conflict.
