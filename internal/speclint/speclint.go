@@ -92,7 +92,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 				continue
 			}
 			var set []string
-			for _, tok := range strings.Split(cell, ",") {
+			for _, tok := range strings.Split(cell, "/") {
 				tok = strings.TrimSpace(strings.ReplaceAll(tok, "`", ""))
 				if tok == "" {
 					continue

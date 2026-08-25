@@ -65,7 +65,7 @@ func TestSpecLint_WildcardAndCompound(t *testing.T) {
 		"| x | y | Required behavior |\n" +
 		"|---|---|---|\n" +
 		"| a | any | covers a |\n" +
-		"| b | p, q | covers b-p-q |\n" +
+		"| b | p / q | covers b-p-q |\n" +
 		"| b | r | covers b-r |\n"
 	issues := check(t, content)
 	if len(issues) != 0 {
@@ -95,6 +95,18 @@ func TestSpecLint_BacktickInsideValueIsStripped(t *testing.T) {
 	issues := check(t, content)
 	if len(issues) != 0 {
 		t.Fatalf("got %d issues, want 0 (mid-value backtick should be stripped): %v", len(issues), issues)
+	}
+}
+
+func TestSpecLint_CommaInsideValueNameIsNotASeparator(t *testing.T) {
+	content := "## 1. Test\n\nParameters: `x` (wildcard, all values / single, one value).\n\n" +
+		"| x | Required behavior |\n" +
+		"|---|---|\n" +
+		"| wildcard, all values | ok |\n" +
+		"| single, one value | ok |\n"
+	issues := check(t, content)
+	if len(issues) != 0 {
+		t.Fatalf("got %d issues, want 0 (comma is not the compound separator, `/` is): %v", len(issues), issues)
 	}
 }
 
