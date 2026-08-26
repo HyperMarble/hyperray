@@ -35,3 +35,7 @@ go.work.sum
 
 # ray check/spec-lint run output, written per task directory
 logs/
+
+# Python bytecode cache from third_party/touchstone-patch's driver scripts
+__pycache__/
+*.pyc
