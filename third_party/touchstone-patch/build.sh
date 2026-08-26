@@ -8,13 +8,17 @@
 # every function of every dependency, and independent of touchstone's
 # broader/riskier internal _TRAPFREE flag. See ray-typed.patch for the
 # annotated diff and docs/specs for the reasoning.
+#
+# Also installs mypy, used by auto_annotate.py to add that annotation
+# automatically from installed PEP 561 stubs, before falling back to
+# whatever a model author wrote by hand.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV="${1:-$HERE/venv}"
 
 python3 -m venv "$VENV"
-"$VENV/bin/pip" install --quiet touchstone-prover==1.60.0
+"$VENV/bin/pip" install --quiet touchstone-prover==1.60.0 mypy
 
 CORE="$("$VENV/bin/python3" -c 'import touchstone.core as c; print(c.__file__)')"
 patch "$CORE" < "$HERE/ray-typed.patch"

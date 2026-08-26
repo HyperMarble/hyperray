@@ -49,6 +49,50 @@ func TestOracle_PlainRefutation(t *testing.T) {
 	}
 }
 
+// TestOracle_AutoAnnotate_ResolvesFromRealStub is the regression test for
+// the auto_annotate pre-pass: zero manual annotation anywhere in src, yet
+// the unmodeled math.isnan call still gets narrowed and proves, because
+// mypy resolves its real declared return type from the stdlib's own
+// bundled stub. This is the "can't we just detect it already" case --
+// auto_annotate is on by default (oracle.Prove doesn't expose a way to
+// turn it off, so this also confirms the default path).
+func TestOracle_AutoAnnotate_ResolvesFromRealStub(t *testing.T) {
+	python := testOraclePython(t)
+	src := "def f(x):\n" +
+		"    import math\n" +
+		"    r = math.isnan(x)\n" + // deliberately unannotated
+		"    return r\n"
+	v, err := oracle.Prove(python, src, "result == True or result == False", "True")
+	if err != nil {
+		t.Fatalf("Prove: %v", err)
+	}
+	if v.Status != "PROVED" {
+		t.Fatalf("got status %q, want PROVED (auto_annotate should have resolved math.isnan's real return type): %+v", v.Status, v)
+	}
+}
+
+// TestOracle_AutoAnnotate_DeclinesWithoutStub confirms the honest boundary:
+// when no stub is available to resolve a call's real return type (here,
+// pandas-stubs genuinely doesn't model Index.any() -- confirmed against
+// real mypy AND pyright, not a tooling quirk), auto_annotate leaves the
+// call unannotated and the property comes back UNKNOWN rather than a
+// false PROVED/REFUTED. The manual-annotation patch is what closes this
+// gap when a human or AI writes the annotation directly.
+func TestOracle_AutoAnnotate_DeclinesWithoutStub(t *testing.T) {
+	python := testOraclePython(t)
+	src := "def f(n: int):\n" +
+		"    import pandas as pd\n" +
+		"    idx = pd.Index(range(n)).any()\n" + // deliberately unannotated, unresolvable stub
+		"    return idx\n"
+	v, err := oracle.Prove(python, src, "result == True or result == False", "n >= 0")
+	if err != nil {
+		t.Fatalf("Prove: %v", err)
+	}
+	if v.Status != "UNKNOWN" {
+		t.Fatalf("got status %q, want UNKNOWN (auto_annotate should not have guessed a type here): %+v", v.Status, v)
+	}
+}
+
 // typedNarrowingCases is the ray-typed.patch regression suite: 20 real,
 // distinct dependencies pulled unbiased from the real task corpora
 // (/Volumes/Hak_SSD/pluto/tasks, /Volumes/Hak_SSD/deep-swe/tasks) via their
