@@ -74,6 +74,20 @@ func TestSpecLint_WildcardAndCompound(t *testing.T) {
 	}
 }
 
+func TestSpecLint_QuotedSlashValuesAndLiteralAny(t *testing.T) {
+	content := "## Quoted values\n\n" +
+		"Parameters: `route` (\"/api/v1\" / \"https://example/x/y?q=1/2\" / \"left / right\" / \"any\").\n\n" +
+		"| route | Required behavior |\n" +
+		"|---|---|\n" +
+		"| \"/api/v1\" / \"https://example/x/y?q=1/2\" | external |\n" +
+		"| \"left / right\" | embedded separator |\n" +
+		"| \"any\" | literal reserved word |\n"
+	issues := check(t, content)
+	if len(issues) != 0 {
+		t.Fatalf("quoted slash-safe values produced issues: %v", issues)
+	}
+}
+
 func TestSpecLint_NotApplicableExcludesColumn(t *testing.T) {
 	content := "## 1. Test\n\nParameters: `x` (a / b), `y` (p / q).\n\n" +
 		"| x | y | Required behavior |\n" +
@@ -107,7 +121,7 @@ func TestSpecLint_CommaInsideValueNameIsNotASeparator(t *testing.T) {
 		"| single, one value | ok |\n"
 	issues := check(t, content)
 	if len(issues) != 0 {
-		t.Fatalf("got %d issues, want 0 (comma is not the compound separator, `/` is): %v", len(issues), issues)
+		t.Fatalf("got %d issues, want 0 (comma is not the compound separator, ` / ` is): %v", len(issues), issues)
 	}
 }
 
@@ -130,7 +144,7 @@ func TestSpecLint_UnsupportedDomain(t *testing.T) {
 		"| positive | ok |\n"
 	issues := check(t, content)
 	if len(issues) != 1 || issues[0].Kind != "unsupported-domain" {
-		t.Fatalf("got %v, want exactly one unsupported-domain issue (no `/`-separated value list)", issues)
+		t.Fatalf("got %v, want exactly one unsupported-domain issue (no explicit finite value list)", issues)
 	}
 }
 
