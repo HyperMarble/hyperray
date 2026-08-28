@@ -20,10 +20,21 @@ func Parse(content string) ([]Table, error) {
 	currentSection := ""
 	var paraBuf []string
 
+	// A stress test found a real, dangerous bug here: requiring the
+	// paragraph to START WITH "Parameters:" meant a lead-in sentence
+	// sharing the same paragraph (no blank line before "Parameters:")
+	// made the ENTIRE domain declaration silently vanish -- not corrupt,
+	// gone -- and spec-lint then reported a clean PASS on a table with
+	// an undeclared cell value, since there was no domain left to check
+	// it against. Matching on Contains instead of HasPrefix keeps the
+	// declaration regardless of what prose precedes it in the same
+	// paragraph; ParseParams already finds and strips everything before
+	// "Parameters:" itself, so passing the whole paragraph through is
+	// safe once it's no longer being discarded first.
 	flushParaAsParams := func() string {
 		para := strings.TrimSpace(strings.Join(paraBuf, " "))
 		paraBuf = nil
-		if strings.HasPrefix(para, "Parameters:") {
+		if strings.Contains(para, "Parameters:") {
 			return para
 		}
 		return ""
@@ -41,7 +52,7 @@ func Parse(content string) ([]Table, error) {
 
 		if !looksLikeTableRow(line) {
 			if trimmed == "" || trimmed == "---" {
-				if !strings.HasPrefix(strings.Join(paraBuf, " "), "Parameters:") {
+				if !strings.Contains(strings.Join(paraBuf, " "), "Parameters:") {
 					paraBuf = nil
 				}
 			} else {
@@ -125,22 +136,84 @@ func splitRow(line string) []string {
 	return cells
 }
 
+// truncateAtDeclarationEnd returns s up to (excluding) the first "."
+// that occurs outside both a backtick-quoted name and a parenthesized
+// value group -- the declaration sentence's own real end. If no such
+// period exists, s is returned unchanged (a single-sentence Parameters
+// line with no trailing prose to exclude).
+func truncateAtDeclarationEnd(s string) string {
+	depth := 0
+	inBacktick := false
+	inQuote := false
+	escaped := false
+	for i := 0; i < len(s); i++ {
+		if inQuote {
+			if escaped {
+				escaped = false
+				continue
+			}
+			if s[i] == '\\' {
+				escaped = true
+				continue
+			}
+			if s[i] == '"' {
+				inQuote = false
+			}
+			continue
+		}
+		switch s[i] {
+		case '`':
+			inBacktick = !inBacktick
+		case '"':
+			if !inBacktick {
+				inQuote = true
+			}
+		case '(':
+			if !inBacktick {
+				depth++
+			}
+		case ')':
+			if !inBacktick && depth > 0 {
+				depth--
+			}
+		case '.':
+			if !inBacktick && depth == 0 {
+				return s[:i]
+			}
+		}
+	}
+	return s
+}
+
 // Domain is one parameter's declared name and its disjoint set of
 // legal values, as declared in a Parameters: line.
 type Domain struct {
-	Name   string
-	Values []string
+	Name       string
+	Values     []string
+	JSONQuoted map[string]bool
 }
 
 // ParseParams parses "Parameters: `name` (v1 / v2), `name2` (v3 / v4)."
 // into one Domain per parameter, in declared order. If a parameter's
-// parenthesized group contains no "/", it wasn't decomposed into
+// parenthesized group contains no unquoted " / " separator, it wasn't decomposed into
 // disjoint categorical values and its name is returned as unsupported.
+//
+// A real stress test found that when the Parameters: sentence shares a
+// Markdown paragraph with trailing explanatory prose (no blank line
+// between them -- e.g. "Parameters: `x` (a / b). This means `a` (fast)
+// or `b` (slow/legacy)."), the whole paragraph was being scanned, so
+// backticks and "/" inside that trailing prose were misread as more
+// parameter declarations. The declaration sentence itself always ends
+// at its own top-level period (one not nested inside a paren or a
+// backtick pair, since the format is "Parameters: ... (...), ....") --
+// truncating there before parsing keeps trailing prose out of scope
+// entirely, rather than special-casing backticks or "/" individually.
 func ParseParams(raw string) (doms []Domain, unsupported string, err error) {
 	s := raw
 	if idx := strings.Index(s, "Parameters:"); idx >= 0 {
 		s = s[idx+len("Parameters:"):]
 	}
+	s = truncateAtDeclarationEnd(s)
 
 	i := 0
 	for i < len(s) {
@@ -166,8 +239,26 @@ func ParseParams(raw string) (doms []Domain, unsupported string, err error) {
 		}
 		depth := 0
 		parenEnd := -1
+		inQuote := false
+		escaped := false
 		for p := parenStart; p < len(rest); p++ {
+			if inQuote {
+				if escaped {
+					escaped = false
+					continue
+				}
+				if rest[p] == '\\' {
+					escaped = true
+					continue
+				}
+				if rest[p] == '"' {
+					inQuote = false
+				}
+				continue
+			}
 			switch rest[p] {
+			case '"':
+				inQuote = true
 			case '(':
 				depth++
 			case ')':
@@ -184,23 +275,20 @@ func ParseParams(raw string) (doms []Domain, unsupported string, err error) {
 			return nil, "", fmt.Errorf("unterminated parenthesis for parameter %q", name)
 		}
 		content := rest[parenStart+1 : parenEnd]
-		if idx := strings.Index(content, "—"); idx >= 0 {
-			content = content[:idx]
+		content = truncateOutsideJSONString(content, "—")
+		decoded, compound, parseErr := ParseFiniteValues(content)
+		if parseErr != nil {
+			return nil, "", fmt.Errorf("parameter %q: %w", name, parseErr)
 		}
-
-		if !strings.Contains(content, "/") {
+		if len(decoded) == 1 && !compound && !decoded[0].JSONQuoted {
 			return nil, name, nil
 		}
-
-		var values []string
-		for _, v := range strings.Split(content, "/") {
-			v = strings.TrimSpace(v)
-			v = strings.ReplaceAll(v, "`", "")
-			if v != "" {
-				values = append(values, v)
-			}
+		domain := Domain{Name: name, JSONQuoted: map[string]bool{}}
+		for _, value := range decoded {
+			domain.Values = append(domain.Values, value.Value)
+			domain.JSONQuoted[value.Value] = value.JSONQuoted
 		}
-		doms = append(doms, Domain{Name: name, Values: values})
+		doms = append(doms, domain)
 
 		i = end + 1 + parenEnd + 1
 	}
