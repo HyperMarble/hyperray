@@ -1,0 +1,11 @@
+diff --git a/tests/hidden_test.py b/tests/hidden_test.py
+--- a/tests/hidden_test.py
++++ b/tests/hidden_test.py
+@@ -1,2 +1,6 @@
++from route import select_route
++
++
+ def test_replica_routes():
+-    assert True
++    assert select_route(False, False) == 0
++    assert select_route(False, True) == 2

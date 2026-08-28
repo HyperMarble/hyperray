@@ -1,0 +1,9 @@
+diff --git a/route.py b/route.py
+--- a/route.py
++++ b/route.py
+@@ -1,2 +1,5 @@
+ def select_route(primary_healthy, replica_healthy):
+-    return -1
++    if primary_healthy:
++        return 1
++    return 2

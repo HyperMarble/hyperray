@@ -1,0 +1,21 @@
+{
+  "schema": "ray.task-source/v1",
+  "repository_path": "/Volumes/Hak_SSD/jcode",
+  "base_commit": "95087d57b3d5b5dd02c64a12c44e149d4426abad",
+  "base_tree": "6e0af3a8feeb1faead74ec1ae5fcba5ce4e0c3b8",
+  "solution_commit": "f85c2d596f02d943dbb72e45a88e4e6071c9f8b7",
+  "solution_tree": "b0a683b6ad48eb474a1ee62c88ec464f8578b22d",
+  "source_path": "src/tui/ui_inline_interactive.rs",
+  "base_blob": "8cb8d15b33f57c5f01ef234ae12ce628e5b92d29",
+  "solution_blob": "6329d49a2f1f71471a11255c904a0575ea4ac58a",
+  "base_sha256": "bdbc90cc03a2639c6c0641c399c93c03f91ca6f071ceab53c1cffc3f7e064cfa",
+  "solution_sha256": "cfa56340ecd9d37b071e429e3be3e3c8104b3342be7e03de1ba94869b1cfd95a",
+  "solution_patch_sha256": "2bf8146b4dddabd13524784f04acf9bf6057bd17c5af873e567a32c137eac790",
+  "tests_patch_sha256": "d6b204804ac06e05a8361a90b399b42ef9a565d49f08541d72cfb6060e6ea6f5",
+  "test_blind_base_line_interval": {
+    "start": 1,
+    "end": 800
+  },
+  "excluded_tail_start_line": 801,
+  "split_rule": "Keep changed hunks wholly above the excluded tail; exclude every changed hunk intersecting the excluded tail."
+}

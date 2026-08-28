@@ -1,0 +1,12 @@
+diff --git a/tests/public_test.py b/tests/public_test.py
+--- a/tests/public_test.py
++++ b/tests/public_test.py
+@@ -1,2 +1,7 @@
++from route import select_route
++
++
+ def test_non_tie_routes():
+-    assert True
++    assert select_route(False, False) == 0
++    assert select_route(False, True) == 2
++    assert select_route(True, False) == 1
