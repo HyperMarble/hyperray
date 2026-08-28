@@ -1,107 +1,146 @@
-# spec.md examples
+# Current strict spec examples
 
-Real tables, confirmed to pass `ray spec-lint`, across different kinds
-of tasks — not variations on one domain. Use these as starting points
-for the grammar patterns they show, not as templates to copy verbatim.
+Use these patterns only after deriving behavior from the instruction/issue,
+base, reference diff, and relevant environment without test access. The
+complete maintained starting point is [the spec template](../templates/spec.md).
 
-## A simple enum, no wildcards needed
+## Exact full-N-way interaction
 
-From a cron-expression field parser. Every value gets its own row —
-the plainest, most common shape.
-
-```markdown
-Parameters: `atom_kind` (wildcard / single-integer / inclusive-range / stepped-range / stepped-wildcard).
-
-| atom_kind | Required behavior |
-|---|---|
-| wildcard | every value from field minimum to field maximum |
-| single-integer | that single integer, if in range; else error |
-| inclusive-range | inclusive range [a, b]; a > b is an error |
-| stepped-range | inclusive range [a, b] stepped by s from a; includes b iff (b - a) is a multiple of s |
-| stepped-wildcard | every s-th value starting at the field minimum |
-```
-
-## `any` — one row applies regardless of another column
-
-From a semver range resolver's prerelease opt-in rule. When
-`version_has_prerelease` is `no`, the second column doesn't matter —
-`any` says so explicitly instead of writing two near-duplicate rows.
+This two-by-two operation keeps validation precedence explicit. Four rows are
+required; separate one-dimensional rules would lose the interaction.
 
 ```markdown
-Parameters: `version_has_prerelease` (yes / no), `group_has_matching_base_prerelease_comparator` (yes / no).
+Inputs: persist(target: string, payload: string).
+Grounding: persist.target_state."writable" = when target == "writable"; witness {"payload":"valid","target":"writable"}.
+Grounding: persist.target_state."read-only" = when target == "read-only"; witness {"payload":"valid","target":"read-only"}.
+Grounding: persist.payload_kind."valid" = when payload == "valid"; witness {"payload":"valid","target":"writable"}.
+Grounding: persist.payload_kind."invalid" = when payload == "invalid"; witness {"payload":"invalid","target":"writable"}.
 
-| version_has_prerelease | group_has_matching_base_prerelease_comparator | Required behavior |
-|---|---|---|
-| no | any | opt-in rule never blocks; normal comparator evaluation applies |
-| yes | yes | AND-group may match, subject to normal comparator evaluation |
-| yes | no | AND-group rejects the version |
+Parameters: `target_state` ("writable" / "read-only"), `payload_kind` ("valid" / "invalid").
+
+| target_state | payload_kind | ID | Operation | Reachability | Required outcomes | Forbidden outcomes | Effects | Invariants | Input witnesses | Enforced by | Evidence | Constraint reason |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| "writable" | "valid" | REQ-persist-writable-valid | persist | reachable | return "stored" | raise ValidationError containing "invalid payload"; raise PermissionError containing "read-only target"; other outcome | write:target="stored" | none | [{"payload":"valid","target":"writable"}] | none | 1 | — |
+| "writable" | "invalid" | REQ-persist-writable-invalid | persist | reachable | raise ValidationError containing "invalid payload" | return "stored"; raise PermissionError containing "read-only target"; other outcome | none | none | [{"payload":"invalid","target":"writable"}] | none | 1 | — |
+| "read-only" | "valid" | REQ-persist-readonly-valid | persist | reachable | raise PermissionError containing "read-only target" | return "stored"; raise ValidationError containing "invalid payload"; other outcome | none | none | [{"payload":"valid","target":"read-only"}] | none | 1 | — |
+| "read-only" | "invalid" | REQ-persist-readonly-invalid | persist | reachable | raise ValidationError containing "invalid payload" | return "stored"; raise PermissionError containing "read-only target"; other outcome | none | none | [{"payload":"invalid","target":"read-only"}] | none | 1 | — |
 ```
 
-## `—` — a column that doesn't apply to a specific row
+The last row deliberately chooses validation over permission rejection when
+both clauses hold. That precedence must come from phase-1 evidence, not from
+which assertion happens to appear in a test.
 
-From a UI dispatch board's selection-persistence rule. Whether the
-selected call still matches the active filters only matters when the
-triggering action *was* a filter change — for every other action kind,
-that column is meaningless, not "any value of it."
+## Impossible combination
+
+An excluded row still appears in the full product and states why it has no
+path:
 
 ```markdown
-Parameters: `action_kind` (filter change / sort change / edit change / reload), `selected_call_still_matches_filters` (yes / no).
-
-| action_kind | selected_call_still_matches_filters | Required behavior |
-|---|---|---|
-| filter change | yes | selection unchanged; inspector shows the selected call |
-| filter change | no | selection unchanged even though its row is hidden; inspector still shows the selected call |
-| sort change | — | selection and inspector target unchanged |
-| edit change | — | selection stays on the edited call |
-| reload | — | edits, selection, filters, and sorting are all restored |
+| "closed" | "write" | CON-session-closed-write | session_request | excluded | — | — | — | — | none | none | — | the frozen API cannot issue write requests for a closed session |
 ```
 
-## A `/`-separated compound row
+“Unsupported,” “not tested,” and “the reference does not do this” are not
+valid constraint reasons.
 
-From ts-pattern's `matchEach`. Four different terminal calls share
-identical behavior on the "no pattern matched" branch — one compound
-row instead of four near-duplicates. Note the separator is `/`, the
-same one the `Parameters:` line uses — never a comma, since a value's
-own name might need one (see the next example).
+## Permitted alternatives
+
+When the instruction permits two externally distinguishable results, keep both
+in the required set so fairness analysis can detect an over-rigid test:
 
 ```markdown
-Parameters: `terminal_call` (run / exhaustive / toFunction / toExhaustiveFunction / exhaustive-with-fallback / otherwise / toPartialFunction), `match_result` (some matched / none matched).
-
-| terminal_call | match_result | Required behavior |
-|---|---|---|
-| run / exhaustive / toFunction / toExhaustiveFunction | none matched | throw NonExhaustiveError |
-| exhaustive-with-fallback | none matched | call fallback, return single-element array of its result |
-| otherwise | none matched | return single-element array of the otherwise handler's result |
-| toPartialFunction | none matched | return undefined |
-| run / exhaustive / toFunction / toExhaustiveFunction / exhaustive-with-fallback / otherwise / toPartialFunction | some matched | return array of all matching results |
+| "ready" | REQ-drive-ready | drive | reachable | return "scheduled"; return "immediate" | raise StateError containing "not ready"; other outcome | none | none | [{"state":"ready"}] | none | 4-6 | — |
 ```
 
-## An explicit catch-all bucket (not `any`)
+A hidden test that accepts only `"scheduled"` may pass the reference yet reject
+the permitted `"immediate"` behavior. That is the false-negative direction;
+do not narrow the row after reading the test.
 
-From a CSV parser's quote-escaping rule. `other` is a real, named
-value in the declared domain — not the wildcard keyword — because the
-row genuinely means "none of the specific cases," which is a different
-thing from "every value applies here."
+## Slash-safe values
+
+The exact separator is ` / ` outside JSON quotes:
 
 ```markdown
-Parameters: `char_after_closing_quote` (delimiter / LF / CR / another-quote / other).
-
-| char_after_closing_quote | Required behavior |
-|---|---|
-| delimiter | field ends normally |
-| LF | row ends |
-| CR | row ends |
-| another-quote | doubled-quote escape: literal quote, field continues |
-| other | raise CsvFormatError |
+Parameters: `route` ("/api/v1" / "https://example/x/y?q=1/2" / "2026/08/27" / "left / right" / "snowman ☃").
 ```
 
-## What doesn't belong in a table
+Quoted `"any"` is a literal value. Unquoted `any` is a wildcard in a row.
+Malformed quoting, invalid JSON escapes, mixed bare/quoted tokens, and
+slash-bearing bare values fail closed.
 
-A value's own name can contain a comma (`"wildcard, all values"` is a
-single value, not two) — but never a `/`, since that's the reserved
-separator. If a parameter doesn't reduce to a short, disjoint list of
-named buckets — a raw numeric range like "any float," a raw string —
-name a bucketed property of it instead (`positive` / `non-positive`,
-`empty` / `non-empty`), the same judgment call as naming any other
-parameter. `ray spec-lint` rejects a `Parameters:` entry with no
-`/`-separated value list rather than guessing what you meant.
+## Observable state and effects
+
+Use exact effect syntax rather than prose:
+
+```text
+read:input
+write:selection="kept"; call:refresh; output:stdout="done\n"
+return unit with call:engine.find, write:phase="Sending"
+```
+
+If a relevant type, shape, state transition, ordering rule, or bounded history
+cannot be expressed in the strict format and Semantic IR, keep the task
+`PROOF BLOCKED` until the generic language supports it.
+
+## Relational requirements
+
+Every real prompt carries at least one requirement that relates two runs
+rather than describing one:
+
+> *"applying the same operation or pipeline again to its output must produce
+> no further changes"* · *"existing rematerialization and loop-invariant
+> placement behavior must remain intact"* · *"preserve existing semantics"*
+
+A row states one outcome for one input, so these have no direct form.
+Express the relation as an operation that computes it and returns a bool.
+`Inputs:` accepts any operation the frontend can translate, so the relation
+becomes an ordinary bounded row with a witness like any other.
+
+```markdown
+Inputs: holds(aspect: string).
+Grounding: holds.aspect."idempotent" = when aspect == "idempotent"; witness {"aspect":"idempotent"}.
+Grounding: holds.aspect."behaviour-preserving" = when aspect == "behaviour-preserving"; witness {"aspect":"behaviour-preserving"}.
+
+Parameters: `aspect` ("idempotent" / "behaviour-preserving").
+
+| aspect | ID | Operation | Reachability | Required outcomes | Forbidden outcomes | Effects | Invariants | Input witnesses | Enforced by | Evidence | Constraint reason |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| "idempotent" | REQ-reapplication-is-fixpoint | holds | reachable | return true | return false; other outcome | none | none | [{"aspect":"idempotent"}] | none | 2 | — |
+| "behaviour-preserving" | REQ-output-behaviour-preserving | holds | reachable | return true | return false; other outcome | none | none | [{"aspect":"behaviour-preserving"}] | none | 2 | — |
+```
+
+Collect them under one `holds(aspect)` operation, one value per property.
+The predicate has to be computable by the frontend, because the proof
+evaluates it — prose in `Required outcomes` is rejected, correctly.
+
+## Non-scalar observables
+
+When the real observable is not a value the operation returns — where an
+instruction was placed, whether a connection was replaced, which credential
+was resolved — name the decision as an operation and return its label.
+
+```markdown
+Inputs: placement_block(purity: string, demand: string, barrier: string).
+
+| "pure" | "all-successors" | "absent" | REQ-place-hoist-to-fork | placement_block | reachable | return "fork" | return "each-successor"; return "unchanged"; other outcome | ... |
+```
+
+Between these two patterns and ordinary scalar rows, six real accepted
+tasks across Go, Rust, and C++ compiled with no `unsupported` construct.
+
+## Evidence anchors into the reference
+
+A row whose exact shape comes from the reference solution cites it directly.
+A bare span still means the instruction.
+
+```
+| "non-numeric" | REQ-parse-limit-non-numeric | parse_token | reachable | return "error" | return "term"; return "filter"; other outcome | none | none | [{"key":"limit","value_kind":"non-numeric"}] | none | reference:95-99 | — |
+```
+
+Lint with both artifacts:
+
+```sh
+ray spec-lint spec.md --instruction instruction.md --reference solution.patch --task-id <task-id>
+```
+
+The instruction carries the contract; the reference carries the mechanism.
+The frozen statement is [the evidence rule](../../../docs/specs/evidence-rule.md).
