@@ -37,6 +37,7 @@ import (
 func newRowsCmd() *cobra.Command {
 	var sourceRoot, testCommand, probeRunner, pythonPath string
 	var solutionFiles []string
+	var fastKill bool
 	command := &cobra.Command{
 		Use:          "rows <task-dir>",
 		Hidden:       true,
@@ -52,6 +53,9 @@ func newRowsCmd() *cobra.Command {
 				return fmt.Errorf("rows: needs --source-root, --test-command, --solution-file")
 			}
 			run, err := newRowsRun(cmd.OutOrStdout(), taskDir, sourceRoot, testCommand, probeRunner, solutionFiles)
+			if err == nil {
+				run.fastKill = fastKill
+			}
 			if err != nil {
 				return err
 			}
@@ -78,6 +82,7 @@ func newRowsCmd() *cobra.Command {
 	command.Flags().StringVar(&testCommand, "test-command", "", "the task's verifier command, run in --source-root")
 	command.Flags().StringVar(&probeRunner, "probe-runner", "", "command template run per bridge probe; {probe} is the script path")
 	command.Flags().StringVar(&pythonPath, "python", "python3", "interpreter for the mutant generator")
+	command.Flags().BoolVar(&fastKill, "fast-kill", false, "stop each breaker's suite at the first failing test; same verdicts, fewer runs")
 	return command
 }
 
@@ -92,6 +97,7 @@ type rowsRun struct {
 	outcomes    map[string]semanticir.ObservableOutcome
 	sources     map[string]string
 	baseline    map[string]string
+	fastKill    bool
 	enforced    int
 	holes       int
 	untried     int
@@ -217,7 +223,11 @@ func (run *rowsRun) runBrokenSolution(file, original, broken string) ([]string, 
 	if err := os.WriteFile(path, []byte(broken), 0o644); err != nil {
 		return nil, err
 	}
-	killers := runSuiteFailures(run.testCommand, run.sourceRoot)
+	command := run.testCommand
+	if run.fastKill {
+		command += " -x"
+	}
+	killers := runSuiteFailures(command, run.sourceRoot)
 	if err := os.WriteFile(path, []byte(original), 0o644); err != nil {
 		return nil, fmt.Errorf("rows: RESTORE FAILED for %s: %w", file, err)
 	}
