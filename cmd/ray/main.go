@@ -10,15 +10,28 @@ import (
 )
 
 func main() {
-	root := &cobra.Command{
-		Use:           "ray",
-		Short:         "Verify that an agent's (or human's) code logic is actually correct",
-		SilenceErrors: true,
-	}
-	root.AddCommand(newSpecLintCmd())
-
-	if err := root.Execute(); err != nil {
+	if err := newRootCmd().Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func newRootCmd() *cobra.Command {
+	root := &cobra.Command{
+		Use:           "ray",
+		Short:         "Prove one frozen finite coding task against its specification",
+		SilenceErrors: true,
+		SilenceUsage:  true,
+	}
+	root.AddCommand(newCheckCmd())
+	root.AddCommand(newEnforceCmd())
+	root.AddCommand(newSpecInitCmd())
+	root.AddCommand(newOneshotCmd())
+	root.AddCommand(newDepHarvestCmd())
+	root.AddCommand(newRowsCmd())
+	root.AddCommand(newBridgesGenCmd())
+	root.AddCommand(newHygieneCmd())
+	root.AddCommand(newStartCmd())
+	root.AddCommand(newStrictSpecLintCmd())
+	return root
 }
