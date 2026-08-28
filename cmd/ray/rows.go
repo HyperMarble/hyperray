@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -49,224 +51,26 @@ func newRowsCmd() *cobra.Command {
 			if sourceRoot == "" || testCommand == "" || len(solutionFiles) == 0 {
 				return fmt.Errorf("rows: needs --source-root, --test-command, --solution-file")
 			}
-			task, err := compileTaskDir(taskDir)
+			run, err := newRowsRun(cmd.OutOrStdout(), taskDir, sourceRoot, testCommand, probeRunner, solutionFiles)
 			if err != nil {
 				return err
 			}
-			outcomes := map[string]semanticir.ObservableOutcome{}
-			for _, outcome := range task.Outcomes {
-				outcomes[outcome.ID] = outcome
+			run.checkReferenceAgainstRaiseRows()
+			if err := run.enforceRaiseRows(); err != nil {
+				return err
 			}
-			out := cmd.OutOrStdout()
-			sources := map[string]string{}
-			for _, file := range solutionFiles {
-				body, err := os.ReadFile(filepath.Join(sourceRoot, file))
-				if err != nil {
-					return err
-				}
-				sources[file] = string(body)
-			}
-			// Oracle-lite: before breaking anything, the reference itself is
-			// checked against the derivable rows. Each raise-row's required
-			// exception type and message must be observed in some probe's
-			// output on the untouched solution -- the bounded form of "the
-			// author's own solution obeys the spec", for the rows where the
-			// observation is mechanical.
-			baseline := probeOutputs(taskDir, sourceRoot, probeRunner)
-			confirmed, unconfirmed := 0, 0
-			for _, requirement := range task.Requirements {
-				message := singleRaiseMessage(requirement, outcomes)
-				if message == "" {
-					continue
-				}
-				exceptionType := raiseType(requirement, outcomes)
-				if baselineShows(baseline, exceptionType, message) {
-					confirmed++
-				} else {
-					unconfirmed++
-					fmt.Fprintf(out, "reference UNCONFIRMED %s -- no probe observed %s containing %q\n", requirement.ID, exceptionType, message)
-				}
-			}
-			fmt.Fprintf(out, "oracle-lite: reference confirmed on %d raise-rows, %d unconfirmed\n\n", confirmed, unconfirmed)
-
-			enforced, holes, notDerived := 0, 0, 0
-			guardNames := map[string]bool{}
-			for _, requirement := range task.Requirements {
-				message := singleRaiseMessage(requirement, outcomes)
-				if message == "" {
-					notDerived++
-					continue
-				}
-				file, count := findLiteral(sources, message)
-				if count != 1 {
-					notDerived++
-					fmt.Fprintf(out, "not derived  %s (message %q found %d times in solution)\n", requirement.ID, message, count)
-					continue
-				}
-				original := sources[file]
-				// The row requires the message to CONTAIN the substring, so the
-				// breaker must make the substring disappear -- appending to it
-				// would leave every substring-matching test green and report
-				// false holes, which is exactly what the first run of this
-				// command did.
-				path := filepath.Join(sourceRoot, file)
-				// Closure over the rule's forbidden outcome classes: a raise
-				// rule can be wrong three ways -- wrong message, wrong
-				// exception type, or no exception at all. All three breakers
-				// are derived from the rule; every one must be rejected for
-				// the rule to count as enforced.
-				exceptionType := raiseType(requirement, outcomes)
-				breakers := []struct{ kind, broken string }{
-					{"wrong-message", strings.Replace(original, message, "ray broke this message", 1)},
-					{"wrong-type", swapRaiseType(original, exceptionType, message)},
-					{"no-raise", suppressRaise(original, exceptionType, message)},
-				}
-				ruleEnforced := true
-				var ruleKillers []string
-				for _, breaker := range breakers {
-					if breaker.broken == "" || breaker.broken == original {
-						fmt.Fprintf(out, "not derived  %s [%s]\n", requirement.ID, breaker.kind)
-						continue
-					}
-					if err := os.WriteFile(path, []byte(breaker.broken), 0o644); err != nil {
-						return err
-					}
-					killers := runSuiteFailures(testCommand, sourceRoot)
-					if err := os.WriteFile(path, []byte(original), 0o644); err != nil {
-						return fmt.Errorf("rows: RESTORE FAILED for %s: %w", file, err)
-					}
-					if len(killers) == 0 {
-						ruleEnforced = false
-						holes++
-						fmt.Fprintf(out, "HOLE         %s [%s] -- this wrong behaviour is pinned by no test\n", requirement.ID, breaker.kind)
-					} else {
-						for _, killer := range killers {
-							name := strings.SplitN(killer, "[", 2)[0]
-							guardNames[name] = true
-							ruleKillers = append(ruleKillers, name)
-						}
-					}
-				}
-				if ruleEnforced {
-					enforced++
-					fmt.Fprintf(out, "enforced     %s <- %s\n", requirement.ID, strings.Join(dedupe(ruleKillers), "; "))
-				}
-			}
-			attributed, err := attributeMutants(cmd, taskDir, sourceRoot, testCommand, probeRunner, pythonPath, solutionFiles, task, outcomes, baseline)
+			attributed, err := attributeMutants(cmd, taskDir, sourceRoot, testCommand, probeRunner, pythonPath, solutionFiles, run.task, run.outcomes, run.baseline)
 			if err != nil {
 				return err
 			}
-			untried := 0
-			for _, requirement := range task.Requirements {
-				if singleRaiseMessage(requirement, outcomes) != "" {
-					continue
-				}
-				verdict, found := attributed[requirement.ID]
-				switch {
-				case !found:
-					untried++
-				case verdict.falsePositive:
-					holes++
-					fmt.Fprintf(out, "FALSE POSITIVE %s -- a deviating mutant passed (probe %s)\n", requirement.ID, verdict.probe)
-				default:
-					enforced++
-					var residue []string
-					for _, forbiddenID := range requirement.ForbiddenOutcomes {
-						forbidden := outcomes[forbiddenID]
-						if forbidden.Kind == semanticir.OutcomeReturn && forbidden.Value != nil && forbidden.Value.Type == semanticir.TypeString {
-							label := forbidden.Value.String
-							found := false
-							for _, realized := range verdict.realizedForbidden {
-								if realized == label {
-									found = true
-								}
-							}
-							if !found {
-								residue = append(residue, label)
-							}
-						}
-					}
-					closure := fmt.Sprintf("%d wrong behaviours rejected", len(verdict.rejected))
-					if len(verdict.realizedForbidden) > 0 {
-						closure += "; forbidden labels realized+rejected: " + strings.Join(verdict.realizedForbidden, ",")
-					}
-					if len(residue) > 0 {
-						closure += "; never realized: " + strings.Join(residue, ",")
-					}
-					fmt.Fprintf(out, "enforced     %s <- %s (%s)\n", requirement.ID, strings.Join(verdict.killers, "; "), closure)
-				}
+			run.reportAttributedRows(attributed)
+			if err := run.checkBaselineGreen(); err != nil {
+				return err
 			}
-			notDerived = untried
-			restoreCheck := exec.Command("sh", "-c", testCommand)
-			restoreCheck.Dir = sourceRoot
-			if restoreCheck.Run() != nil {
-				return fmt.Errorf("rows: baseline is not green after restore; the tree needs inspection")
-			}
-			// #5 oracle snapshot: the reference's observation under every
-			// healthy probe, recorded beside the bridges. A later run that
-			// changes a line here is a behaviour change of the reference
-			// itself -- reviewable, versionable evidence.
-			var snapshot []string
-			var probeNames []string
-			for name := range baseline {
-				probeNames = append(probeNames, name)
-			}
-			sort.Strings(probeNames)
-			for _, name := range probeNames {
-				if healthyProbe(baseline, name) {
-					snapshot = append(snapshot, name+": "+strings.TrimSpace(baseline[name]))
-				}
-			}
-			_ = os.WriteFile(filepath.Join(taskDir, "bridges", "reference-observations.txt"), []byte(strings.Join(snapshot, "\n")+"\n"), 0o644)
-			fmt.Fprintf(out, "oracle: reference observed healthy on %d probe(s); snapshot recorded\n", len(snapshot))
-
-			// #3 orphan report: tests never seen guarding any rule. These
-			// are candidates for unfairness, not verdicts -- a test can
-			// guard a rule nothing has tried to break yet.
-			guards := guardNames
-			for _, verdict := range attributed {
-				for _, killer := range verdict.killers {
-					guards[strings.SplitN(killer, "[", 2)[0]] = true
-				}
-			}
-			collectCmd := exec.Command("sh", "-c", testCommand+" --collect-only -q 2>/dev/null | grep '::' | sed 's/.*:://' | sort -u")
-			collectCmd.Dir = sourceRoot
-			if listing, err := collectCmd.Output(); err == nil {
-				var orphans []string
-				for _, test := range strings.Fields(strings.TrimSpace(string(listing))) {
-					base := strings.SplitN(test, "[", 2)[0]
-					if !guards[base] && !guards[test] {
-						orphans = append(orphans, base)
-					}
-				}
-				orphans = dedupe(orphans)
-				if len(orphans) > 0 {
-					fmt.Fprintf(out, "orphan candidates (%d): tests not yet seen guarding any rule -- %s\n", len(orphans), strings.Join(orphans, "; "))
-				}
-			}
-
-			// False negatives, the model-level theorem: every rule requires
-			// exactly one outcome, so exactly one allowed behaviour table
-			// exists -- the reference's. "Every allowed solution passes" is
-			// then equivalent to "the suite passes the reference", which the
-			// baseline check above establishes. The probe-equivalence sweep
-			// guards the seam between model and reality.
-			singleRequired := true
-			for _, requirement := range task.Requirements {
-				if len(requirement.RequiredOutcomes) != 1 {
-					singleRequired = false
-					break
-				}
-			}
-			if singleRequired {
-				fmt.Fprintf(out, "false negatives: 100%% within the finite model -- every rule single-outcome, reference accepted, equivalence sweep clean\n")
-			}
-
-			fmt.Fprintf(out, "\nrows: %d enforced, %d holes/false positives, %d untried (no breaker reached them; the claim stops here)\n", enforced, holes, notDerived)
-			if holes > 0 {
-				return fmt.Errorf("unenforced rows: %d", holes)
-			}
-			return nil
+			run.writeReferenceSnapshot()
+			run.reportOrphanCandidates(attributed)
+			run.reportFalseNegativeTheorem()
+			return run.summarize()
 		},
 	}
 	command.Flags().StringVar(&sourceRoot, "source-root", "", "the applied source tree the tests run against")
@@ -275,6 +79,284 @@ func newRowsCmd() *cobra.Command {
 	command.Flags().StringVar(&probeRunner, "probe-runner", "", "command template run per bridge probe; {probe} is the script path")
 	command.Flags().StringVar(&pythonPath, "python", "python3", "interpreter for the mutant generator")
 	return command
+}
+
+// rowsRun carries one invocation's fixed inputs and running tallies so each
+// phase below reads as a plain step instead of sharing a wall of locals.
+type rowsRun struct {
+	out         io.Writer
+	taskDir     string
+	sourceRoot  string
+	testCommand string
+	task        *semanticir.Task
+	outcomes    map[string]semanticir.ObservableOutcome
+	sources     map[string]string
+	baseline    map[string]string
+	enforced    int
+	holes       int
+	untried     int
+	guardNames  map[string]bool
+}
+
+func newRowsRun(out io.Writer, taskDir, sourceRoot, testCommand, probeRunner string, solutionFiles []string) (*rowsRun, error) {
+	task, err := compileTaskDir(taskDir)
+	if err != nil {
+		return nil, err
+	}
+	outcomes := map[string]semanticir.ObservableOutcome{}
+	for _, outcome := range task.Outcomes {
+		outcomes[outcome.ID] = outcome
+	}
+	sources := map[string]string{}
+	for _, file := range solutionFiles {
+		body, err := os.ReadFile(filepath.Join(sourceRoot, file))
+		if err != nil {
+			return nil, err
+		}
+		sources[file] = string(body)
+	}
+	return &rowsRun{
+		out:         out,
+		taskDir:     taskDir,
+		sourceRoot:  sourceRoot,
+		testCommand: testCommand,
+		task:        task,
+		outcomes:    outcomes,
+		sources:     sources,
+		baseline:    probeOutputs(taskDir, sourceRoot, probeRunner),
+		guardNames:  map[string]bool{},
+	}, nil
+}
+
+// checkReferenceAgainstRaiseRows is oracle-lite: before breaking anything,
+// the reference itself is checked against the derivable rows. Each raise-row's
+// required exception type and message must be observed in some probe's output
+// on the untouched solution -- the bounded form of "the author's own solution
+// obeys the spec", for the rows where the observation is mechanical.
+func (run *rowsRun) checkReferenceAgainstRaiseRows() {
+	confirmed, unconfirmed := 0, 0
+	for _, requirement := range run.task.Requirements {
+		message := singleRaiseMessage(requirement, run.outcomes)
+		if message == "" {
+			continue
+		}
+		exceptionType := raiseType(requirement, run.outcomes)
+		if baselineShows(run.baseline, exceptionType, message) {
+			confirmed++
+		} else {
+			unconfirmed++
+			fmt.Fprintf(run.out, "reference UNCONFIRMED %s -- no probe observed %s containing %q\n", requirement.ID, exceptionType, message)
+		}
+	}
+	fmt.Fprintf(run.out, "oracle-lite: reference confirmed on %d raise-rows, %d unconfirmed\n\n", confirmed, unconfirmed)
+}
+
+// enforceRaiseRows derives the three breakers for every raise-row and runs
+// the verifier against each. Closure over the rule's forbidden outcome
+// classes: a raise rule can be wrong three ways -- wrong message, wrong
+// exception type, or no exception at all. All three breakers are derived
+// from the rule; every one must be rejected for the rule to count as
+// enforced.
+func (run *rowsRun) enforceRaiseRows() error {
+	for _, requirement := range run.task.Requirements {
+		message := singleRaiseMessage(requirement, run.outcomes)
+		if message == "" {
+			continue
+		}
+		file, count := findLiteral(run.sources, message)
+		if count != 1 {
+			fmt.Fprintf(run.out, "not derived  %s (message %q found %d times in solution)\n", requirement.ID, message, count)
+			continue
+		}
+		original := run.sources[file]
+		exceptionType := raiseType(requirement, run.outcomes)
+		// The row requires the message to CONTAIN the substring, so the
+		// wrong-message breaker must make the substring disappear -- appending
+		// to it would leave every substring-matching test green and report
+		// false holes, which is exactly what the first run of this command did.
+		breakers := []struct{ kind, broken string }{
+			{"wrong-message", strings.Replace(original, message, "ray broke this message", 1)},
+			{"wrong-type", swapRaiseType(original, exceptionType, message)},
+			{"no-raise", suppressRaise(original, exceptionType, message)},
+		}
+		ruleEnforced := true
+		var ruleKillers []string
+		for _, breaker := range breakers {
+			if breaker.broken == "" || breaker.broken == original {
+				fmt.Fprintf(run.out, "not derived  %s [%s]\n", requirement.ID, breaker.kind)
+				continue
+			}
+			killers, err := run.runBrokenSolution(file, original, breaker.broken)
+			if err != nil {
+				return err
+			}
+			if len(killers) == 0 {
+				ruleEnforced = false
+				run.holes++
+				fmt.Fprintf(run.out, "HOLE         %s [%s] -- this wrong behaviour is pinned by no test\n", requirement.ID, breaker.kind)
+				continue
+			}
+			for _, killer := range killers {
+				name := testBaseName(killer)
+				run.guardNames[name] = true
+				ruleKillers = append(ruleKillers, name)
+			}
+		}
+		if ruleEnforced {
+			run.enforced++
+			fmt.Fprintf(run.out, "enforced     %s <- %s\n", requirement.ID, strings.Join(dedupe(ruleKillers), "; "))
+		}
+	}
+	return nil
+}
+
+// runBrokenSolution writes one broken solution file, runs the verifier, and
+// always restores the original bytes before returning.
+func (run *rowsRun) runBrokenSolution(file, original, broken string) ([]string, error) {
+	path := filepath.Join(run.sourceRoot, file)
+	if err := os.WriteFile(path, []byte(broken), 0o644); err != nil {
+		return nil, err
+	}
+	killers := runSuiteFailures(run.testCommand, run.sourceRoot)
+	if err := os.WriteFile(path, []byte(original), 0o644); err != nil {
+		return nil, fmt.Errorf("rows: RESTORE FAILED for %s: %w", file, err)
+	}
+	return killers, nil
+}
+
+// reportAttributedRows reads the mutant-attribution verdicts for every
+// non-raise row: killed deviations mark the row enforced, accepted
+// deviations are proven false positives, and rows nothing reached stay
+// untried.
+func (run *rowsRun) reportAttributedRows(attributed map[string]rowVerdict) {
+	for _, requirement := range run.task.Requirements {
+		if singleRaiseMessage(requirement, run.outcomes) != "" {
+			continue
+		}
+		verdict, found := attributed[requirement.ID]
+		switch {
+		case !found:
+			run.untried++
+		case verdict.falsePositive:
+			run.holes++
+			fmt.Fprintf(run.out, "FALSE POSITIVE %s -- a deviating mutant passed (probe %s)\n", requirement.ID, verdict.probe)
+		default:
+			run.enforced++
+			fmt.Fprintf(run.out, "enforced     %s <- %s (%s)\n", requirement.ID, strings.Join(verdict.killers, "; "), run.closureNote(requirement, verdict))
+		}
+	}
+}
+
+// closureNote summarizes how much of the row's forbidden alphabet the
+// mutants actually realized, so "enforced" always carries its boundary.
+func (run *rowsRun) closureNote(requirement semanticir.RequirementCase, verdict rowVerdict) string {
+	var residue []string
+	for _, forbiddenID := range requirement.ForbiddenOutcomes {
+		forbidden := run.outcomes[forbiddenID]
+		if forbidden.Kind != semanticir.OutcomeReturn || forbidden.Value == nil || forbidden.Value.Type != semanticir.TypeString {
+			continue
+		}
+		label := forbidden.Value.String
+		if !slices.Contains(verdict.realizedForbidden, label) {
+			residue = append(residue, label)
+		}
+	}
+	note := fmt.Sprintf("%d wrong behaviours rejected", len(verdict.rejected))
+	if len(verdict.realizedForbidden) > 0 {
+		note += "; forbidden labels realized+rejected: " + strings.Join(verdict.realizedForbidden, ",")
+	}
+	if len(residue) > 0 {
+		note += "; never realized: " + strings.Join(residue, ",")
+	}
+	return note
+}
+
+// checkBaselineGreen proves the tree was restored: the untouched suite must
+// pass again after every breaker ran.
+func (run *rowsRun) checkBaselineGreen() error {
+	restoreCheck := exec.Command("sh", "-c", run.testCommand)
+	restoreCheck.Dir = run.sourceRoot
+	if restoreCheck.Run() != nil {
+		return fmt.Errorf("rows: baseline is not green after restore; the tree needs inspection")
+	}
+	return nil
+}
+
+// writeReferenceSnapshot records the reference's observation under every
+// healthy probe beside the bridges. A later run that changes a line here is
+// a behaviour change of the reference itself -- reviewable, versionable
+// evidence.
+func (run *rowsRun) writeReferenceSnapshot() {
+	var probeNames []string
+	for name := range run.baseline {
+		probeNames = append(probeNames, name)
+	}
+	sort.Strings(probeNames)
+	var snapshot []string
+	for _, name := range probeNames {
+		if healthyProbe(run.baseline, name) {
+			snapshot = append(snapshot, name+": "+strings.TrimSpace(run.baseline[name]))
+		}
+	}
+	_ = os.WriteFile(filepath.Join(run.taskDir, "bridges", "reference-observations.txt"), []byte(strings.Join(snapshot, "\n")+"\n"), 0o644)
+	fmt.Fprintf(run.out, "oracle: reference observed healthy on %d probe(s); snapshot recorded\n", len(snapshot))
+}
+
+// reportOrphanCandidates lists tests never seen guarding any rule. These are
+// candidates for unfairness, not verdicts -- a test can guard a rule nothing
+// has tried to break yet.
+func (run *rowsRun) reportOrphanCandidates(attributed map[string]rowVerdict) {
+	guards := run.guardNames
+	for _, verdict := range attributed {
+		for _, killer := range verdict.killers {
+			guards[testBaseName(killer)] = true
+		}
+	}
+	collectCmd := exec.Command("sh", "-c", run.testCommand+" --collect-only -q 2>/dev/null | grep '::' | sed 's/.*:://' | sort -u")
+	collectCmd.Dir = run.sourceRoot
+	listing, err := collectCmd.Output()
+	if err != nil {
+		return
+	}
+	var orphans []string
+	for _, test := range strings.Fields(strings.TrimSpace(string(listing))) {
+		base := testBaseName(test)
+		if !guards[base] && !guards[test] {
+			orphans = append(orphans, base)
+		}
+	}
+	orphans = dedupe(orphans)
+	if len(orphans) > 0 {
+		fmt.Fprintf(run.out, "orphan candidates (%d): tests not yet seen guarding any rule -- %s\n", len(orphans), strings.Join(orphans, "; "))
+	}
+}
+
+// reportFalseNegativeTheorem states the model-level theorem when it applies:
+// every rule requires exactly one outcome, so exactly one allowed behaviour
+// table exists -- the reference's. "Every allowed solution passes" is then
+// equivalent to "the suite passes the reference", which checkBaselineGreen
+// establishes. The probe-equivalence sweep guards the seam between model and
+// reality.
+func (run *rowsRun) reportFalseNegativeTheorem() {
+	for _, requirement := range run.task.Requirements {
+		if len(requirement.RequiredOutcomes) != 1 {
+			return
+		}
+	}
+	fmt.Fprintf(run.out, "false negatives: 100%% within the finite model -- every rule single-outcome, reference accepted, equivalence sweep clean\n")
+}
+
+func (run *rowsRun) summarize() error {
+	fmt.Fprintf(run.out, "\nrows: %d enforced, %d holes/false positives, %d untried (no breaker reached them; the claim stops here)\n", run.enforced, run.holes, run.untried)
+	if run.holes > 0 {
+		return fmt.Errorf("unenforced rows: %d", run.holes)
+	}
+	return nil
+}
+
+// testBaseName strips a parametrization suffix: "test_x[case-1]" -> "test_x".
+func testBaseName(test string) string {
+	return strings.SplitN(test, "[", 2)[0]
 }
 
 // compileTaskDir strictly compiles a task folder's spec the same way
