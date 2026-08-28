@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/HyperMarble/ray/internal/specparser"
@@ -52,7 +53,7 @@ func (f Finding) String() string {
 	for k, v := range f.Combo {
 		parts = append(parts, k+"="+v)
 	}
-	sortStrings(parts)
+	sort.Strings(parts)
 	combo := strings.Join(parts, " ")
 	switch f.Status {
 	case Unenforced:
@@ -158,12 +159,4 @@ func namedTestExists(cell string, names map[string]bool) bool {
 		}
 	}
 	return true
-}
-
-func sortStrings(s []string) {
-	for i := 1; i < len(s); i++ {
-		for j := i; j > 0 && s[j] < s[j-1]; j-- {
-			s[j], s[j-1] = s[j-1], s[j]
-		}
-	}
 }
