@@ -92,7 +92,7 @@ func DiscoverWith(task Task, solutionFile string, mutants []mutate.Mutant, probe
 		if !deviates {
 			// Not shown to deviate. Not "equivalent" -- unknown. Asking the
 			// verifier about it would prove nothing either way.
-			_ = writeSource(task, path, original)
+			restoreOriginal(task, path, original)
 			continue
 		}
 		dev.Mutant = m
@@ -102,14 +102,14 @@ func DiscoverWith(task Task, solutionFile string, mutants []mutate.Mutant, probe
 		// anything, so there is nothing to run: it deviates and the
 		// verifier is blind to it.
 		if tests, measured := lines.TestsForLine(solutionFile, m.Line); measured && len(tests) == 0 {
-			_ = writeSource(task, path, original)
+			restoreOriginal(task, path, original)
 			dev.Reason = "no test executes this line, so nothing can reject it"
 			found = append(found, dev)
 			continue
 		}
 
 		passed, out := verifierPasses(task, lines, solutionFile, m.Line)
-		_ = writeSource(task, path, original)
+		restoreOriginal(task, path, original)
 		if passed {
 			dev.Accepted = true
 			dev.Reason = fmt.Sprintf("verifier stayed green (%s)", lastLine(out))
@@ -200,6 +200,15 @@ var failedNamePattern = regexp.MustCompile(`FAILED [^\s:]*::([A-Za-z0-9_]+)`)
 
 // failedTestNames parses the verifier's own FAILED report lines. Parametrized
 // case suffixes are dropped so one test name covers its whole matrix.
+
+// restoreOriginal puts the untouched solution back after a mutant ran. A
+// failed restore is repaired by the next mutant's own write, and the caller's
+// final green-baseline check catches a failure on the last one -- so the
+// error carries no extra information here.
+func restoreOriginal(task Task, path, original string) {
+	_ = writeSource(task, path, original)
+}
+
 func FailedTestNames(output string) []string {
 	seen := map[string]bool{}
 	var names []string

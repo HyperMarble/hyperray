@@ -39,11 +39,11 @@ func FalseNegatives(task Task, solutionFile string, mutants []mutate.Mutant, pro
 		_, deviates := firstDifference(probes, baseline, after)
 		if deviates {
 			// Observably different: Discover's territory, not this check's.
-			_ = writeSource(task, path, original)
+			restoreOriginal(task, path, original)
 			continue
 		}
 		passed, out := verifierPasses(task, nil, solutionFile, m.Line)
-		_ = writeSource(task, path, original)
+		restoreOriginal(task, path, original)
 		if !passed {
 			found = append(found, Deviation{
 				Mutant:  m,
