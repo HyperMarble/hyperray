@@ -1,0 +1,77 @@
+package main
+
+import (
+	"fmt"
+	"os/exec"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/HyperMarble/ray/internal/enforce"
+)
+
+// newHygieneCmd checks the verifier is an instrument: the same tree must
+// yield the same verdict on every run and in every order. A test that flakes
+// or depends on its neighbours poisons every other verdict ray produces, so
+// this runs before any per-row work is trusted.
+func newHygieneCmd() *cobra.Command {
+	var sourceRoot, testCommand, pythonPath, testFile string
+	command := &cobra.Command{
+		Use:          "hygiene <task-dir>",
+		Hidden:       true,
+		Short:        "Same tree, same verdict: run twice and in reverse order; name any test that differs",
+		Args:         cobra.ExactArgs(1),
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			out := cmd.OutOrStdout()
+			runOnce := func(command string) (bool, []string) {
+				sub := exec.Command("sh", "-c", command+" -rf")
+				sub.Dir = sourceRoot
+				output, err := sub.CombinedOutput()
+				return err == nil, enforce.FailedTestNames(string(output))
+			}
+			firstPass, firstFailed := runOnce(testCommand)
+			secondPass, secondFailed := runOnce(testCommand)
+			if firstPass != secondPass || strings.Join(firstFailed, ",") != strings.Join(secondFailed, ",") {
+				fmt.Fprintf(out, "FLAKY: two identical runs disagree (run1 failed=%v, run2 failed=%v)\n", firstFailed, secondFailed)
+				return fmt.Errorf("hygiene: flaky verifier")
+			}
+			// Reverse order: pytest honours the order of given node ids.
+			collect := exec.Command("sh", "-c", pythonPath+" -m pytest -q -o addopts= --collect-only "+testFile+" | grep '::' ")
+			collect.Dir = sourceRoot
+			listing, err := collect.Output()
+			if err != nil {
+				return fmt.Errorf("hygiene: collect tests: %w", err)
+			}
+			// One id per line: parametrized ids contain spaces, so
+			// whitespace-splitting shreds them into nonsense arguments.
+			var ids []string
+			for _, line := range strings.Split(strings.TrimSpace(string(listing)), "\n") {
+				if line = strings.TrimSpace(line); line != "" {
+					ids = append(ids, line)
+				}
+			}
+			for left, right := 0, len(ids)-1; left < right; left, right = left+1, right-1 {
+				ids[left], ids[right] = ids[right], ids[left]
+			}
+			// Parametrized ids carry [brackets]; unquoted they are shell
+			// globs and pytest receives nothing -- which once made a clean
+			// suite read as order-dependent.
+			for index, id := range ids {
+				ids[index] = "'" + id + "'"
+			}
+			reversedPass, reversedFailed := runOnce(pythonPath + " -m pytest -q -o addopts= " + strings.Join(ids, " "))
+			if reversedPass != firstPass || strings.Join(reversedFailed, ",") != strings.Join(firstFailed, ",") {
+				fmt.Fprintf(out, "ORDER-DEPENDENT: reversed order disagrees (normal failed=%v, reversed failed=%v)\n", firstFailed, reversedFailed)
+				return fmt.Errorf("hygiene: order-dependent verifier")
+			}
+			fmt.Fprintf(out, "hygiene: %d tests -- stable across repeat and reverse order\n", len(ids))
+			return nil
+		},
+	}
+	command.Flags().StringVar(&sourceRoot, "source-root", "", "tree the tests run in")
+	command.Flags().StringVar(&testCommand, "test-command", "", "the verifier command")
+	command.Flags().StringVar(&pythonPath, "python", "python3", "interpreter")
+	command.Flags().StringVar(&testFile, "test-file", "", "test file for ordered collection")
+	return command
+}
