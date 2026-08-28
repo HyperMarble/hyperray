@@ -39,7 +39,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 	if len(tb.Columns) < 2 || len(tb.Rows) == 0 {
 		return nil, nil
 	}
-	paramCols := len(tb.Columns) - 1
+	paramCols := tb.ParamColumns()
 
 	if tb.Params == "" {
 		// No declared domain to check against; nothing to lint.
@@ -55,7 +55,7 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 			Section: tb.Section,
 			Line:    tb.Line,
 			Kind:    "unsupported-domain",
-			Message: fmt.Sprintf("parameter %q has no `/`-separated value list — decompose it into disjoint categorical buckets, not a numeric/continuous range", unsupported),
+			Message: fmt.Sprintf("parameter %q has neither a quoted singleton nor a ` / `-separated finite value list — decompose it into explicit categorical buckets, not a numeric/continuous range", unsupported),
 		}}, nil
 	}
 	if len(domains) != paramCols {
@@ -86,12 +86,12 @@ func checkTable(tb specparser.Table) ([]Issue, error) {
 				rowSets[r][c] = domains[c].Values
 				continue
 			}
+			values, _, parseErr := specparser.ParseValueList(cell)
+			if parseErr != nil {
+				return nil, fmt.Errorf("column %q row value: %w", domains[c].Name, parseErr)
+			}
 			var set []string
-			for _, tok := range strings.Split(cell, "/") {
-				tok = strings.TrimSpace(strings.ReplaceAll(tok, "`", ""))
-				if tok == "" {
-					continue
-				}
+			for _, tok := range values {
 				if !contains(domains[c].Values, tok) {
 					issues = append(issues, Issue{
 						Section: tb.Section,
