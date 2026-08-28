@@ -7,6 +7,7 @@ import (
 	"math"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -192,7 +193,7 @@ func validateBridges(bridges bridgeDeclarations, rows []rowDefinition) []semanti
 		for label := range labels[operationID] {
 			labelOrder = append(labelOrder, label)
 		}
-		sortStrings(labelOrder)
+		sort.Strings(labelOrder)
 		for _, label := range labelOrder {
 			if bridges.observers[operationID][label] == "" {
 				diagnostics = append(diagnostics, diagnostic(semanticir.DiagnosticMissingBridge, fmt.Sprintf("outcome label %q of operation %q has no Observe declaration; add `Observe: %s.%q = command <executable deciding the label on real output>.`", label, operationID, operationID, label), provenance))
@@ -206,13 +207,13 @@ func validateBridges(bridges bridgeDeclarations, rows []rowDefinition) []semanti
 	for operationID := range bridges.observers {
 		observedOps = append(observedOps, operationID)
 	}
-	sortStrings(observedOps)
+	sort.Strings(observedOps)
 	for _, operationID := range observedOps {
 		var observed []string
 		for label := range bridges.observers[operationID] {
 			observed = append(observed, label)
 		}
-		sortStrings(observed)
+		sort.Strings(observed)
 		for _, label := range observed {
 			if _, exists := operations[operationID]; !exists {
 				diagnostics = append(diagnostics, diagnostic(semanticir.DiagnosticMissingBridge, fmt.Sprintf("Observe declaration names operation %q, which no row uses", operationID), semanticir.Provenance{}))
@@ -224,14 +225,6 @@ func validateBridges(bridges bridgeDeclarations, rows []rowDefinition) []semanti
 		}
 	}
 	return diagnostics
-}
-
-func sortStrings(values []string) {
-	for i := 1; i < len(values); i++ {
-		for j := i; j > 0 && values[j] < values[j-1]; j-- {
-			values[j], values[j-1] = values[j-1], values[j]
-		}
-	}
 }
 
 func parseUniverseDeclaration(line string, provenance semanticir.Provenance) (universeDeclaration, error) {
