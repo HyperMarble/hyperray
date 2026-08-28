@@ -32,6 +32,7 @@ func newRootCmd() *cobra.Command {
 	root.AddCommand(newBridgesGenCmd())
 	root.AddCommand(newHygieneCmd())
 	root.AddCommand(newRepoLintCmd())
+	root.AddCommand(newProseLintCmd())
 	root.AddCommand(newStartCmd())
 	root.AddCommand(newStrictSpecLintCmd())
 	return root
