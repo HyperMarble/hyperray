@@ -142,7 +142,7 @@ func TestSpecSkillSchema(t *testing.T) {
 		speccompiler.HeaderInvariants:        true,
 		speccompiler.HeaderInputWitnesses:    true,
 		speccompiler.HeaderEnforcedBy:        true,
-		speccompiler.HeaderEvidence: true,
+		speccompiler.HeaderEvidence:          true,
 		speccompiler.HeaderConstraintReason:  true,
 	}
 	for _, table := range tables {

@@ -110,7 +110,7 @@ func materializeBehaviorVector(ctx context.Context, task *semanticir.Task, recor
 	want := semanticir.ExpectedSemantics{
 		Conditions: cloneAssignment(witness.Conditions), OperationID: witness.OperationID,
 		OutcomeIDs: append([]string(nil), witness.ObservedOutcomes...),
-		Choices: append([]semanticir.BehaviorChoice(nil), witness.Choices...), TestPasses: witness.TestPasses,
+		Choices:    append([]semanticir.BehaviorChoice(nil), witness.Choices...), TestPasses: witness.TestPasses,
 	}
 	plans := make([]semanticir.EditPlan, 0, len(owners))
 	for _, owner := range owners {
