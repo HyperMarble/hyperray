@@ -171,3 +171,18 @@ func TestRepoLint_ClangFormatViolationIsAFinding(t *testing.T) {
 		t.Fatalf("expected %q, got %q (%s)", repolint.StatusFindings, result.Status, result.Output)
 	}
 }
+
+func TestBundle_PatchFilesAndMissing(t *testing.T) {
+	patch := "diff --git a/test.sh b/test.sh\nnew file mode 100755\n@@ -0,0 +1 @@\n+echo hi\ndiff --git a/pkg/tests/test_x.py b/pkg/tests/test_x.py\n@@ -1 +1 @@\n-a\n+b\n"
+	files := repolint.PatchFiles(patch)
+	if len(files) != 2 || files[0] != "test.sh" || files[1] != "pkg/tests/test_x.py" {
+		t.Fatalf("unexpected files: %v", files)
+	}
+	if missing := repolint.MissingBundleFiles(patch, []string{"test.sh"}); len(missing) != 0 {
+		t.Fatalf("test.sh is delivered, got missing=%v", missing)
+	}
+	missing := repolint.MissingBundleFiles(patch, []string{"test.sh", "run.sh"})
+	if len(missing) != 1 || missing[0] != "run.sh" {
+		t.Fatalf("expected run.sh missing, got %v", missing)
+	}
+}
