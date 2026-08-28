@@ -92,6 +92,13 @@ func newOneshotCmd() *cobra.Command {
 				return fmt.Errorf("oneshot: spec-lint failed")
 			}
 
+			// Rung 1.25: the statement itself. Non-ASCII bytes bounce at the
+			// platform, and a promise-bearing line with no spec row anchored
+			// to it is behavior nothing downstream will check.
+			if err := run("prose-lint", "prose-lint", taskDir); err != nil {
+				return fmt.Errorf("oneshot: prose lint failed")
+			}
+
 			// Rung 1.5: the host repository's own lint gate. Review bounces a
 			// solution that violates the repo's configured linter even when
 			// every test passes, so the gate runs here with the repo's own
