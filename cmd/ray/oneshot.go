@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
+	"github.com/HyperMarble/ray/internal/repolint"
 	toml "github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +27,13 @@ type oneshotConfig struct {
 		// docker container instead of on the host: the task's frozen box.
 		// source_root then names the path inside the container.
 		Container string `toml:"container"`
+		// RequiredTestFiles are files the test patch must deliver -- the
+		// canonical runner above all. A regenerated patch that drops one
+		// fails here instead of inside the platform's container.
+		RequiredTestFiles []string `toml:"required_test_files"`
+		// FastKill makes the rows rung stop each breaker's suite at the
+		// first failing test: same verdicts, far fewer test executions.
+		FastKill bool `toml:"fast_kill"`
 	} `toml:"oneshot"`
 }
 
@@ -90,6 +99,20 @@ func newOneshotCmd() *cobra.Command {
 			}
 			if err := run("spec-lint", lintArgs...); err != nil {
 				return fmt.Errorf("oneshot: spec-lint failed")
+			}
+
+			// Rung 1.1: bundle completeness. The container's canonical
+			// runner ships inside the test patch; a patch that lost it
+			// fails every verify remotely and nothing locally.
+			if len(c.RequiredTestFiles) > 0 {
+				patchBytes, err := os.ReadFile(filepath.Join(taskDir, "test.patch"))
+				if err != nil {
+					return fmt.Errorf("oneshot: required_test_files declared but test.patch unreadable: %w", err)
+				}
+				if missing := repolint.MissingBundleFiles(string(patchBytes), c.RequiredTestFiles); len(missing) > 0 {
+					return fmt.Errorf("oneshot: test.patch does not deliver required file(s): %s", strings.Join(missing, ", "))
+				}
+				fmt.Fprintf(out, "bundle: test.patch delivers all %d required file(s)\n", len(c.RequiredTestFiles))
 			}
 
 			// Rung 1.25: the statement itself. Non-ASCII bytes bounce at the
@@ -168,6 +191,9 @@ func newOneshotCmd() *cobra.Command {
 				"--test-command", c.TestCommand,
 				"--probe-runner", c.Python + " {probe}",
 				"--python", c.Python}
+			if c.FastKill {
+				rowsArgs = append(rowsArgs, "--fast-kill")
+			}
 			for _, file := range c.SolutionFiles {
 				rowsArgs = append(rowsArgs, "--solution-file", file)
 			}
