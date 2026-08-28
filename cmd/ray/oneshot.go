@@ -92,6 +92,24 @@ func newOneshotCmd() *cobra.Command {
 				return fmt.Errorf("oneshot: spec-lint failed")
 			}
 
+			// Rung 1.5: the host repository's own lint gate. Review bounces a
+			// solution that violates the repo's configured linter even when
+			// every test passes, so the gate runs here with the repo's own
+			// tool and config. Container mode is warned about, not failed:
+			// the lint config lives in the source tree, which container
+			// tasks expose only inside the box.
+			if c.Container != "" {
+				fmt.Fprintln(out, "repo-lint: not run in container mode -- run it on a host checkout")
+			} else if c.SourceRoot != "" && len(c.SolutionFiles) > 0 {
+				repoLintArgs := []string{"repo-lint", "--source-root", c.SourceRoot}
+				for _, file := range c.SolutionFiles {
+					repoLintArgs = append(repoLintArgs, "--solution-file", file)
+				}
+				if err := run("repo-lint", repoLintArgs...); err != nil {
+					return fmt.Errorf("oneshot: repo lint gate failed")
+				}
+			}
+
 			// Rung 2: every test must fail without the solution. Needs a git
 			// tree so the solution can be stashed and restored; without one
 			// the rung is blocked, never silently skipped.
