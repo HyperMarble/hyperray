@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -210,7 +211,7 @@ func newRowsCmd() *cobra.Command {
 			for name := range baseline {
 				probeNames = append(probeNames, name)
 			}
-			sortStringsCmd(probeNames)
+			sort.Strings(probeNames)
 			for _, name := range probeNames {
 				if healthyProbe(baseline, name) {
 					snapshot = append(snapshot, name+": "+strings.TrimSpace(baseline[name]))
@@ -554,14 +555,6 @@ func baselineShows(outputs map[string]string, exceptionType, message string) boo
 		}
 	}
 	return false
-}
-
-func sortStringsCmd(values []string) {
-	for i := 1; i < len(values); i++ {
-		for j := i; j > 0 && values[j] < values[j-1]; j-- {
-			values[j], values[j-1] = values[j-1], values[j]
-		}
-	}
 }
 
 func dedupe(values []string) []string {
