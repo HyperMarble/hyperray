@@ -1,6 +1,8 @@
-// Tests for the repo-lint gate: the host repository's own configured linter
-// decides, ray only detects the config and runs the tool. The four-way
-// result is covered: no config, tool missing, findings, clean.
+// Tests for the repo-lint gate: the host repository's own configured
+// linters decide, ray only detects the config and runs the tools. Covered
+// per language: no config, tool missing, findings, clean, and the rule that
+// a configured linter stays quiet when the solution never touches its
+// language.
 package tests
 
 import (
@@ -32,48 +34,62 @@ const initWithDocstring = `class Composed:
         self.parts = parts
 `
 
-func writeRepoLintFixture(t *testing.T, pyproject, source string) string {
+func writeRepoLintFile(t *testing.T, dir, name, content string) {
 	t.Helper()
-	dir := t.TempDir()
-	if pyproject != "" {
-		if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), []byte(pyproject), 0o644); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := os.WriteFile(filepath.Join(dir, "solution.py"), []byte(source), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	return dir
 }
 
-func requireRuff(t *testing.T) {
+func requireTool(t *testing.T, binary string) {
 	t.Helper()
-	if _, err := exec.LookPath("ruff"); err != nil {
-		t.Skip("ruff is not installed on this machine")
+	if _, err := exec.LookPath(binary); err != nil {
+		t.Skipf("%s is not installed on this machine", binary)
 	}
+}
+
+func onlyResult(t *testing.T, results []repolint.Result) repolint.Result {
+	t.Helper()
+	if len(results) != 1 {
+		t.Fatalf("expected exactly one gate result, got %d: %+v", len(results), results)
+	}
+	return results[0]
 }
 
 func TestRepoLint_NoConfigMeansNoGate(t *testing.T) {
-	dir := writeRepoLintFixture(t, "", initWithoutDocstring)
-	result := repolint.Check(dir, []string{"solution.py"})
-	if result.Status != repolint.StatusNoConfig {
-		t.Fatalf("expected %q, got %q (%s)", repolint.StatusNoConfig, result.Status, result.Output)
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, "solution.py", initWithoutDocstring)
+	if results := repolint.Check(dir, []string{"solution.py"}); len(results) != 0 {
+		t.Fatalf("expected no gates, got %+v", results)
+	}
+}
+
+func TestRepoLint_ConfiguredButUntouchedLanguageStaysQuiet(t *testing.T) {
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, "pyproject.toml", ruffDocstringConfig)
+	writeRepoLintFile(t, dir, "solution.rs", "fn main() {}\n")
+	if results := repolint.Check(dir, []string{"solution.rs"}); len(results) != 0 {
+		t.Fatalf("expected the Python gate to stay quiet for a Rust solution, got %+v", results)
 	}
 }
 
 func TestRepoLint_ConfiguredButToolMissingIsBlocked(t *testing.T) {
-	dir := writeRepoLintFixture(t, ruffDocstringConfig, initWithoutDocstring)
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, "pyproject.toml", ruffDocstringConfig)
+	writeRepoLintFile(t, dir, "solution.py", initWithoutDocstring)
 	t.Setenv("PATH", dir)
-	result := repolint.Check(dir, []string{"solution.py"})
+	result := onlyResult(t, repolint.Check(dir, []string{"solution.py"}))
 	if result.Status != repolint.StatusBlocked {
 		t.Fatalf("expected %q, got %q (%s)", repolint.StatusBlocked, result.Status, result.Output)
 	}
 }
 
 func TestRepoLint_MissingInitDocstringIsAFinding(t *testing.T) {
-	requireRuff(t)
-	dir := writeRepoLintFixture(t, ruffDocstringConfig, initWithoutDocstring)
-	result := repolint.Check(dir, []string{"solution.py"})
+	requireTool(t, "ruff")
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, "pyproject.toml", ruffDocstringConfig)
+	writeRepoLintFile(t, dir, "solution.py", initWithoutDocstring)
+	result := onlyResult(t, repolint.Check(dir, []string{"solution.py"}))
 	if result.Status != repolint.StatusFindings {
 		t.Fatalf("expected %q, got %q (%s)", repolint.StatusFindings, result.Status, result.Output)
 	}
@@ -83,10 +99,75 @@ func TestRepoLint_MissingInitDocstringIsAFinding(t *testing.T) {
 }
 
 func TestRepoLint_DocumentedInitIsClean(t *testing.T) {
-	requireRuff(t)
-	dir := writeRepoLintFixture(t, ruffDocstringConfig, initWithDocstring)
-	result := repolint.Check(dir, []string{"solution.py"})
+	requireTool(t, "ruff")
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, "pyproject.toml", ruffDocstringConfig)
+	writeRepoLintFile(t, dir, "solution.py", initWithDocstring)
+	result := onlyResult(t, repolint.Check(dir, []string{"solution.py"}))
 	if result.Status != repolint.StatusClean {
 		t.Fatalf("expected %q, got %q (%s)", repolint.StatusClean, result.Status, result.Output)
+	}
+}
+
+func writeClippyCrate(t *testing.T, mainBody string) string {
+	t.Helper()
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, "Cargo.toml", `[package]
+name = "gatecheck"
+version = "0.1.0"
+edition = "2021"
+
+[lints.clippy]
+needless_return = "deny"
+`)
+	if err := os.Mkdir(filepath.Join(dir, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeRepoLintFile(t, dir, filepath.Join("src", "main.rs"), mainBody)
+	return dir
+}
+
+func TestRepoLint_ClippyDeniedLintIsAFinding(t *testing.T) {
+	requireTool(t, "cargo")
+	dir := writeClippyCrate(t, "fn answer() -> i32 {\n    return 42;\n}\n\nfn main() {\n    println!(\"{}\", answer());\n}\n")
+	result := onlyResult(t, repolint.Check(dir, []string{"src/main.rs"}))
+	if result.Status != repolint.StatusFindings {
+		t.Fatalf("expected %q, got %q (%s)", repolint.StatusFindings, result.Status, result.Output)
+	}
+	if !strings.Contains(result.Output, "needless_return") {
+		t.Fatalf("expected the denied lint name in the report, got: %s", result.Output)
+	}
+}
+
+func TestRepoLint_ClippyCleanCratePasses(t *testing.T) {
+	requireTool(t, "cargo")
+	dir := writeClippyCrate(t, "fn main() {\n    println!(\"ok\");\n}\n")
+	result := onlyResult(t, repolint.Check(dir, []string{"src/main.rs"}))
+	if result.Status != repolint.StatusClean {
+		t.Fatalf("expected %q, got %q (%s)", repolint.StatusClean, result.Status, result.Output)
+	}
+}
+
+func TestRepoLint_ClangTidyWithoutCompileCommandsIsBlocked(t *testing.T) {
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, ".clang-tidy", "Checks: 'readability-*'\n")
+	writeRepoLintFile(t, dir, "solution.cpp", "int main() { return 0; }\n")
+	result := onlyResult(t, repolint.Check(dir, []string{"solution.cpp"}))
+	if result.Status != repolint.StatusBlocked {
+		t.Fatalf("expected %q, got %q (%s)", repolint.StatusBlocked, result.Status, result.Output)
+	}
+	if !strings.Contains(result.Output, "compile_commands.json") {
+		t.Fatalf("expected the blocking reason to name compile_commands.json, got: %s", result.Output)
+	}
+}
+
+func TestRepoLint_ClangFormatViolationIsAFinding(t *testing.T) {
+	requireTool(t, "clang-format")
+	dir := t.TempDir()
+	writeRepoLintFile(t, dir, ".clang-format", "BasedOnStyle: LLVM\n")
+	writeRepoLintFile(t, dir, "solution.cpp", "int   main( ){return 0 ;}\n")
+	result := onlyResult(t, repolint.Check(dir, []string{"solution.cpp"}))
+	if result.Status != repolint.StatusFindings {
+		t.Fatalf("expected %q, got %q (%s)", repolint.StatusFindings, result.Status, result.Output)
 	}
 }
