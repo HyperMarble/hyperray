@@ -4,7 +4,6 @@
 package coverage
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -47,11 +46,22 @@ func Generate(tables []specparser.Table, pictPath string, strength int) ([]Table
 			continue
 		}
 		domains, unsupported, err := specparser.ParseParams(tb.Params)
-		if err != nil || unsupported != "" || len(domains) != len(tb.Columns)-1 {
+		if err != nil || unsupported != "" || len(domains) != tb.ParamColumns() {
 			continue
 		}
 
-		combos, err := runPict(pictPath, domains, strength)
+		// EXHAUSTIVE, not sampled. PICT's default is pairwise: every pair
+		// of values appears somewhere, but a specific three-way case can
+		// be omitted entirely. Measured: three binary parameters have 8
+		// combinations and PICT's default returns 4. ray was reporting
+		// that sample as "every combination", so a clean coverage result
+		// was weaker than it read.
+		//
+		// The task is fixed and bounded, so the whole Cartesian product is
+		// the right answer and needs no external tool. PICT stays available
+		// through runPict for a future strength-limited mode, but a
+		// sampled result must never be reported as complete.
+		combos, err := cartesian(domains)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", tb.Section, err)
 		}
@@ -62,6 +72,50 @@ func Generate(tables []specparser.Table, pictPath string, strength int) ([]Table
 		})
 	}
 	return results, nil
+}
+
+// maxCombinations bounds the expansion. A fixed task cannot legitimately
+// need more; past this, the spec's parameters are too coarse and the
+// caller is told rather than handed a sample.
+const maxCombinations = 20000
+
+// cartesian returns every complete combination of the declared values.
+func cartesian(domains []specparser.Domain) ([]Combination, error) {
+	total := 1
+	for _, d := range domains {
+		if len(d.Values) == 0 {
+			return nil, fmt.Errorf("parameter %q declares no values", d.Name)
+		}
+		total *= len(d.Values)
+		if total > maxCombinations {
+			return nil, fmt.Errorf(
+				"more than %d combinations — decompose the parameters; a sampled subset "+
+					"must not be reported as complete coverage", maxCombinations)
+		}
+	}
+
+	combos := make([]Combination, 0, total)
+	idx := make([]int, len(domains))
+	for {
+		c := make(Combination, len(domains))
+		for i, d := range domains {
+			c[d.Name] = d.Values[idx[i]]
+		}
+		combos = append(combos, c)
+
+		pos := len(domains) - 1
+		for pos >= 0 {
+			idx[pos]++
+			if idx[pos] < len(domains[pos].Values) {
+				break
+			}
+			idx[pos] = 0
+			pos--
+		}
+		if pos < 0 {
+			return combos, nil
+		}
+	}
 }
 
 func runPict(pictPath string, domains []specparser.Domain, strength int) ([]Combination, error) {
@@ -80,7 +134,7 @@ func runPict(pictPath string, domains []specparser.Domain, strength int) ([]Comb
 		return nil, err
 	}
 
-	args := []string{f.Name(), "/d:" + pictSeparator, "/f:json"}
+	args := []string{f.Name(), "/d:" + pictSeparator}
 	if strength > 0 {
 		args = append(args, fmt.Sprintf("/o:%d", strength))
 	}
@@ -89,22 +143,41 @@ func runPict(pictPath string, domains []specparser.Domain, strength int) ([]Comb
 	if err != nil {
 		return nil, fmt.Errorf("pict: %w", err)
 	}
+	return parsePict(string(out))
+}
 
-	var raw [][]struct {
-		Key   string `json:"key"`
-		Value string `json:"value"`
-	}
-	if err := json.Unmarshal(out, &raw); err != nil {
-		return nil, fmt.Errorf("parsing pict output: %w", err)
-	}
-
-	combos := make([]Combination, len(raw))
-	for i, row := range raw {
-		c := make(Combination, len(row))
-		for _, kv := range row {
-			c[kv.Key] = kv.Value
+// parsePict reads PICT's real output: tab-separated columns, one header
+// row naming the parameters, one row per generated combination.
+//
+// An earlier version asked for "/f:json". That option does not exist --
+// pict 3.7.4 rejects it with "Unknown option" and exits 3, so the whole
+// coverage layer failed on every task and reported itself skipped. It
+// was never caught because a skipped layer looks like a missing binary,
+// not like a bug.
+func parsePict(out string) ([]Combination, error) {
+	lines := strings.Split(strings.ReplaceAll(out, "\r\n", "\n"), "\n")
+	var header []string
+	var combos []Combination
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
 		}
-		combos[i] = c
+		fields := strings.Split(line, "\t")
+		if header == nil {
+			header = fields
+			continue
+		}
+		if len(fields) != len(header) {
+			return nil, fmt.Errorf("pict row has %d fields, header has %d", len(fields), len(header))
+		}
+		c := make(Combination, len(fields))
+		for i, name := range header {
+			c[name] = fields[i]
+		}
+		combos = append(combos, c)
+	}
+	if header == nil {
+		return nil, fmt.Errorf("pict produced no output")
 	}
 	return combos, nil
 }
