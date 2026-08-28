@@ -31,6 +31,10 @@ var promiseWords = []string{
 	"same",
 	"every",
 	"regardless",
+	"mapping", "mappings",
+	"sequence", "sequences",
+	"iterable", "iterables",
+	"collection", "collections",
 }
 
 // PromiseLine is one statement line carrying promise words, with the count

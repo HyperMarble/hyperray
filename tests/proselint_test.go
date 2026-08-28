@@ -62,6 +62,14 @@ func TestProseLint_PromiseWordsSurvivePunctuationAndCase(t *testing.T) {
 	}
 }
 
+func TestProseLint_TypeFamilyWordsAreLoaded(t *testing.T) {
+	text := "fh_params accepts mappings and lists.\nInput may be any sequence type."
+	lines := proselint.PromiseLines(text, nil)
+	if len(lines) != 2 {
+		t.Fatalf("expected both type-family lines flagged, got %+v", lines)
+	}
+}
+
 func TestProseLint_CountWords(t *testing.T) {
 	if got := proselint.CountWords("one two  three\nfour"); got != 4 {
 		t.Fatalf("expected 4 words, got %d", got)
