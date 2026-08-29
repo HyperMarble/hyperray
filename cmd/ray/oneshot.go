@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/HyperMarble/ray/internal/repolint"
+	"github.com/HyperMarble/ray/internal/runner"
 	toml "github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
@@ -154,11 +155,19 @@ func newOneshotCmd() *cobra.Command {
 			if err := stash.Run(); err != nil {
 				return fmt.Errorf("oneshot: stash solution: %w", err)
 			}
+			frameworkRunner, runnerErr := runner.New(c.Language, c.Python, c.TestFile, c.TestCommand)
+			if runnerErr != nil {
+				return runnerErr
+			}
+			testList := frameworkRunner.ListCommand()
+			if frameworkRunner.Language() == "python" {
+				testList += " | sed 's/.*:://' | sort -u"
+			}
 			failToPassErr := run("fail-to-pass",
 				"enforce", taskDir, "--fail-to-pass",
 				"--base-root", c.SourceRoot,
-				"--test-list", fmt.Sprintf("%s -m pytest -q -o addopts= --collect-only %s | grep '::' | sed 's/.*:://' | sort -u", c.Python, c.TestFile),
-				"--one-test", fmt.Sprintf("%s -m pytest -q -o addopts= '%s::{test}'", c.Python, c.TestFile))
+				"--test-list", testList,
+				"--one-test", frameworkRunner.OneTestCommand("{test}"))
 			restore := exec.Command("git", "stash", "pop", "--quiet")
 			restore.Dir = c.SourceRoot
 			if err := restore.Run(); err != nil {
@@ -180,7 +189,8 @@ func newOneshotCmd() *cobra.Command {
 				"--source-root", c.SourceRoot,
 				"--test-command", c.TestCommand,
 				"--python", c.Python,
-				"--test-file", c.TestFile); err != nil {
+				"--test-file", c.TestFile,
+				"--language", c.Language); err != nil {
 				return fmt.Errorf("oneshot: test hygiene failed")
 			}
 
@@ -193,6 +203,9 @@ func newOneshotCmd() *cobra.Command {
 				"--python", c.Python}
 			if c.FastKill {
 				rowsArgs = append(rowsArgs, "--fast-kill")
+			}
+			if c.Language != "" {
+				rowsArgs = append(rowsArgs, "--language", c.Language)
 			}
 			for _, file := range c.SolutionFiles {
 				rowsArgs = append(rowsArgs, "--solution-file", file)
