@@ -196,10 +196,14 @@ func newOneshotCmd() *cobra.Command {
 
 			// Rung 4: per-row -- oracle-lite on the reference, then a derived
 			// breaker per rule, guards named, boundary listed.
+			probeRunner := c.Python + " {probe}"
+			if c.Language == "rust" || c.Language == "cpp" {
+				probeRunner = "sh {probe}"
+			}
 			rowsArgs := []string{"rows", taskDir,
 				"--source-root", c.SourceRoot,
 				"--test-command", c.TestCommand,
-				"--probe-runner", c.Python + " {probe}",
+				"--probe-runner", probeRunner,
 				"--python", c.Python}
 			if c.FastKill {
 				rowsArgs = append(rowsArgs, "--fast-kill")
