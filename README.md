@@ -30,14 +30,21 @@ The frozen design lives in [docs/specs/finalarchitecture.md](docs/specs/finalarc
 
 **Install the release binary** (macOS and Linux, arm64 and amd64):
 
+via Homebrew:
+
+```sh
+brew install hypermarble/tap/ray
+```
+
+via Curl:
+
 ```sh
 curl -fsSL https://raw.githubusercontent.com/HyperMarble/ray/main/install.sh | sh
 ```
 
-Or via Homebrew, or from source (Go 1.25+):
+or from source (Go 1.25+)
 
 ```sh
-brew install hypermarble/tap/ray
 go install github.com/HyperMarble/ray/cmd/ray@latest
 ```
 
