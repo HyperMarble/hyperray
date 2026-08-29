@@ -39,6 +39,10 @@ type oneshotConfig struct {
 		// verifier drives; the runner then lists and filters through it
 		// instead of ctest.
 		GtestBinary string `toml:"gtest_binary"`
+		// VerifierCommand is the task's frozen verifier, verbatim -- the
+		// whole thing, old tests and new. It backs the fourth obligation:
+		// the reference must be accepted by the complete verifier.
+		VerifierCommand string `toml:"verifier_command"`
 	} `toml:"oneshot"`
 }
 
@@ -213,6 +217,22 @@ func newOneshotCmd() *cobra.Command {
 			}
 			if err := run("rows", rowsArgs...); err != nil {
 				return fmt.Errorf("oneshot: per-row verification failed")
+			}
+
+			// Rung 5: reference accepted by the complete verifier, run
+			// verbatim with the solution in place. This is T(C) = true --
+			// the same obligation check/start prove -- in executable form.
+			if c.VerifierCommand == "" {
+				fmt.Fprintln(out, "reference-acceptance: no verifier_command declared -- the complete verifier was not run")
+			} else {
+				fmt.Fprintln(out, "== reference-acceptance")
+				acceptance := exec.Command("sh", "-c", c.VerifierCommand)
+				acceptance.Dir = c.SourceRoot
+				acceptance.Stdout = out
+				acceptance.Stderr = out
+				if err := acceptance.Run(); err != nil {
+					return fmt.Errorf("oneshot: the complete verifier rejects the reference: %w", err)
+				}
 			}
 
 			fmt.Fprintf(out, "\nONESHOT PASS: spec compiles, every test requires the solution, no constructed wrong solution was accepted, every derivable row is guarded\n")
