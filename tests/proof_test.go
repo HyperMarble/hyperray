@@ -2099,7 +2099,11 @@ func proofArtifact(id string, kind semanticir.ArtifactKind) semanticir.ArtifactR
 
 func proofWorkspaceRoot() string {
 	proofWorkspaceOnce.Do(func() {
-		root, err := os.MkdirTemp("/Volumes/Hak_SSD", "ray-proof-fixture-")
+		base := "/Volumes/Hak_SSD"
+		if _, statErr := os.Stat(base); statErr != nil {
+			base = os.TempDir()
+		}
+		root, err := os.MkdirTemp(base, "ray-proof-fixture-")
 		if err != nil {
 			panic(err)
 		}
