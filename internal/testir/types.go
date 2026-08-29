@@ -6,8 +6,8 @@ package testir
 import (
 	"context"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // TranslateFunc retranslates one derived candidate using the same pinned

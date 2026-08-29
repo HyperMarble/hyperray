@@ -5,7 +5,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // configureRustCommand applies the frozen execution contract to every Rust

@@ -26,7 +26,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 const (
@@ -1005,7 +1005,7 @@ func resolveVerdictPath(workspaceRoot, declared string) (string, error) {
 
 func writeExact(path string, body []byte, mode os.FileMode) error {
 	dir := filepath.Dir(path)
-	tmp, err := os.CreateTemp(dir, ".ray-executor-*")
+	tmp, err := os.CreateTemp(dir, ".hyperray-executor-*")
 	if err != nil {
 		return err
 	}

@@ -4,8 +4,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/specparser"
-	"github.com/HyperMarble/ray/internal/sufficiency"
+	"github.com/HyperMarble/hyperray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/sufficiency"
 )
 
 // Deriving a violation from the frozen spec and the real source, rather
@@ -20,7 +20,7 @@ import (
 // This is what makes obligation B run on an arbitrary task. Hand-authored
 // violations still win when present, because an author can express
 // violations this cannot derive (a wrong value rather than a missing
-// guard), but their absence no longer stops ray from reporting.
+// guard), but their absence no longer stops hyperray from reporting.
 
 // neutraliser is the text that replaces a removed terminating statement.
 //

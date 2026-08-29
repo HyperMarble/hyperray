@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // BaselineRetranslationEvidence is the complete, freshly produced frontend

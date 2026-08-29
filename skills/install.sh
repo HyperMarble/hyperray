@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install ray's skills for every agent harness on this machine.
+# Install hyperray's skills for every agent harness on this machine.
 #
 # SKILL.md is a cross-agent open standard: Claude Code, Codex, Cursor,
 # Gemini CLI and others load the same folder unchanged. Each harness reads

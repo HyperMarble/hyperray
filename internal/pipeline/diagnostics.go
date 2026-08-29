@@ -17,11 +17,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
-const diagnosticReportSchema = "ray.diagnostic-report/v1"
+const diagnosticReportSchema = "hyperray.diagnostic-report/v1"
 const maxDiagnosticOutput = 16 << 20
 
 // diagnosticsEvidence binds supporting diagnostic executions. These records
@@ -138,7 +138,7 @@ func runPICTDiagnostic(ctx context.Context, cfg pictDiagnosticConfig, manifest t
 	if err != nil {
 		return pictDiagnosticEvidence{}, err
 	}
-	file, err := os.CreateTemp("", "ray-pict-model-*.txt")
+	file, err := os.CreateTemp("", "hyperray-pict-model-*.txt")
 	if err != nil {
 		return pictDiagnosticEvidence{}, fmt.Errorf("create PICT model: %w", err)
 	}
@@ -414,7 +414,7 @@ func copyDiagnosticWorkspace(source string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	parent, err := os.MkdirTemp(filepath.Dir(source), ".ray-diagnostic-*")
+	parent, err := os.MkdirTemp(filepath.Dir(source), ".hyperray-diagnostic-*")
 	if err != nil {
 		return "", "", err
 	}

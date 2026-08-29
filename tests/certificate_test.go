@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/certificate"
+	"github.com/HyperMarble/hyperray/internal/certificate"
 )
 
 func TestCertificateRejectsIncompleteEvidence(t *testing.T) {
@@ -15,7 +15,7 @@ func TestCertificateRejectsIncompleteEvidence(t *testing.T) {
 }
 
 func TestCertificateRejectsUnknownAndNonCanonicalJSON(t *testing.T) {
-	unknown := []byte(`{"schema":"ray.verification-certificate/v3","unknown":true}`)
+	unknown := []byte(`{"schema":"hyperray.verification-certificate/v3","unknown":true}`)
 	if _, err := certificate.VerifyBytes(unknown); err == nil || !strings.Contains(err.Error(), "unknown field") {
 		t.Fatalf("unknown certificate field was not rejected: %v", err)
 	}

@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/speclint"
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/speclint"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 func check(t *testing.T, content string) []speclint.Issue {

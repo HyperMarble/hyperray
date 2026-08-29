@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // assertionCall is a lexical macro/function invocation. Its argument ranges

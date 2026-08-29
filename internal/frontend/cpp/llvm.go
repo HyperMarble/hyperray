@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // validateLLVMOperation makes the compiler IR, rather than AST syntax, a

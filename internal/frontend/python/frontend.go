@@ -1,4 +1,4 @@
-// Package python translates a fail-closed, finite subset of Python into Ray's
+// Package python translates a fail-closed, finite subset of Python into Hyperray's
 // shared Semantic IR. Parsing is delegated to Python's standard ast module;
 // this package never infers Python structure from source text.
 package python
@@ -25,8 +25,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 const (
@@ -547,7 +547,7 @@ func materializedCandidateRequest(request semanticir.FrontendRequest, candidate 
 	if err != nil {
 		return semanticir.FrontendRequest{}, func() {}, err
 	}
-	temporaryRoot, err := os.MkdirTemp("", "ray-python-candidate-")
+	temporaryRoot, err := os.MkdirTemp("", "hyperray-python-candidate-")
 	if err != nil {
 		return semanticir.FrontendRequest{}, func() {}, err
 	}
@@ -773,8 +773,8 @@ func GenerateProbe(ctx context.Context, materialization semanticir.Materializati
 	if len(shortID) > 16 {
 		shortID = shortID[:16]
 	}
-	harnessPath := ".ray/probes/python-" + shortID + ".py"
-	observationPath := ".ray/probes/python-" + shortID + ".observation.json"
+	harnessPath := ".hyperray/probes/python-" + shortID + ".py"
+	observationPath := ".hyperray/probes/python-" + shortID + ".observation.json"
 	packageRoot, err := normalizedPackageRoot(request)
 	if err != nil {
 		return block(semanticir.DiagnosticInvalidInput, err.Error())
@@ -3819,7 +3819,7 @@ func runConcrete(ctx context.Context, frontend semanticir.FrontendRequest, reque
 		single.Cases = []concreteCase{item}
 		single.Reverse = false
 		caseDigest, _ := semanticir.Digest(item.ID)
-		signalName := ".ray-python-signal-" + order + "-" + strings.TrimPrefix(caseDigest, "sha256:")[:16] + ".json"
+		signalName := ".hyperray-python-signal-" + order + "-" + strings.TrimPrefix(caseDigest, "sha256:")[:16] + ".json"
 		single.SignalPath = filepath.ToSlash(filepath.Join(frontend.Workspace.WorkingDirectory, signalName))
 		partial, err := runConcreteProcess(ctx, frontend, single)
 		if err != nil {

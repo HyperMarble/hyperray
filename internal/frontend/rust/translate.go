@@ -1,4 +1,4 @@
-// Package rust implements Ray's strict, finite Rust frontend.
+// Package rust implements Hyperray's strict, finite Rust frontend.
 //
 // It deliberately supports a closed Rust subset. Any source-owned construct
 // outside that subset produces error diagnostics and blocked coverage; no
@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 const Version = "rust-strict-v1"
@@ -557,9 +557,9 @@ func (l *lowerer) lowerPattern(subject semanticir.Expression, pattern string, bi
 		return semanticir.Expression{}, armBindings, true, true
 	}
 	if variant, binding, ok := splitVariantPattern(pattern); ok {
-		condition := semanticir.Expression{Kind: semanticir.ExprCall, Type: semanticir.TypeBool, Name: "ray::is_variant::" + variant, Operands: []semanticir.Expression{subject}, Provenance: l.prov(span)}
+		condition := semanticir.Expression{Kind: semanticir.ExprCall, Type: semanticir.TypeBool, Name: "hyperray::is_variant::" + variant, Operands: []semanticir.Expression{subject}, Provenance: l.prov(span)}
 		if binding != "_" {
-			armBindings[binding] = semanticir.Expression{Kind: semanticir.ExprCall, Type: semanticir.TypeUnknown, Name: "ray::variant_payload::" + variant, Operands: []semanticir.Expression{subject}, Provenance: l.prov(span)}
+			armBindings[binding] = semanticir.Expression{Kind: semanticir.ExprCall, Type: semanticir.TypeUnknown, Name: "hyperray::variant_payload::" + variant, Operands: []semanticir.Expression{subject}, Provenance: l.prov(span)}
 		}
 		return condition, armBindings, false, true
 	}

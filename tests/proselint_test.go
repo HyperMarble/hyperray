@@ -6,7 +6,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/proselint"
+	"github.com/HyperMarble/hyperray/internal/proselint"
 )
 
 func TestProseLint_FindsFirstNonASCIIByte(t *testing.T) {

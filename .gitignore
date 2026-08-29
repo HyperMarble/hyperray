@@ -31,9 +31,9 @@ go.work.sum
 # .vscode/
 
 # Build artifact from `go build ./...` at repo root
-/ray
+/hyperray
 
-# ray check/spec-lint run output, written per task directory
+# hyperray check/spec-lint run output, written per task directory
 logs/
 
 # Python bytecode cache from third_party/touchstone-patch's driver scripts

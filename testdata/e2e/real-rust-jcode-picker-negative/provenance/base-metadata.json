@@ -1,5 +1,5 @@
 {
-  "schema": "ray.task-source/v1",
+  "schema": "hyperray.task-source/v1",
   "repository_path": "/Volumes/Hak_SSD/jcode",
   "base_commit": "95087d57b3d5b5dd02c64a12c44e149d4426abad",
   "base_tree": "6e0af3a8feeb1faead74ec1ae5fcba5ce4e0c3b8",

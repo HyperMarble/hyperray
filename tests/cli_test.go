@@ -16,11 +16,11 @@ func TestCLIStartAndCheckShareFailClosedPipeline(t *testing.T) {
 		command := exec.Command(binary, subcommand, root)
 		output, err := command.CombinedOutput()
 		if err == nil {
-			t.Fatalf("ray %s succeeded without a frozen task", subcommand)
+			t.Fatalf("hyperray %s succeeded without a frozen task", subcommand)
 		}
 		text := string(output)
 		if !strings.Contains(text, "freeze: blocked") || !strings.Contains(text, "PROOF BLOCKED") {
-			t.Fatalf("ray %s did not expose the fail-closed verdict:\n%s", subcommand, text)
+			t.Fatalf("hyperray %s did not expose the fail-closed verdict:\n%s", subcommand, text)
 		}
 		outputs = append(outputs, text)
 	}
@@ -66,11 +66,11 @@ func buildRayCLI(t *testing.T) string {
 		t.Fatal("cannot resolve repository root")
 	}
 	repository := filepath.Dir(filepath.Dir(source))
-	binary := filepath.Join(t.TempDir(), "ray")
-	command := exec.Command("go", "build", "-o", binary, "./cmd/ray")
+	binary := filepath.Join(t.TempDir(), "hyperray")
+	command := exec.Command("go", "build", "-o", binary, "./cmd/hyperray")
 	command.Dir = repository
 	if output, err := command.CombinedOutput(); err != nil {
-		t.Fatalf("build ray CLI: %v\n%s", err, output)
+		t.Fatalf("build hyperray CLI: %v\n%s", err, output)
 	}
 	return binary
 }

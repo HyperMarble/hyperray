@@ -1,13 +1,13 @@
-# Ray v0.10 Final Architecture
+# Hyperray v0.10 Final Architecture
 
 Status: **FROZEN — 2026-08-27**
 
-This is Ray v0.10. It replaces the rejected broader draft. Its scope is only
+This is Hyperray v0.10. It replaces the rejected broader draft. Its scope is only
 to determine whether one fixed coding task or PR is actually correct.
 
-## 1. Result Ray must establish
+## 1. Result Hyperray must establish
 
-For one exact task/PR, Ray must prove:
+For one exact task/PR, Hyperray must prove:
 
 1. The exact reference solution implements the required logic for every case
    inside the task's complete bounded scope.
@@ -18,7 +18,7 @@ For one exact task/PR, Ray must prove:
 4. The exact reference solution passes the verifier over the complete bounded
    scope.
 
-Ray verifies the task before coding agents are evaluated. Agent success,
+Hyperray verifies the task before coding agents are evaluated. Agent success,
 failure, sampling, or mutation score is not the proof.
 
 ## 2. Fixed inputs
@@ -40,8 +40,8 @@ as the reference solution, and its test changes as the verifier.
 
 ## 3. spec.md
 
-`spec.md` is Ray's machine-readable input for the task's bounded behavior. It
-is parsed by Ray; it is not a PRD or a file the coding agent must follow.
+`spec.md` is Hyperray's machine-readable input for the task's bounded behavior. It
+is parsed by Hyperray; it is not a PRD or a file the coding agent must follow.
 
 The task author writes it using the spec skill after reading the instruction,
 base code, issue/PR, reference diff, and relevant environment behavior. The
@@ -64,7 +64,7 @@ rows are fixed.
 - relevant returns, exceptions, values, data types, shapes, labels, state
   changes, calls, and side effects.
 
-Ray's strict parser expands compact rows into the complete full N-way set.
+Hyperray's strict parser expands compact rows into the complete full N-way set.
 `spec-lint` proves the tables are complete, disjoint, and use only declared
 values.
 
@@ -85,7 +85,7 @@ The formal layer covers every element of `D` and every relevant outcome in
 `O`. It may enumerate them or represent them exactly with SAT/SMT/BDD. It may
 not sample them.
 
-Because accepted Ray tasks have a closed finite model, these checks are
+Because accepted Hyperray tasks have a closed finite model, these checks are
 decidable. General undecidability for unrestricted programs is outside the
 accepted task format.
 
@@ -93,13 +93,13 @@ accepted task format.
 
 A declared bound being finite does not make it correct. A domain can be finite
 and still exclude a reachable case, and the resulting `VERIFIED` then covers a
-smaller problem than the real one — the same defect Ray exists to remove,
+smaller problem than the real one — the same defect Hyperray exists to remove,
 relocated one level up.
 
 Bounded model checkers do not trust a caller-supplied bound either. They
 assert it: an unwinding assertion at each loop fails when the bound was too
 small, and a computed completeness threshold is the `k` beyond which no new
-counterexample can exist. Ray requires the equivalent for every declared
+counterexample can exist. Hyperray requires the equivalent for every declared
 domain — each category reachable, and no reachable behavior outside the
 declared categories. An unproved bound yields `PROOF BLOCKED`.
 
@@ -125,7 +125,7 @@ the backend rejects is not evidence.
 
 ### 5.1 Reference solution correctness
 
-Ray proves:
+Hyperray proves:
 
 ```text
 For every x in D:
@@ -144,7 +144,7 @@ Required result: `UNSAT`.
 
 A false positive is an incorrect candidate solution that passes the tests.
 
-Ray proves:
+Hyperray proves:
 
 ```text
 For every complete implementation behavior F:
@@ -166,7 +166,7 @@ while failing at least one required case.
 
 A false negative is a correct solution behavior rejected by the tests.
 
-Ray proves:
+Hyperray proves:
 
 ```text
 For every complete implementation behavior F:
@@ -188,7 +188,7 @@ restrictions.
 ### 5.4 Exact reference acceptance
 
 Section 5.1 proves that the exact reference produces a permitted result for
-every case in `D`. Separately, Ray proves that the complete frozen verifier
+every case in `D`. Separately, Hyperray proves that the complete frozen verifier
 accepts that exact reference:
 
 ```text
@@ -215,13 +215,13 @@ prompt/spec requirement not enforced by tests → false-positive witness
 test restriction not permitted by prompt/spec → false-negative witness
 ```
 
-If hidden tests enforce something the prompt never states, Ray reports the
+If hidden tests enforce something the prompt never states, Hyperray reports the
 second direction. The author must either remove/fix that hidden test or state
 the intended requirement and regenerate the frozen spec.
 
 ## 7. Exact semantic inputs to the proof
 
-Ray independently builds:
+Hyperray independently builds:
 
 1. Spec semantics from parsed `spec.md` tables.
 2. Reference-solution semantics from the real solution and language verifier.
@@ -243,7 +243,7 @@ decouples the frontend, which encodes one language's semantics, from the
 backend, which automates proof search. Backends are reused across languages,
 so adding a language means writing a translator, not a solver.
 
-Two backends already cover Ray's targets:
+Two backends already cover Hyperray's targets:
 
 | language | frontend | backend |
 |---|---|---|
@@ -255,21 +255,21 @@ Two backends already cover Ray's targets:
 | Java | JBMC | CBMC |
 
 Viper is therefore the existing realization of a shared semantic layer for
-Python, Go, and Rust; Ray does not need to invent one for those languages. A
+Python, Go, and Rust; Hyperray does not need to invent one for those languages. A
 language that lowers to LLVM IR (Zig, and C/C++/Rust already) is reachable
 through the LLVM-based backends without a bespoke frontend.
 
 These tools verify *annotated* programs: the caller supplies preconditions,
 postconditions, and loop invariants, and the tool proves them. That is
-compatible with Ray by construction, because compiled `spec.md` is precisely
-where those annotations come from. It also fixes the boundary: Ray supplies
+compatible with Hyperray by construction, because compiled `spec.md` is precisely
+where those annotations come from. It also fixes the boundary: Hyperray supplies
 the specification, the frontend supplies the program semantics, and the
-backend supplies the proof. Ray does not re-derive any of the three.
+backend supplies the proof. Hyperray does not re-derive any of the three.
 
 Selecting a frontend does not weaken section 4. A frontend that cannot
 translate reachable task behavior yields `PROOF BLOCKED`, never `VERIFIED`.
 
-## 8. Existing Ray layers
+## 8. Existing Hyperray layers
 
 The existing layers remain and feed the final proof:
 
@@ -299,7 +299,7 @@ candidate-forged result. They do not replace the three mathematical proofs.
 
 ## 10. Counterexamples and repair
 
-Ray returns exact witnesses:
+Hyperray returns exact witnesses:
 
 - reference bug — a bounded case where the reference result is wrong;
 - false positive — an incorrect complete behavior that still passes tests;
@@ -311,7 +311,7 @@ the solution, prompt/spec, or tests and reruns the complete pipeline.
 
 ## 11. Verdicts
 
-Ray returns:
+Hyperray returns:
 
 - `VERIFIED` — all mandatory proofs are complete and have no counterexample;
 - `NOT VERIFIED` — at least one proof has a confirmed counterexample; or
@@ -323,7 +323,7 @@ coverage, or a passing reference test run can never produce `VERIFIED`.
 
 ## 12. v0.10 completion
 
-Ray v0.10 is complete when `ray start` and `ray check` run this same pipeline
+Hyperray v0.10 is complete when `hyperray start` and `hyperray check` run this same pipeline
 end to end for real Python, Rust, and C++ tasks/PRs and demonstrate:
 
 1. a correct reference and correct tests are `VERIFIED`;

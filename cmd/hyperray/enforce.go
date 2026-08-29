@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HyperMarble/ray/internal/coverage"
-	"github.com/HyperMarble/ray/internal/enforce"
-	"github.com/HyperMarble/ray/internal/mutate"
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/coverage"
+	"github.com/HyperMarble/hyperray/internal/enforce"
+	"github.com/HyperMarble/hyperray/internal/mutate"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 // newEnforceCmd asks the grader-soundness question for every expanded spec
@@ -44,7 +44,7 @@ func newEnforceCmd() *cobra.Command {
 				return err
 			}
 			// Discovery mode is the fully automatic path the architecture
-			// asks for: the human authors spec.md, and ray derives the wrong
+			// asks for: the human authors spec.md, and hyperray derives the wrong
 			// solutions itself -- mechanical mutants of the reference --
 			// proves each one deviates using the spec's bridge scripts as
 			// probes, and asks the task's own verifier about it. A deviant
@@ -93,7 +93,7 @@ func newEnforceCmd() *cobra.Command {
 				}
 			}
 			// --fix renders the test each proven false positive implies and
-			// appends it under a marker naming ray. A rendered test is
+			// appends it under a marker naming hyperray. A rendered test is
 			// derivation from the frozen spec row -- exactly as right as the
 			// row, no more -- so every generated test is printed for the
 			// author to review, and the loop reruns to confirm the holes
@@ -105,7 +105,7 @@ func newEnforceCmd() *cobra.Command {
 					return fmt.Errorf("enforce: --fix needs a \"fix\" section (file, template) in obligations.json")
 				}
 				fixPath := filepath.Join(taskDir, spec.Fix.File)
-				body := "\n\n# --- ray-generated tests: derived from frozen spec rows, review before keeping ---\n"
+				body := "\n\n# --- hyperray-generated tests: derived from frozen spec rows, review before keeping ---\n"
 				for _, result := range falsePositives {
 					rendered := spec.Fix.Render(result.Obligation)
 					body += "\n" + rendered + "\n"
@@ -182,8 +182,8 @@ func runDiscovery(cmd *cobra.Command, taskDir, sourceRoot, testCommand, probeRun
 		return fmt.Errorf("enforce: no wit_* probe scripts in %s", probesDir)
 	}
 	// One interpreter answers every probe per observation round; each probe
-	// still runs in full. The driver ships with ray.
-	batchDriver := filepath.Join(rayRepoRoot(), "third_party", "mutate", "run_probes.py")
+	// still runs in full. The driver ships with hyperray.
+	batchDriver := filepath.Join(hyperrayRepoRoot(), "third_party", "mutate", "run_probes.py")
 	task := enforce.Task{
 		SourceRoot:        sourceRoot,
 		TestCwd:           sourceRoot,
@@ -220,9 +220,9 @@ func runDiscovery(cmd *cobra.Command, taskDir, sourceRoot, testCommand, probeRun
 	return nil
 }
 
-// rayRepoRoot resolves ray's own repository root from this binary's source
+// hyperrayRepoRoot resolves hyperray's own repository root from this binary's source
 // location, the same trick mutate uses to find its generator.
-func rayRepoRoot() string {
+func hyperrayRepoRoot() string {
 	_, thisFile, _, ok := runtime.Caller(0)
 	if !ok {
 		return "."

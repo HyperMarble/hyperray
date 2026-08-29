@@ -1,4 +1,4 @@
-// Package mutate implements ray's mutation pass: it asks whether the
+// Package mutate implements hyperray's mutation pass: it asks whether the
 // task's own test suite actually verifies each requirement, or whether
 // it would stay green while the behaviour changed.
 //
@@ -36,7 +36,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/difftest"
+	"github.com/HyperMarble/hyperray/internal/difftest"
 )
 
 // Mutant is one deliberate change to the solution.
@@ -64,7 +64,7 @@ const (
 	// Unchecked: the tests passed but no inputs were available to decide
 	// whether the mutant differs. Deliberately distinct from Equivalent:
 	// reporting "nothing to see" for a check that never ran is the
-	// false confidence ray exists to prevent.
+	// false confidence hyperray exists to prevent.
 	Unchecked Verdict = "unchecked"
 )
 
@@ -337,7 +337,7 @@ func DiffersFromOriginal(pythonPath, originalSrc, mutantSrc, fnName string,
 	// TypeError on both sides, they "agreed", and 13 mutants were
 	// reported equivalent when none had been exercised at all. That is a
 	// confident wrong answer standing in for an honest "unknown" -- the
-	// exact false confidence ray exists to prevent, reproduced inside ray.
+	// exact false confidence hyperray exists to prevent, reproduced inside hyperray.
 	//
 	// So: if nothing ever returned a value, the comparison was vacuous.
 	// Report that rather than silently calling it equivalence.

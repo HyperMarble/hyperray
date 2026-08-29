@@ -1,4 +1,4 @@
-// Package taskbundle freezes every input to a Ray verification run into a
+// Package taskbundle freezes every input to a Hyperray verification run into a
 // deterministic, SHA-256-bound manifest.
 //
 // A freeze is deliberately active: it executes the declared verifier command
@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-const SchemaVersion = "ray.taskbundle.freeze/v1"
+const SchemaVersion = "hyperray.taskbundle.freeze/v1"
 
 const maxCapturedCommandOutput = 16 << 20
 
@@ -65,7 +65,7 @@ type ArtifactSpec struct {
 	Path string `json:"path"`
 }
 
-// StandardArtifactSpecs is the patch-shaped task bundle described by Ray's
+// StandardArtifactSpecs is the patch-shaped task bundle described by Hyperray's
 // v0.1 design. A caller may extend or replace it, but every declaration is
 // mandatory once supplied to Freeze.
 func StandardArtifactSpecs() []ArtifactSpec {
@@ -112,7 +112,7 @@ type PassSignal struct {
 }
 
 // Command records the exact command and environment used in a workspace.
-// Text is evaluated by Shell with "-c", matching Ray's command-string
+// Text is evaluated by Shell with "-c", matching Hyperray's command-string
 // integration contract. WorkingDirectory is relative to the workspace root.
 type Command struct {
 	Text             string            `json:"text"`
@@ -1136,7 +1136,7 @@ func validatePassSignal(signal PassSignal) error {
 }
 
 func executeIsolated(parent context.Context, sourceRoot string, command Command, expectedEntries []WorkspaceEntry, expectedTreeDigest string) (CommandResult, error) {
-	tempParent, err := os.MkdirTemp("", "ray-freeze-workspace-*")
+	tempParent, err := os.MkdirTemp("", "hyperray-freeze-workspace-*")
 	if err != nil {
 		return CommandResult{}, fmt.Errorf("create isolated workspace: %w", err)
 	}

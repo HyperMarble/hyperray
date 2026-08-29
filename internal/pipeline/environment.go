@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 func lowerEnvironment(configArtifact semanticir.ArtifactRef, manifest taskbundle.Manifest) (*semanticir.EnvironmentModel, error) {

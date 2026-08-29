@@ -1,6 +1,6 @@
 package proof
 
-import "github.com/HyperMarble/ray/internal/semanticir"
+import "github.com/HyperMarble/hyperray/internal/semanticir"
 
 // validateSpecIR establishes the sole formal-property authority consumed by
 // proof. The proof engine evaluates the typed Task registries only after their

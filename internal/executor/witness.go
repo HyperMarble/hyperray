@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // WitnessKind names the three SAT witness classes from the frozen proof

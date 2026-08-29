@@ -1,6 +1,6 @@
-# CLAUDE.md - ray
+# CLAUDE.md - hyperray
 
-> Ray v0.10 scope is Python/Rust/C++ bounded task/PR verification only.
+> Hyperray v0.10 scope is Python/Rust/C++ bounded task/PR verification only.
 > The only architecture sources of truth are
 > `docs/specs/finalarchitecture.md` and `docs/specs/whole flow.md`, verified by
 > `docs/specs/architecture-freeze.sha256`. The dated v0.1 design documents are
@@ -8,10 +8,10 @@
 
 ## Project Overview
 
-ray verifies that an agent's (AI or human's) code logic is actually
+hyperray verifies that an agent's (AI or human's) code logic is actually
 correct, using formal methods layered with testing, not testing alone.
 It sits upstream of eval-environment frameworks like Harbor and
-Inspect: ray checks whether a task's spec, tests, and solution are
+Inspect: hyperray checks whether a task's spec, tests, and solution are
 internally sound before any agent or eval framework touches it.
 
 - **spec-lint**: checks `spec.md`'s condition tables for completeness
@@ -33,7 +33,7 @@ internally sound before any agent or eval framework touches it.
 go build ./...
 
 # Check a task's spec.md
-go run ./cmd/ray spec-lint examples/fhplex-task/spec.md
+go run ./cmd/hyperray spec-lint examples/fhplex-task/spec.md
 
 # Run the test suite
 go test ./...
@@ -42,10 +42,10 @@ go test ./...
 ## Repository Structure
 
 ```
-ray/
-├── cmd/ray/               # CLI entrypoint (cobra)
+hyperray/
+├── cmd/hyperray/               # CLI entrypoint (cobra)
 │   ├── main.go            # root command, subcommand registration
-│   └── speclint.go        # `ray spec-lint` subcommand
+│   └── speclint.go        # `hyperray spec-lint` subcommand
 ├── internal/
 │   └── specparser/        # spec.md condition-table parser
 │       └── specparser.go  # Parse() -> []Table
@@ -66,13 +66,13 @@ ray/
 
 ### Task bundle
 
-A ray task is a directory shaped like this:
+A hyperray task is a directory shaped like this:
 
 ```
 task/
   instruction.md   # prose, for a human or an agent to read as the ticket
-  spec.md          # condition tables — the only file ray's layers read
-  ray.toml         # verifier timeouts, target language
+  spec.md          # condition tables — the only file hyperray's layers read
+  hyperray.toml         # verifier timeouts, target language
   environment/     # Dockerfile
   tests/
   solution/
@@ -98,8 +98,8 @@ type Result struct {
 ## Development Setup
 
 ```bash
-git clone https://github.com/HyperMarble/ray.git
-cd ray
+git clone https://github.com/HyperMarble/hyperray.git
+cd hyperray
 
 go mod tidy
 go build ./...
@@ -133,11 +133,11 @@ go vet ./...
 
 ### Cobra subcommands
 
-Each layer gets its own file under `cmd/ray/`, registered once in
+Each layer gets its own file under `cmd/hyperray/`, registered once in
 `main.go`:
 
 ```go
-// cmd/ray/speclint.go
+// cmd/hyperray/speclint.go
 func newSpecLintCmd() *cobra.Command {
     return &cobra.Command{
         Use:   "spec-lint <spec.md>",
@@ -149,7 +149,7 @@ func newSpecLintCmd() *cobra.Command {
     }
 }
 
-// cmd/ray/main.go
+// cmd/hyperray/main.go
 root.AddCommand(newSpecLintCmd())
 ```
 
@@ -169,28 +169,28 @@ the loop, resolving each ambiguity into the table as it's found.
 
 ### Adding a new layer (coverage, oracle, diff-test, dep-harvest)
 
-1. Add `cmd/ray/<layer>.go` with a cobra subcommand
-2. Wire it into `root.AddCommand` in `cmd/ray/main.go`
+1. Add `cmd/hyperray/<layer>.go` with a cobra subcommand
+2. Wire it into `root.AddCommand` in `cmd/hyperray/main.go`
 3. Put parsing/logic in its own `internal/<layer>/` package, not in
-   `cmd/ray` directly
+   `cmd/hyperray` directly
 4. Return the shared `Result{Pass, Explanation, Metadata}` shape
 
 ## File Naming Conventions
 
 - Go files: standard lowercase, no underscores (`speclint.go`)
 - Test files: `tests/<package>_test.go`
-- Config: `ray.toml`
+- Config: `hyperray.toml`
 - Markdown: `instruction.md`, `spec.md`, `SKILL.md`
 
 ## Important Notes
 
 - Go 1.25+ required
-- `spec.md` is the production artifact ray's tools consume at
+- `spec.md` is the production artifact hyperray's tools consume at
   runtime — never write process/decision narrative into it; that
   belongs in `skills/spec/SKILL.md`
 - v0.1.0 scope: Python, Rust, C++ solution targets only; Go deferred —
   no oracle-layer tool exists yet
-- `ray check` retains spec-lint, coverage/PICT, oracle, diff-test, and
+- `hyperray check` retains spec-lint, coverage/PICT, oracle, diff-test, and
   dep-harvest, then performs the mandatory exact reference,
   false-positive, false-negative, and reference-acceptance checks from the
   frozen architecture. Diagnostic passes cannot manufacture `VERIFIED`.

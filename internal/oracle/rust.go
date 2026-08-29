@@ -29,7 +29,7 @@ func ProveRust(verusPath, src string) (Verdict, error) {
 		return Verdict{}, fmt.Errorf("verus binary not found (%q): %w", verusPath, err)
 	}
 
-	f, err := os.CreateTemp("", "ray-verus-model-*.rs")
+	f, err := os.CreateTemp("", "hyperray-verus-model-*.rs")
 	if err != nil {
 		return Verdict{}, err
 	}

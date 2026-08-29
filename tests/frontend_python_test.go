@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	frontendpython "github.com/HyperMarble/ray/internal/frontend/python"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	frontendpython "github.com/HyperMarble/hyperray/internal/frontend/python"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func frontendPythonTool(t *testing.T) semanticir.ToolRef {

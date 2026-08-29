@@ -1,5 +1,5 @@
 // Package semanticir defines the finite, language-neutral model shared by
-// Ray's specification compiler, language frontends, and proof engine.
+// Hyperray's specification compiler, language frontends, and proof engine.
 //
 // The proof-critical IR is intentionally a small closed behavioral
 // projection: finite labels, compiler-grounded partitions, outcomes/effects,
@@ -7,7 +7,7 @@
 // audit detail only; source-language proof comes from CompilerEvidence.
 package semanticir
 
-// Language is a source language supported by Ray's v0.1 contract.
+// Language is a source language supported by Hyperray's v0.1 contract.
 type Language string
 
 const (
@@ -817,7 +817,7 @@ type SpecAcceptanceEvidence struct {
 	Evidence                []Provenance                  `json:"evidence"`
 }
 
-const PhaseAEnvironmentSchemaV1 = "ray.phase-a-environment/v1"
+const PhaseAEnvironmentSchemaV1 = "hyperray.phase-a-environment/v1"
 
 // PhaseAEnvironmentModel is the canonical test-blind environment subset used
 // during spec authoring. It deliberately contains no test command or wiring.
@@ -1478,7 +1478,7 @@ type RawEffectTrace struct {
 
 // RawOutcomeTrace contains only runtime facts emitted by an independently
 // translated reference execution. Operation identity, semantic outcome ID,
-// and provenance come only from frozen Ray inputs.
+// and provenance come only from frozen Hyperray inputs.
 type RawOutcomeTrace struct {
 	Kind          OutcomeKind      `json:"kind"`
 	Value         *Literal         `json:"value,omitempty"`

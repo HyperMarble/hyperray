@@ -1,4 +1,4 @@
-module github.com/HyperMarble/ray
+module github.com/HyperMarble/hyperray
 
 go 1.25.0
 

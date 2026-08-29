@@ -1,15 +1,15 @@
 ---
 name: task
-description: Author or audit one fixed bounded Python, Rust, or C++ task/PR for Ray's exact reference, false-positive, false-negative, and verifier-acceptance checks.
+description: Author or audit one fixed bounded Python, Rust, or C++ task/PR for Hyperray's exact reference, false-positive, false-negative, and verifier-acceptance checks.
 ---
 
 # Build a formally verifiable task
 
-Ray evaluates one frozen coding task or PR before coding agents are scored. A
-task is ready only when the same fail-closed pipeline used by `ray start` and
-`ray check` returns `VERIFIED` with complete frozen evidence.
+Hyperray evaluates one frozen coding task or PR before coding agents are scored. A
+task is ready only when the same fail-closed pipeline used by `hyperray start` and
+`hyperray check` returns `VERIFIED` with complete frozen evidence.
 
-Use the [spec skill](../spec/SKILL.md) to author `spec.md`. It is Ray's strict
+Use the [spec skill](../spec/SKILL.md) to author `spec.md`. It is Hyperray's strict
 machine-readable source of complete finite behavior and compiles into Spec
 Semantic IR. The candidate does not read it.
 
@@ -150,7 +150,7 @@ predicate. Hash or tool drift invalidates earlier evidence.
 
 ## 6. Run the exact pipeline
 
-The retained Ray layers have distinct roles:
+The retained Hyperray layers have distinct roles:
 
 ```text
 spec-lint -> coverage/PICT -> oracle -> diff-test -> dep-harvest
@@ -176,7 +176,7 @@ spec-lint -> coverage/PICT -> oracle -> diff-test -> dep-harvest
 
 Diagnostic success cannot produce `VERIFIED` or compensate for a missing
 translation. Do not replace the actual verifier with test logic synthesized
-from the requirements; doing so erases the questions Ray is meant to answer.
+from the requirements; doing so erases the questions Hyperray is meant to answer.
 
 ## Mandatory results
 
@@ -214,8 +214,8 @@ correctness for every case.
 Both commands use the same production path and exit nonzero unless verified:
 
 ```sh
-ray check <task-folder>
-ray start <task-folder>
+hyperray check <task-folder>
+hyperray start <task-folder>
 ```
 
 ## Final task review

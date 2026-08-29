@@ -25,9 +25,9 @@ type Outcome struct {
 	SourceText string `json:"source_text"`
 }
 
-// Language names extract_outcomes.py accepts -- ray's four target
+// Language names extract_outcomes.py accepts -- hyperray's four target
 // languages, each backed by that language's own real tree-sitter
-// grammar rather than by parsing rules of ray's own.
+// grammar rather than by parsing rules of hyperray's own.
 const (
 	LangPython = "python"
 	LangRust   = "rust"
@@ -39,7 +39,7 @@ const (
 // third_party/branch-extract/extract_outcomes.py against the real
 // source file and returns every return/raise it found. language must be
 // one of the Lang* constants; the script uses that language's real
-// tree-sitter grammar, so this works identically across all of ray's
+// tree-sitter grammar, so this works identically across all of hyperray's
 // targets rather than being Python-only.
 //
 // pythonPath is only the interpreter that runs the extractor script
@@ -84,7 +84,7 @@ func ExtractOutcomes(pythonPath, extractScriptPath, sourcePath, language string)
 // ScriptPath resolves extract_outcomes.py relative to this source file,
 // so callers work regardless of the current working directory. An
 // earlier version resolved it relative to the process's cwd, which meant
-// `ray start` silently skipped the sufficiency pass whenever it was run
+// `hyperray start` silently skipped the sufficiency pass whenever it was run
 // from anywhere but the repo root.
 func ScriptPath() (string, error) {
 	_, thisFile, _, ok := runtime.Caller(0)

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/enforce"
+	"github.com/HyperMarble/hyperray/internal/enforce"
 )
 
 // The cron fixture is a real task with a real, passing test suite. These

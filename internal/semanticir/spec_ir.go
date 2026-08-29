@@ -2,7 +2,7 @@ package semanticir
 
 import "fmt"
 
-const SpecIRSchemaV1 = "ray-spec-semantic-ir/v1"
+const SpecIRSchemaV1 = "hyperray-spec-semantic-ir/v1"
 
 // CanonicalSpecIRDigest binds the frozen spec source and its provenance
 // artifacts to the one canonical typed Spec model (D, O, constraints, R, and

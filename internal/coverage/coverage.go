@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 // Combination is one generated test case: parameter name -> value.
@@ -53,7 +53,7 @@ func Generate(tables []specparser.Table, pictPath string, strength int) ([]Table
 		// EXHAUSTIVE, not sampled. PICT's default is pairwise: every pair
 		// of values appears somewhere, but a specific three-way case can
 		// be omitted entirely. Measured: three binary parameters have 8
-		// combinations and PICT's default returns 4. ray was reporting
+		// combinations and PICT's default returns 4. hyperray was reporting
 		// that sample as "every combination", so a clean coverage result
 		// was weaker than it read.
 		//
@@ -121,7 +121,7 @@ func cartesian(domains []specparser.Domain) ([]Combination, error) {
 func runPict(pictPath string, domains []specparser.Domain, strength int) ([]Combination, error) {
 	model := buildModel(domains)
 
-	f, err := os.CreateTemp("", "ray-pict-model-*.txt")
+	f, err := os.CreateTemp("", "hyperray-pict-model-*.txt")
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,7 @@ import "strings"
 // 113 real tasks, identifier overlap between a prompt and its tests
 // flags 95% of them, offering `bool`, `json` and `data` as requirements.
 // Whether a test enforces a requirement is a question about meaning, so
-// the author states the answer and ray verifies it, rather than ray
+// the author states the answer and hyperray verifies it, rather than hyperray
 // guessing.
 const EnforcedByHeader = "Enforced by"
 

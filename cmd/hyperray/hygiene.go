@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HyperMarble/ray/internal/runner"
+	"github.com/HyperMarble/hyperray/internal/runner"
 )
 
 // newHygieneCmd checks the verifier is an instrument: the same tree must
 // yield the same verdict on every run and in every order. A test that flakes
-// or depends on its neighbours poisons every other verdict ray produces, so
+// or depends on its neighbours poisons every other verdict hyperray produces, so
 // this runs before any per-row work is trusted.
 func newHygieneCmd() *cobra.Command {
 	var sourceRoot, testCommand, pythonPath, testFile, language, gtestBinary string

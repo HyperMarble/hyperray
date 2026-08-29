@@ -14,17 +14,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HyperMarble/ray/internal/enforce"
-	"github.com/HyperMarble/ray/internal/mutate"
-	"github.com/HyperMarble/ray/internal/runner"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/speccompiler"
+	"github.com/HyperMarble/hyperray/internal/enforce"
+	"github.com/HyperMarble/hyperray/internal/mutate"
+	"github.com/HyperMarble/hyperray/internal/runner"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/speccompiler"
 )
 
 // newRowsCmd asks the per-row enforcement question mechanically for the rows
 // whose breaker is derivable from the row itself: a requirement of the form
 // `raise X containing "msg"` is violated by exactly one edit -- tamper the
-// message literal in the solution -- so ray generates that wrong solution
+// message literal in the solution -- so hyperray generates that wrong solution
 // from the spec row, runs the task's tests, and records which test fails.
 //
 //	a test fails   -> that test enforces the row; its name is reported for
@@ -183,7 +183,7 @@ func (run *rowsRun) enforceRaiseRows() error {
 		// The rule matches a substring, so the breaker must remove it;
 		// appending would leave substring-matching tests green.
 		breakers := []struct{ kind, broken string }{
-			{"wrong-message", strings.Replace(original, message, "ray broke this message", 1)},
+			{"wrong-message", strings.Replace(original, message, "hyperray broke this message", 1)},
 			{"wrong-type", enforce.SwapRaiseType(run.language, original, exceptionType, message)},
 			{"no-raise", enforce.SuppressRaise(run.language, original, exceptionType, message)},
 		}
@@ -505,7 +505,7 @@ func attributeMutants(cmd *cobra.Command, taskDir, sourceRoot, testCommand, prob
 	if len(probes) == 0 {
 		return verdicts, nil
 	}
-	batchDriver := filepath.Join(rayRepoRoot(), "third_party", "mutate", "run_probes.py")
+	batchDriver := filepath.Join(hyperrayRepoRoot(), "third_party", "mutate", "run_probes.py")
 	engineTask := enforce.Task{
 		SourceRoot:        sourceRoot,
 		TestCwd:           sourceRoot,

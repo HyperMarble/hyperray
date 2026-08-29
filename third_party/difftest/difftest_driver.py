@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ray Layer 4 (diff-test): runs the real solution and the proven oracle
+"""hyperray Layer 4 (diff-test): runs the real solution and the proven oracle
 model on the same concrete inputs and reports where they disagree.
 
 This is the layer that closes the gap between "we proved something" and

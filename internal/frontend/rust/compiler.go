@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // validateWithRustc makes rustc, rather than the source parser, authoritative
@@ -60,7 +60,7 @@ func validateWithRustc(ctx context.Context, request semanticir.FrontendRequest, 
 		return rustCompilerOutput{}, append(diagnostics, diagnostic(request.Artifact, whole, semanticir.DiagnosticStaleArtifact, "rustc reported version does not match the frozen translator version"))
 	}
 
-	tempDir, err := os.MkdirTemp("", "ray-rust-frontend-*")
+	tempDir, err := os.MkdirTemp("", "hyperray-rust-frontend-*")
 	if err != nil {
 		return rustCompilerOutput{}, append(diagnostics, diagnostic(request.Artifact, whole, semanticir.DiagnosticInvalidInput, "create rustc workspace: "+err.Error()))
 	}

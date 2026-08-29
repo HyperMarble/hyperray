@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/runner"
+	"github.com/HyperMarble/hyperray/internal/runner"
 )
 
 func mustRunner(t *testing.T, language string) runner.Runner {

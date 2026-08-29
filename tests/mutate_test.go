@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/mutate"
+	"github.com/HyperMarble/hyperray/internal/mutate"
 )
 
 // mutDemo builds a task whose tests deliberately under-cover it, matching
@@ -119,7 +119,7 @@ func TestMutate_FindsUntestedRequirement(t *testing.T) {
 			"find a gap that is definitely there (survivors by line: %v)", survivedOnLine)
 	}
 
-	// The original must be back on disk exactly as it started, or ray has
+	// The original must be back on disk exactly as it started, or hyperray has
 	// damaged the task it was asked to verify.
 	after, err := os.ReadFile(solution)
 	if err != nil {

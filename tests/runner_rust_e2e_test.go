@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/enforce"
-	"github.com/HyperMarble/ray/internal/runner"
+	"github.com/HyperMarble/hyperray/internal/enforce"
+	"github.com/HyperMarble/hyperray/internal/runner"
 )
 
 func TestRustEndToEnd_ListBreakAndParse(t *testing.T) {
@@ -33,7 +33,7 @@ func TestRustEndToEnd_ListBreakAndParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	broken := strings.Replace(string(original), "at least one component", "ray broke this message", 1)
+	broken := strings.Replace(string(original), "at least one component", "hyperray broke this message", 1)
 	if err := os.WriteFile(source, []byte(broken), 0o644); err != nil {
 		t.Fatal(err)
 	}

@@ -139,7 +139,7 @@ A bare span still means the instruction.
 Lint with both artifacts:
 
 ```sh
-ray spec-lint spec.md --instruction instruction.md --reference solution.patch --task-id <task-id>
+hyperray spec-lint spec.md --instruction instruction.md --reference solution.patch --task-id <task-id>
 ```
 
 The instruction carries the contract; the reference carries the mechanism.

@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/testir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/testir"
 )
 
 // compileTestSuite composes the one authoritative TestsPass predicate from

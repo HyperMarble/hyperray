@@ -17,7 +17,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 var z3ValuePattern = regexp.MustCompile(`\(b([0-9]+)\s+(-?[0-9]+)\)`)

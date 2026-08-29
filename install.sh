@@ -1,11 +1,11 @@
 #!/bin/sh
-# Install the latest ray release binary.
-#   curl -fsSL https://raw.githubusercontent.com/HyperMarble/ray/main/install.sh | sh
+# Install the latest hyperray release binary.
+#   curl -fsSL https://raw.githubusercontent.com/HyperMarble/hyperray/main/install.sh | sh
 # Shows progress step by step; falls back to plain lines when not on a terminal.
 set -eu
 
-REPO="HyperMarble/ray"
-VERSION="${RAY_VERSION:-v0.1.1}"
+REPO="HyperMarble/hyperray"
+VERSION="${HYPERRAY_VERSION:-v0.1.2}"
 
 # Only animate on a real terminal; piped output gets plain lines.
 if [ -t 1 ]; then
@@ -45,7 +45,7 @@ case "$arch" in
 esac
 case "$os" in
     darwin | linux) ;;
-    *) echo "unsupported OS: $os (build from source: go build ./cmd/ray)" >&2; exit 1 ;;
+    *) echo "unsupported OS: $os (build from source: go build ./cmd/hyperray)" >&2; exit 1 ;;
 esac
 
 install_dir="/usr/local/bin"
@@ -54,17 +54,17 @@ if [ ! -w "$install_dir" ]; then
     mkdir -p "$install_dir"
 fi
 
-url="https://github.com/$REPO/releases/download/$VERSION/ray_${VERSION}_${os}_${arch}.tar.gz"
+url="https://github.com/$REPO/releases/download/$VERSION/hyperray_${VERSION}_${os}_${arch}.tar.gz"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-printf "%b\n" "${BOLD}ray installer${RESET} ${DIM}$VERSION · $os/$arch${RESET}"
-step "downloading release"      curl -fsSL "$url" -o "$tmp/ray.tar.gz"
-step "unpacking"                tar -xzf "$tmp/ray.tar.gz" -C "$tmp"
-step "installing to $install_dir" install -m 0755 "$tmp/ray" "$install_dir/ray"
-step "verifying"                "$install_dir/ray" --help
+printf "%b\n" "${BOLD}hyperray installer${RESET} ${DIM}$VERSION · $os/$arch${RESET}"
+step "downloading release"      curl -fsSL "$url" -o "$tmp/hyperray.tar.gz"
+step "unpacking"                tar -xzf "$tmp/hyperray.tar.gz" -C "$tmp"
+step "installing to $install_dir" install -m 0755 "$tmp/hyperray" "$install_dir/hyperray"
+step "verifying"                "$install_dir/hyperray" --help
 
-printf "%b\n" "\n${GREEN}${CHECK}${RESET} ${BOLD}ray $VERSION is ready${RESET} — try: ${BOLD}ray init my-task${RESET}"
+printf "%b\n" "\n${GREEN}${CHECK}${RESET} ${BOLD}hyperray $VERSION is ready${RESET} — try: ${BOLD}hyperray init my-task${RESET}"
 case ":$PATH:" in
     *":$install_dir:"*) ;;
     *) printf "%b\n" "${DIM}note: add $install_dir to your PATH${RESET}" ;;

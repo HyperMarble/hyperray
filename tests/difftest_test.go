@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/difftest"
+	"github.com/HyperMarble/hyperray/internal/difftest"
 )
 
 const clampModel = `

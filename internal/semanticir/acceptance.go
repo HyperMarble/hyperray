@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const SpecAuthoringRecordSchemaV1 = "ray.spec-authoring-record/v1"
+const SpecAuthoringRecordSchemaV1 = "hyperray.spec-authoring-record/v1"
 
 // FrozenSpecSemanticsDigest hashes the Phase-A-owned semantics while omitting
 // Phase-B TestIDs and spec-file provenance/digests. It is therefore stable

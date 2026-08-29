@@ -1,10 +1,10 @@
 # Proof requirements
 
-Frozen. The complete list of requirements spec.md content needs before ray's
+Frozen. The complete list of requirements spec.md content needs before hyperray's
 finite checks eliminate false positives with full force. The schema's shape
 already holds every one of these; they are content rules and validations.
 
-Ray works on a bounded scope only, and only when it is finite. Every
+Hyperray works on a bounded scope only, and only when it is finite. Every
 requirement below preserves that: finite inputs D, finite outcomes O, so a
 solution's behaviour is one finite table F : D -> O, and there are finitely
 many tables. The proofs enumerate them. The bridges below are what make the
@@ -27,7 +27,7 @@ enumeration speak about real programs.
   nothing.
 - R5. The task ships a classifier: an executable that maps a real input to
   its row. Total and deterministic over the scope.
-- R6. `reachable` is earned: ray runs the witness through the classifier and
+- R6. `reachable` is earned: hyperray runs the witness through the classifier and
   confirms the row. A witness that does not land there blocks the task.
 - R7. The task declares its finite scope of real inputs. Every input any
   test uses classifies into a row; an input outside the scope blocks the

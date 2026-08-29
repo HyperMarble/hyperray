@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/mutate"
+	"github.com/HyperMarble/hyperray/internal/mutate"
 )
 
 // One mechanism, not a rule per case.
@@ -160,8 +160,8 @@ func observeBatch(task Task, probes []Probe) ([]string, bool) {
 	sections := map[string]string{}
 	current := ""
 	for _, line := range strings.Split(text, "\n") {
-		if strings.HasPrefix(line, "===RAY_PROBE ") && strings.HasSuffix(line, "===") {
-			current = strings.TrimSuffix(strings.TrimPrefix(line, "===RAY_PROBE "), "===")
+		if strings.HasPrefix(line, "===HYPERRAY_PROBE ") && strings.HasSuffix(line, "===") {
+			current = strings.TrimSuffix(strings.TrimPrefix(line, "===HYPERRAY_PROBE "), "===")
 			continue
 		}
 		if current != "" {

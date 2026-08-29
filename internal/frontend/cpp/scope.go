@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func (l *lowerer) validateChangedRanges() bool {

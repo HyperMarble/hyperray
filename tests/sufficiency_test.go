@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/specparser"
-	"github.com/HyperMarble/ray/internal/sufficiency"
+	"github.com/HyperMarble/hyperray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/sufficiency"
 )
 
 func testPython3(t *testing.T) string {
@@ -46,7 +46,7 @@ func onlyRaises(outcomes []sufficiency.Outcome) []sufficiency.Outcome {
 // TestSufficiency_ExtractOutcomes_Raises covers raise extraction, and
 // the fact that a bare `raise` re-raise is excluded by the query itself
 // (via the grammar requiring a child expression) rather than by any
-// Python-side filtering rule of ray's own.
+// Python-side filtering rule of hyperray's own.
 func TestSufficiency_ExtractOutcomes_Raises(t *testing.T) {
 	python := testPython3(t)
 	src := writeTempPy(t, `

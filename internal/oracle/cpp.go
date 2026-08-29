@@ -30,7 +30,7 @@ func ProveCPP(esbmcPath, src string, unwind int) (Verdict, error) {
 		unwind = 10
 	}
 
-	f, err := os.CreateTemp("", "ray-esbmc-model-*.c")
+	f, err := os.CreateTemp("", "hyperray-esbmc-model-*.c")
 	if err != nil {
 		return Verdict{}, err
 	}

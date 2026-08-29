@@ -1,13 +1,13 @@
 // Package proof proves the three finite implications and independently checks
-// reference acceptance required by Ray.
+// reference acceptance required by Hyperray.
 package proof
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // Verdict is the only public proof verdict vocabulary.

@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/oracle"
+	"github.com/HyperMarble/hyperray/internal/oracle"
 )
 
 // testEsbmcPath locates the esbmc binary: RAY_ESBMC_PATH env var, then

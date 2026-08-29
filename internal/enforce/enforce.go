@@ -3,7 +3,7 @@
 //
 // The question is not whether the solution is correct. It is whether a
 // solution that VIOLATES a frozen requirement can still pass the task's
-// tests. So for each obligation ray constructs a targeted violation,
+// tests. So for each obligation hyperray constructs a targeted violation,
 // confirms with a witness that the modified solution really does violate
 // it, and then runs the task's own verifier:
 //
@@ -89,14 +89,14 @@ type Task struct {
 	// an adversary is only a guess: nothing shows it actually deviates.
 	Probes []Probe `json:"probes"`
 	// ProbeShape declares the shape of an input, as a Hypothesis strategy.
-	// ray generates the concrete probes from it, so which inputs get tried
+	// hyperray generates the concrete probes from it, so which inputs get tried
 	// is not a person's guess.
 	ProbeShape string `json:"probe_shape"`
 	// ProbeCommand runs the program on one generated input, substituted at
 	// {input}. The task keeps ownership of how an input reaches it.
 	ProbeCommand string `json:"probe_command"`
 	ProbeCount   int    `json:"probe_count"`
-	// CoverageTests and CoverageSource let ray record which tests execute
+	// CoverageTests and CoverageSource let hyperray record which tests execute
 	// which line during the baseline run it has to do anyway. Absent them,
 	// every adversary costs a full verifier run.
 	// TestsDir is where the task's tests live, filled in by discovery so a
@@ -106,7 +106,7 @@ type Task struct {
 	CoverageSource string `json:"coverage_source"`
 	// ProbeBatchCommand, when set, observes every probe in one process:
 	// {probes} is replaced with the space-joined script paths and the
-	// command's output carries ===RAY_PROBE <basename>=== sections. Every
+	// command's output carries ===HYPERRAY_PROBE <basename>=== sections. Every
 	// probe still runs completely; only the per-probe process start and
 	// import cost is removed.
 	ProbeBatchCommand string `json:"probe_batch_command"`
@@ -419,7 +419,7 @@ func lastLine(s string) string {
 // exactly that symptom on the cron fixture.
 //
 // For source that is not local, the same job is the task's AfterWrite
-// hook, since ray cannot reach into a container from here.
+// hook, since hyperray cannot reach into a container from here.
 func purgeBytecode(root string) {
 	if root == "" {
 		return

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func (l *lowerer) lowerAssertions(fn functionDecl, initial map[string]semanticir.Expression) ([]semanticir.Assertion, string, semanticir.Assignment, semanticir.TestPredicate) {

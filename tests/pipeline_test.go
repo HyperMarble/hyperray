@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/pipeline"
+	"github.com/HyperMarble/hyperray/internal/pipeline"
 )
 
 func TestPipelineRejectsMissingFrozenTask(t *testing.T) {
@@ -30,7 +30,7 @@ func TestPipelineRejectsNilContext(t *testing.T) {
 func TestPipelineIgnoresMutationForProof(t *testing.T) {
 	// The sole production request surface accepts frozen paths only. It has no
 	// hook for a mutation score, sampled result, or caller-supplied verdict.
-	request := pipeline.Request{Root: t.TempDir(), ConfigPath: "ray.toml", CertificatePath: "certificate.json"}
+	request := pipeline.Request{Root: t.TempDir(), ConfigPath: "hyperray.toml", CertificatePath: "certificate.json"}
 	result := pipeline.Run(context.Background(), request)
 	if result.Verdict != pipeline.ProofBlocked || result.Successful() {
 		t.Fatalf("caller-controlled advisory state reached success: %+v", result)

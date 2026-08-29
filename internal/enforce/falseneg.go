@@ -1,7 +1,7 @@
 package enforce
 
 import (
-	"github.com/HyperMarble/ray/internal/mutate"
+	"github.com/HyperMarble/hyperray/internal/mutate"
 )
 
 // FalseNegatives asks the mirror of Discover's question. Discover hunts wrong

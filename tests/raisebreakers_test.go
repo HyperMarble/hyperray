@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/enforce"
+	"github.com/HyperMarble/hyperray/internal/enforce"
 )
 
 const pythonRaiseSource = `def check(parts):

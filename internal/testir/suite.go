@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // SuiteBinding supplies the frozen non-vector evidence that is intentionally

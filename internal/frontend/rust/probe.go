@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // GenerateProbe creates an isolated direct-execution witness for a reference
@@ -56,9 +56,9 @@ func GenerateProbe(ctx context.Context, request semanticir.MaterializationReques
 	if err != nil {
 		return block(semanticir.DiagnosticInvalidInput, "encode Rust probe semantics: "+err.Error(), whole)
 	}
-	harnessPath := ".ray-rust-probe-" + safeRustProbeID(request.Counterexample.ID) + ".rs"
-	observationPath := ".ray-rust-probe-" + safeRustProbeID(request.Counterexample.ID) + ".json"
-	binaryPath := ".ray-rust-probe-" + safeRustProbeID(request.Counterexample.ID) + ".bin"
+	harnessPath := ".hyperray-rust-probe-" + safeRustProbeID(request.Counterexample.ID) + ".rs"
+	observationPath := ".hyperray-rust-probe-" + safeRustProbeID(request.Counterexample.ID) + ".json"
+	binaryPath := ".hyperray-rust-probe-" + safeRustProbeID(request.Counterexample.ID) + ".bin"
 	includePath, err := filepath.Rel(filepath.Dir(harnessPath), filepath.Clean(frontend.Artifact.Path))
 	if err != nil || filepath.IsAbs(includePath) || includePath == ".." || strings.HasPrefix(includePath, ".."+string(filepath.Separator)) {
 		return block(semanticir.DiagnosticInvalidReference, "Rust probe cannot include the focused artifact through a workspace-relative path", whole)
@@ -68,7 +68,7 @@ func GenerateProbe(ctx context.Context, request semanticir.MaterializationReques
 	if semanticir.HasErrors(expectedDiagnostics) {
 		return executor.ProbePlan{}, expectedDiagnostics
 	}
-	harness := []byte(fmt.Sprintf("include!(%s);\nfn main() {\n    std::panic::set_hook(Box::new(|_| {}));\n%s    std::fs::write(%s, &%s).expect(\"write exact Ray probe observation\");\n}\n", strconv.Quote(filepath.ToSlash(includePath)), checks, strconv.Quote(observationPath), rustByteSlice(expectedJSON)))
+	harness := []byte(fmt.Sprintf("include!(%s);\nfn main() {\n    std::panic::set_hook(Box::new(|_| {}));\n%s    std::fs::write(%s, &%s).expect(\"write exact Hyperray probe observation\");\n}\n", strconv.Quote(filepath.ToSlash(includePath)), checks, strconv.Quote(observationPath), rustByteSlice(expectedJSON)))
 	workspaceDigest, err := executor.WorkspaceDigest(frontend.Workspace.Root)
 	if err != nil || workspaceDigest != frontend.Workspace.TreeDigest {
 		message := "Rust probe workspace digest does not match the frozen request"

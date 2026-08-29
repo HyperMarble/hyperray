@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // Materialize renders one semantic counterexample as an exact replacement of
@@ -429,7 +429,7 @@ func materializedFrontendRequest(frontend semanticir.FrontendRequest, source []b
 	request := frontend
 	request.Source = append([]byte(nil), source...)
 	request.Artifact.Digest = semanticir.DigestBytes(source)
-	tempDir, err := os.MkdirTemp("", "ray-rust-materialized-*")
+	tempDir, err := os.MkdirTemp("", "hyperray-rust-materialized-*")
 	if err != nil {
 		item := diagnostic(frontend.Artifact, wholeSpan(frontend.Source), semanticir.DiagnosticInvalidInput, "create materialized Rust workspace: "+err.Error())
 		return semanticir.FrontendRequest{}, func() {}, &item

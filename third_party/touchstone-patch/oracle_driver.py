@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ray Layer 3 (oracle) driver: reads one proof request as JSON on stdin,
+"""hyperray Layer 3 (oracle) driver: reads one proof request as JSON on stdin,
 calls the patched touchstone-prover, writes one verdict as JSON on stdout.
 
 Request:  {"src": "<function source>", "ensures": "<postcondition>",
@@ -10,7 +10,7 @@ Response: {"status": "PROVED"|"REFUTED"|"UNKNOWN", "reason": "...",
            "counterexample": "..." or null}
 
 Kept deliberately thin: all real reasoning is touchstone's (patched) and
-ray's own -- this file only bridges JSON in/out so internal/oracle can
+hyperray's own -- this file only bridges JSON in/out so internal/oracle can
 shell out to it the same way internal/coverage shells out to pict.
 
 auto_annotate (on by default) runs auto_annotate.auto_annotate() on src
@@ -19,7 +19,7 @@ installed PEP 561 stubs and adds the `: bool`/`int`/`float` annotation
 automatically wherever it can. Where it can't -- an incomplete stub, no
 stub installed at all -- the source passes through unchanged, same as
 if auto_annotate were off; a model author's own manual annotation
-(what ray-typed.patch itself consumes) is the fallback for those cases,
+(what hyperray-typed.patch itself consumes) is the fallback for those cases,
 not something this driver invents or guesses at.
 """
 import json
@@ -47,7 +47,7 @@ def run(req):
 def self_check():
     """Sanity check run by build.sh right after applying the patch: confirms
     the venv is wired correctly (patched module importable, ordinary proving
-    still works, the ray-typed annotation narrowing still fires) before
+    still works, the hyperray-typed annotation narrowing still fires) before
     trusting the build."""
     assert core._TRAPFREE is False, "self-check must not depend on _TRAPFREE"
 
@@ -68,7 +68,7 @@ def self_check():
                "    return ok\n",
         "ensures": "result == True or result == False",
     })
-    assert typed["status"] == "PROVED", f"ray-typed patch not active: {typed}"
+    assert typed["status"] == "PROVED", f"hyperray-typed patch not active: {typed}"
 
     auto = run({
         "src": "def f(x):\n"
@@ -79,7 +79,7 @@ def self_check():
     })
     assert auto["status"] == "PROVED", f"auto_annotate pre-pass not resolving math.isnan: {auto}"
 
-    print("self-check passed: plain proving + ray-typed narrowing + auto_annotate all work", file=sys.stderr)
+    print("self-check passed: plain proving + hyperray-typed narrowing + auto_annotate all work", file=sys.stderr)
 
 
 if __name__ == "__main__":

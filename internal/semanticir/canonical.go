@@ -33,13 +33,13 @@ func Digest(value any) (string, error) {
 	return DigestBytes(encoded), nil
 }
 
-// DigestBytes returns Ray's normalized SHA-256 representation.
+// DigestBytes returns Hyperray's normalized SHA-256 representation.
 func DigestBytes(content []byte) string {
 	sum := sha256.Sum256(content)
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
-// ValidDigest reports whether digest has Ray's normalized SHA-256 syntax.
+// ValidDigest reports whether digest has Hyperray's normalized SHA-256 syntax.
 func ValidDigest(digest string) bool {
 	return digestPattern.MatchString(digest)
 }

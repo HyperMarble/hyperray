@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HyperMarble/ray/internal/repolint"
+	"github.com/HyperMarble/hyperray/internal/repolint"
 )
 
 func newRepoLintCmd() *cobra.Command {

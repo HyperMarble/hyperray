@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // EvaluateTestPredicate evaluates one global predicate against one complete

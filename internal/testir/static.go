@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // compileStaticTests constructs TestsPass from complete, independently

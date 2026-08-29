@@ -53,7 +53,7 @@ func ClassifyOutcome(operation Operation, raw ObservableOutcome) string {
 	return OtherOutcome(operation.ID, raw.Provenance).ID
 }
 
-// ObservableOutcomeFromTrace adds only frozen Ray-owned identity/provenance
+// ObservableOutcomeFromTrace adds only frozen Hyperray-owned identity/provenance
 // to raw runtime facts. Effect values become literal expressions so the
 // existing canonical outcome semantics remain the single comparison format.
 func ObservableOutcomeFromTrace(operationID string, trace RawOutcomeTrace, provenance Provenance) (ObservableOutcome, error) {

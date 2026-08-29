@@ -1,5 +1,5 @@
 // Tests for the repo-lint gate: the host repository's own configured
-// linters decide, ray only detects the config and runs the tools. Covered
+// linters decide, hyperray only detects the config and runs the tools. Covered
 // per language: no config, tool missing, findings, clean, and the rule that
 // a configured linter stays quiet when the solution never touches its
 // language.
@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/repolint"
+	"github.com/HyperMarble/hyperray/internal/repolint"
 )
 
 const ruffDocstringConfig = "[tool.ruff.lint]\nselect = [\"D107\"]\n"

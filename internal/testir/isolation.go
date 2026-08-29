@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/HyperMarble/ray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/executor"
 )
 
 // SemanticIsolationEvidence proves that materialization/retranslation ran in
@@ -36,7 +36,7 @@ func makeSemanticWorkspace(sourceRoot, expectedDigest string) (*semanticWorkspac
 	if current != expectedDigest {
 		return nil, fmt.Errorf("frozen workspace became stale: got %s, want %s", current, expectedDigest)
 	}
-	parent, err := os.MkdirTemp("", "ray-testir-semantic-*")
+	parent, err := os.MkdirTemp("", "hyperray-testir-semantic-*")
 	if err != nil {
 		return nil, err
 	}

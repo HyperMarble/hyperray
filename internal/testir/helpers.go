@@ -4,8 +4,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func executorWorkspaceRoot(environment executor.TaskEnvironment) string {

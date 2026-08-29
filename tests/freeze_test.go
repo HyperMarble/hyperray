@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 func freezeTestDigest(content string) string {
@@ -125,7 +125,7 @@ func freezeFixture(t *testing.T) (string, taskbundle.Request) {
 			Configuration: map[string]string{"LANG": "C.UTF-8", "TZ": "UTC"},
 			Tools: []taskbundle.ToolVersion{
 				{Name: "fixture-tool", Version: "fixture-tool-v1", Path: filepath.Join(root, "tools", "fixture-tool"), VersionArgs: []string{}},
-				{Name: "shell", Version: "ray-fixture-shell", Path: "/bin/sh", VersionArgs: []string{"-c", "printf ray-fixture-shell"}},
+				{Name: "shell", Version: "hyperray-fixture-shell", Path: "/bin/sh", VersionArgs: []string{"-c", "printf hyperray-fixture-shell"}},
 				{Name: "git", Version: "git version", Path: gitPath, VersionArgs: []string{"--version"}},
 			},
 		},

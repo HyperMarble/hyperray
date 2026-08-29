@@ -1,4 +1,4 @@
-// Package pipeline is Ray's fail-closed production verification path.
+// Package pipeline is Hyperray's fail-closed production verification path.
 //
 // A successful result is deliberately difficult to construct: Run executes
 // every stage against one frozen task and returns VERIFIED only after all
@@ -10,7 +10,7 @@ package pipeline
 import (
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // Verdict is the only externally visible result vocabulary. Keep these
@@ -63,7 +63,7 @@ type Stage struct {
 	Duration   time.Duration `json:"duration"`
 }
 
-// Translation documents the strict ray.toml lowering declaration. Proof
+// Translation documents the strict hyperray.toml lowering declaration. Proof
 // domains, constraints, operations, and outcomes always come from the compiled
 // frozen spec. The config deliberately contains no duplicate semantic truth.
 type Translation struct {

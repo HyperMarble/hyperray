@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Harvest a pinned dependency's own tested edge values.
 
-An SMT solver cannot reason through a complex dependency's internals, so ray
+An SMT solver cannot reason through a complex dependency's internals, so hyperray
 does not try: the dependency's own test suite is a curated list of inputs its
 authors proved they care about. Harvesting the literals from those tests
 yields solver-grade edge values without symbolically entering the code.

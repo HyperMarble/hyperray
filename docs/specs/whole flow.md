@@ -349,7 +349,7 @@ VERIFIED task/PR
 
 ## 18. v0.10 end-to-end acceptance
 
-Production `ray start` and `ray check` must execute this same flow on real
+Production `hyperray start` and `hyperray check` must execute this same flow on real
 Python, Rust, and C++ tasks/PRs.
 
 Required demonstrations:

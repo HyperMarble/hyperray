@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func TestReplayDerivationConfirmsBothExactStreamsTwice(t *testing.T) {
@@ -125,7 +125,7 @@ func TestReplayDerivationRejectsCrossTranscriptAliases(t *testing.T) {
 	t.Run("duplicate-output-path", func(t *testing.T) {
 		plan := derivationReplayFixture(t, "stable", "")
 		output := semanticir.ProbeOutput{
-			ID: "decoder-output", Path: ".ray/derivation/shared-output",
+			ID: "decoder-output", Path: ".hyperray/derivation/shared-output",
 			AfterDigest: plan.Graph.Tool.Digest, Executable: true,
 			Provenance: plan.Graph.Provenance,
 		}

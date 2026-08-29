@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/sufficiency"
+	"github.com/HyperMarble/hyperray/internal/sufficiency"
 )
 
 // TestSufficiency_ExtractOutcomes_UniformRaiseAndReturn is the

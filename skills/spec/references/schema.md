@@ -1,13 +1,13 @@
 # spec.md API schema
 
-The exact input contract `ray spec-lint` accepts. Anything outside it is
+The exact input contract `hyperray spec-lint` accepts. Anything outside it is
 rejected at ingestion; the compiler never guesses or repairs. Extracted
 from `internal/speccompiler` and `internal/specparser`, not from prose.
 
 Invocation:
 
 ```sh
-ray spec-lint spec.md --instruction instruction.md --task-id <id>
+hyperray spec-lint spec.md --instruction instruction.md --task-id <id>
 ```
 
 Success prints `spec: complete` with an IR digest and a frozen-semantics
@@ -200,7 +200,7 @@ reference:187-193; reference:226   two spans, separated by `;`
 
 Span forms are `line`, `line:column`, `start-end`, and
 `start:column-end:column`. A span must lie inside that artifact's real line
-and column count. `reference:` requires `ray spec-lint --reference <path>`;
+and column count. `reference:` requires `hyperray spec-lint --reference <path>`;
 without it the row is rejected.
 
 Two artifacts exist because they carry different things.

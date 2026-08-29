@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	proofengine "github.com/HyperMarble/ray/internal/proof"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	proofengine "github.com/HyperMarble/hyperray/internal/proof"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 const (

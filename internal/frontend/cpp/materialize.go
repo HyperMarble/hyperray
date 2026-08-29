@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 var cxxTypeName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_:]*$`)

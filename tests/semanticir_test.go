@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/testir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/testir"
 )
 
 func TestSemanticIRRepresentsProofContract(t *testing.T) {
@@ -22,7 +22,7 @@ func TestSemanticIRRepresentsProofContract(t *testing.T) {
 	code := frozenRef("code", semanticir.ArtifactCode, "choose.py", codeBytes)
 	testsArtifact := frozenRef("tests", semanticir.ArtifactTests, "test_choose.py", testBytes)
 	environmentArtifact := frozenRef("environment", semanticir.ArtifactEnvironment, "environment.json", environmentBytes)
-	configurationArtifact := frozenRef("configuration", semanticir.ArtifactConfiguration, "ray.toml", configurationBytes)
+	configurationArtifact := frozenRef("configuration", semanticir.ArtifactConfiguration, "hyperray.toml", configurationBytes)
 	prov := semanticir.NewProvenance(spec, semanticir.SourceLocation{Path: spec.Path, StartLine: 1, StartColumn: 1}, semanticir.TranslationTranslated)
 	instructionProv := semanticir.NewProvenance(instruction, semanticir.SourceLocation{Path: instruction.Path, StartLine: 1, StartColumn: 1, EndLine: 1}, semanticir.TranslationTranslated)
 	codeProv := semanticir.NewProvenance(code, semanticir.SourceLocation{Path: code.Path, StartLine: 1, StartColumn: 1}, semanticir.TranslationTranslated)
@@ -189,7 +189,7 @@ func TestSemanticIRRepresentsProofContract(t *testing.T) {
 		Schema: semanticir.SpecAuthoringRecordSchemaV1, AuthoringRecord: authoringRecord, DetachedLedger: ledger, PhaseASpec: phaseASpec, FinalSpec: spec,
 		Instruction: instruction, Environment: phaseEnvironmentArtifact, PhaseAEnvironment: phaseEnvironmentArtifact, PhaseAEnvironmentModel: phaseEnvironmentModel, TaskID: task.ID, PhaseASpecIRDigest: semanticir.DigestBytes([]byte("phase-a-ir")), FrozenSemanticsDigest: frozenSemantics, EnvironmentConfigDigest: task.Environment.ConfigDigest,
 		Manifest:   []semanticir.AcceptanceSourceBinding{{Role: "instruction", Path: instruction.Path, Digest: instruction.Digest, Relevant: "line 1"}, {Role: "environment", Path: phaseEnvironmentArtifact.Path, Digest: phaseEnvironmentArtifact.Digest, Relevant: "frozen authoring environment"}},
-		Operations: []semanticir.AcceptanceOperationBinding{{OperationID: operation.ID, EntryPoint: operation.ID, PhaseAEvidence: "instruction line 1", ObservableBoundary: "return and effects", InstructionClauseIDs: []string{clause.ID}, Evidence: []semanticir.Provenance{instructionProv}, Decision: semanticir.SpecAcceptanceAccepted}}, Domains: []semanticir.AcceptanceDomainBinding{{OperationID: operation.ID, DomainID: domain.ID, ValueIDs: []string{"zero", "one"}, Labels: []semanticir.AcceptanceLabelBinding{{ValueID: "zero", DefinitionEvidence: []semanticir.Provenance{instructionProv}, ExpectedCompilerPath: "mode zero path", ExpectedReachableWitness: "mode=zero"}, {ValueID: "one", DefinitionEvidence: []semanticir.Provenance{instructionProv}, ExpectedCompilerPath: "mode one path", ExpectedReachableWitness: "mode=one"}}}}, Reviews: []semanticir.AcceptanceReviewBinding{{ID: "review-all", RequirementIDs: []string{"zero", "one"}, InstructionClauseIDs: []string{clause.ID}, Decision: semanticir.SpecAcceptanceAccepted, Evidence: []semanticir.Provenance{instructionProv}}}, NoDisagreements: true, LintCommand: "ray spec-lint spec.pretest.md",
+		Operations: []semanticir.AcceptanceOperationBinding{{OperationID: operation.ID, EntryPoint: operation.ID, PhaseAEvidence: "instruction line 1", ObservableBoundary: "return and effects", InstructionClauseIDs: []string{clause.ID}, Evidence: []semanticir.Provenance{instructionProv}, Decision: semanticir.SpecAcceptanceAccepted}}, Domains: []semanticir.AcceptanceDomainBinding{{OperationID: operation.ID, DomainID: domain.ID, ValueIDs: []string{"zero", "one"}, Labels: []semanticir.AcceptanceLabelBinding{{ValueID: "zero", DefinitionEvidence: []semanticir.Provenance{instructionProv}, ExpectedCompilerPath: "mode zero path", ExpectedReachableWitness: "mode=zero"}, {ValueID: "one", DefinitionEvidence: []semanticir.Provenance{instructionProv}, ExpectedCompilerPath: "mode one path", ExpectedReachableWitness: "mode=one"}}}}, Reviews: []semanticir.AcceptanceReviewBinding{{ID: "review-all", RequirementIDs: []string{"zero", "one"}, InstructionClauseIDs: []string{clause.ID}, Decision: semanticir.SpecAcceptanceAccepted, Evidence: []semanticir.Provenance{instructionProv}}}, NoDisagreements: true, LintCommand: "hyperray spec-lint spec.pretest.md",
 		TestAccess: "not-accessed", Decision: semanticir.SpecAcceptanceAccepted, ExpandedTableReview: semanticir.SpecAcceptanceAccepted, ExpectedGroundingReview: semanticir.SpecAcceptanceAccepted,
 		AuthorIdentity: "author@example", IndependentReviewer: "reviewer@example", CompletedAtUTC: "2026-08-27T12:00:00Z", SnapshotPath: phaseASpec.Path, FinalPath: spec.Path, LedgerPath: ledger.Path, Complete: true,
 		Evidence: []semanticir.Provenance{

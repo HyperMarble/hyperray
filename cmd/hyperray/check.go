@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HyperMarble/ray/internal/pipeline"
+	"github.com/HyperMarble/hyperray/internal/pipeline"
 )
 
 // newCheckCmd is intentionally a thin adapter. All semantics, stage ordering,
 // evidence binding, and verdict derivation live in pipeline.Run, which is also
-// the only path used by `ray start`.
+// the only path used by `hyperray start`.
 func newCheckCmd() *cobra.Command {
 	return newPipelineCommand(
 		"check <task-folder>",
@@ -50,7 +50,7 @@ func newPipelineCommand(use, short string) *cobra.Command {
 			return nil
 		},
 	}
-	command.Flags().StringVar(&configPath, "config", "", "ray.toml path relative to the task folder")
+	command.Flags().StringVar(&configPath, "config", "", "hyperray.toml path relative to the task folder")
 	command.Flags().StringVar(&certificatePath, "certificate", "", "certificate output path relative to the task folder")
 	return command
 }

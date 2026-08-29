@@ -1,5 +1,5 @@
 // Package cpp translates bounded C++ artifacts through pinned Clang evidence
-// into Ray Semantic IR. Translation is deliberately fail-closed: AST data is
+// into Hyperray Semantic IR. Translation is deliberately fail-closed: AST data is
 // used only for typed spans/advisory lowering, while executable meaning comes
 // from compiler/model-checker or exhaustive compiled-execution evidence.
 package cpp
@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 const maxProvenLoopIterations = 10_000

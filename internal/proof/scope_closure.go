@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // validateScopeClosure proves that the author-declared operation vocabulary

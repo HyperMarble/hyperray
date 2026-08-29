@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HyperMarble/ray/internal/proselint"
+	"github.com/HyperMarble/hyperray/internal/proselint"
 )
 
 const proseWordBudget = 500

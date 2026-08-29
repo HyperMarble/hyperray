@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/sufficiency"
+	"github.com/HyperMarble/hyperray/internal/sufficiency"
 )
 
 func writeTempFile(t *testing.T, pattern, content string) string {
@@ -27,7 +27,7 @@ func writeTempFile(t *testing.T, pattern, content string) string {
 // TestSufficiency_MultiLanguage locks in the reason extract_outcomes.py
 // uses tree-sitter rather than a hand-rolled walk of one language's AST:
 // the same extractor, the same code path, and each language's own real
-// maintained grammar covers all four of ray's targets. An earlier
+// maintained grammar covers all four of hyperray's targets. An earlier
 // Python-`ast`-based version could never have worked for Rust, C++, or
 // Go at all.
 func TestSufficiency_MultiLanguage(t *testing.T) {
@@ -163,7 +163,7 @@ func f(a int) (res int, err error) {
 
 	// The most consequential gap a 160-file stress sweep found: all Verus
 	// code lives inside `verus! { ... }`, and tree-sitter parses a macro
-	// body as an opaque token_tree -- so ray extracted ZERO outcomes from
+	// body as an opaque token_tree -- so hyperray extracted ZERO outcomes from
 	// exactly the Rust source it cares about most. Fixed using
 	// tree-sitter-rust's own shipped injections.scm declaration (re-parse
 	// a macro body as Rust), not a verus-specific special case.

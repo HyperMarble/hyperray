@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/certificate"
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/proof"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/certificate"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/proof"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 func issueCertificate(manifest taskbundle.Manifest, task *semanticir.Task, records []translationRecord, proofResult proof.Result, report executor.Report, confirmationBlockers []string) (certificate.Certificate, error) {

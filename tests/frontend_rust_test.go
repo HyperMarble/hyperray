@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	frontendrust "github.com/HyperMarble/ray/internal/frontend/rust"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	frontendrust "github.com/HyperMarble/hyperray/internal/frontend/rust"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func TestFrontendRust(t *testing.T) {

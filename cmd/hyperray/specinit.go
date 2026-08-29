@@ -50,7 +50,7 @@ func newSpecInitCmd() *cobra.Command {
 					return err
 				}
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "wrote %s/spec.md (template), %s/SCHEMA.md (format reference), %s/bridges/\nnext: author rows per SCHEMA.md, then `ray spec-lint spec.md --instruction instruction.md --reference solution.patch --task-id <id>`\n", taskDir, taskDir, taskDir)
+			fmt.Fprintf(cmd.OutOrStdout(), "wrote %s/spec.md (template), %s/SCHEMA.md (format reference), %s/bridges/\nnext: author rows per SCHEMA.md, then `hyperray spec-lint spec.md --instruction instruction.md --reference solution.patch --task-id <id>`\n", taskDir, taskDir, taskDir)
 			return nil
 		},
 	}

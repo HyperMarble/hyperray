@@ -7,7 +7,7 @@
 // same three-source method OpenAI's own SWE-bench audit uses: problem
 // statement, tests, and reference solution.
 //
-// The 2026-08-25 design said ray never parses instruction.md. That is
+// The 2026-08-25 design said hyperray never parses instruction.md. That is
 // revised deliberately: not parsing it left the spec checked against two
 // sources out of three, and the direction it misses is the one that makes
 // a task unfair rather than lax.
@@ -34,7 +34,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 // Status is what is known about one row's presence in the instruction.

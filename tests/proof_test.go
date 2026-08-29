@@ -15,10 +15,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/proof"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/testir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/proof"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/testir"
 )
 
 func TestMain(m *testing.M) {
@@ -2103,7 +2103,7 @@ func proofWorkspaceRoot() string {
 		if _, statErr := os.Stat(base); statErr != nil {
 			base = os.TempDir()
 		}
-		root, err := os.MkdirTemp(base, "ray-proof-fixture-")
+		root, err := os.MkdirTemp(base, "hyperray-proof-fixture-")
 		if err != nil {
 			panic(err)
 		}

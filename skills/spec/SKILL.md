@@ -1,12 +1,12 @@
 ---
 name: spec
-description: Author or revise Ray's strict machine-readable spec.md for one fixed bounded coding task or PR, deriving complete finite behavior before tests and comparing public and hidden tests only after the semantic rows are frozen.
+description: Author or revise Hyperray's strict machine-readable spec.md for one fixed bounded coding task or PR, deriving complete finite behavior before tests and comparing public and hidden tests only after the semantic rows are frozen.
 ---
 
 # Author a complete bounded spec
 
-`spec.md` is Ray's strict machine-readable source for a task's complete finite
-behavior. Ray compiles it into Spec Semantic IR. Coding agents do not read it,
+`spec.md` is Hyperray's strict machine-readable source for a task's complete finite
+behavior. Hyperray compiles it into Spec Semantic IR. Coding agents do not read it,
 and proof stages do not infer requirements from tests.
 
 [references/schema.md](references/schema.md) is the exact input contract the
@@ -123,6 +123,17 @@ boolean hides the dimension, so no later stage can ask whether each value is
 enforced; a span tested only at 3 stays invisible exactly this way. The
 compiler warns (`quantifier-as-label`) when a bool row anchors into
 quantifying contract text.
+
+**The divergent witness — every agreement promise needs one.** A sentence
+promising two outputs agree ("equals", "agrees", "matches", "same as") is
+only proven by a scenario where the two sides COULD disagree. If both sides
+derive from one source, agreement is automatic and the test proves nothing:
+a wrapper's `predict_var` "agreed" with its composed variance for weeks
+because every test forecaster derived its own variance from its own
+distribution — one divergent forecaster (distribution says 1, direct method
+says 4) exposed the promise as unimplemented. For each agreement row, add a
+domain value whose witness makes the sources diverge, and require the
+promised side to win.
 
 Declare each domain with a finite, disjoint value list:
 
@@ -244,7 +255,7 @@ that relationship using the phase-1 sources.
 Run structural lint until it reports no error:
 
 ```sh
-ray spec-lint spec.md --instruction instruction.md --reference solution.patch --task-id <task-id>
+hyperray spec-lint spec.md --instruction instruction.md --reference solution.patch --task-id <task-id>
 ```
 
 `spec-lint` checks strict syntax, declared values, expansion, IDs,
@@ -295,7 +306,7 @@ False-negative query:
 
 Also require exact reference acceptance `T(C) = true` separately from the
 reference-correctness proof. Public and hidden tests are translated as they
-exist; Ray never substitutes test logic derived from `spec.md`.
+exist; Hyperray never substitutes test logic derived from `spec.md`.
 
 Compare final `spec.md` with the pre-test bytes. Only `Enforced by` cells may
 change. If any domain, row, outcome, effect, state, constraint, or provenance

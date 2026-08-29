@@ -79,11 +79,11 @@ func TestSkillsCiteTheEvidenceRule(t *testing.T) {
 }
 
 // The scaffold embedded in the binary must stay byte-identical to the real
-// template and schema, or `ray spec-init` hands authors a stale format.
+// template and schema, or `hyperray spec-init` hands authors a stale format.
 func TestScaffoldMatchesSkill(t *testing.T) {
 	for embedded, original := range map[string]string{
-		"cmd/ray/scaffold/spec.md":   "skills/spec/templates/spec.md",
-		"cmd/ray/scaffold/schema.md": "skills/spec/references/schema.md",
+		"cmd/hyperray/scaffold/spec.md":   "skills/spec/templates/spec.md",
+		"cmd/hyperray/scaffold/schema.md": "skills/spec/references/schema.md",
 	} {
 		if readRepoFile(t, embedded) != readRepoFile(t, original) {
 			t.Errorf("%s drifted from %s; re-copy it", embedded, original)

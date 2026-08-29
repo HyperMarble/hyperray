@@ -16,9 +16,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	frontendpython "github.com/HyperMarble/ray/internal/frontend/python"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	frontendpython "github.com/HyperMarble/hyperray/internal/frontend/python"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func TestCounterexampleExecutorBaselineMustPassBeforeMaterialization(t *testing.T) {
@@ -524,18 +524,18 @@ func TestCounterexampleExecutorProbeConfirmsReferenceWitness(t *testing.T) {
 func TestCounterexampleExecutorProbeRunsTypedCompileOutput(t *testing.T) {
 	fixture := newExecutorProbeFixture(t, nil)
 	payload := fixture.plan.Steps[0].Argv[2]
-	generated := ".ray/probes/generated-probe"
+	generated := ".hyperray/probes/generated-probe"
 	tool := fixture.plan.Tools[0]
 	fixture.plan.Steps = []executor.ProbeStep{
 		{
 			ID: "compile", Kind: executor.ProbeStepCompile, Tool: &tool,
-			Argv:    []string{tool.Path, "-c", "cp .ray/probes/probe.sh .ray/probes/generated-probe && chmod 700 .ray/probes/generated-probe"},
+			Argv:    []string{tool.Path, "-c", "cp .hyperray/probes/probe.sh .hyperray/probes/generated-probe && chmod 700 .hyperray/probes/generated-probe"},
 			WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), Outputs: []string{generated},
 		},
 		{
 			ID: "run", Kind: executor.ProbeStepRun, GeneratedExecutable: generated,
 			Argv: []string{generated, payload}, WorkDir: ".", Timeout: time.Second,
-			PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".ray/probes/probe-observation.json",
+			PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".hyperray/probes/probe-observation.json",
 		},
 	}
 	report := executor.ConfirmProbes(context.Background(), fixture.baseline, []executor.ProbePlan{fixture.plan})
@@ -566,7 +566,7 @@ func TestCounterexampleExecutorProbeRunsTypedCompileOutput(t *testing.T) {
 func TestCounterexampleExecutorProbeRejectsNonFreshCompileOutput(t *testing.T) {
 	fixture := newExecutorProbeFixture(t, nil)
 	payload := fixture.plan.Steps[0].Argv[2]
-	generated := ".ray/probes/generated-probe"
+	generated := ".hyperray/probes/generated-probe"
 	tool := fixture.plan.Tools[0]
 	if err := os.MkdirAll(filepath.Dir(filepath.Join(fixture.root, filepath.FromSlash(generated))), 0o750); err != nil {
 		t.Fatal(err)
@@ -578,7 +578,7 @@ func TestCounterexampleExecutorProbeRejectsNonFreshCompileOutput(t *testing.T) {
 	fixture.workspaceDigest = fixture.plan.Workspace.TreeSHA256
 	fixture.plan.Steps = []executor.ProbeStep{
 		{ID: "compile", Kind: executor.ProbeStepCompile, Tool: &tool, Argv: []string{tool.Path, "-c", "exit 0"}, WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), Outputs: []string{generated}},
-		{ID: "run", Kind: executor.ProbeStepRun, GeneratedExecutable: generated, Argv: []string{generated, payload}, WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".ray/probes/probe-observation.json"},
+		{ID: "run", Kind: executor.ProbeStepRun, GeneratedExecutable: generated, Argv: []string{generated, payload}, WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".hyperray/probes/probe-observation.json"},
 	}
 	report := executor.ConfirmProbes(context.Background(), fixture.baseline, []executor.ProbePlan{fixture.plan})
 
@@ -591,13 +591,13 @@ func TestCounterexampleExecutorProbeRejectsNonFreshCompileOutput(t *testing.T) {
 func TestCounterexampleExecutorProbeRejectsChangedGeneratedExecutable(t *testing.T) {
 	fixture := newExecutorProbeFixture(t, nil)
 	payload := fixture.plan.Steps[0].Argv[2]
-	generated := ".ray/probes/generated-probe"
+	generated := ".hyperray/probes/generated-probe"
 	tool := fixture.plan.Tools[0]
 	fixture.plan.Harness.Bytes = append(append([]byte(nil), fixture.plan.Harness.Bytes...), []byte("printf '# changed\\n' >> \"$0\"\n")...)
 	fixture.plan.Harness.SHA256 = executorTestDigest(fixture.plan.Harness.Bytes)
 	fixture.plan.Steps = []executor.ProbeStep{
-		{ID: "compile", Kind: executor.ProbeStepCompile, Tool: &tool, Argv: []string{tool.Path, "-c", "cp .ray/probes/probe.sh .ray/probes/generated-probe && chmod 700 .ray/probes/generated-probe"}, WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), Outputs: []string{generated}},
-		{ID: "run", Kind: executor.ProbeStepRun, GeneratedExecutable: generated, Argv: []string{generated, payload}, WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".ray/probes/probe-observation.json"},
+		{ID: "compile", Kind: executor.ProbeStepCompile, Tool: &tool, Argv: []string{tool.Path, "-c", "cp .hyperray/probes/probe.sh .hyperray/probes/generated-probe && chmod 700 .hyperray/probes/generated-probe"}, WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), Outputs: []string{generated}},
+		{ID: "run", Kind: executor.ProbeStepRun, GeneratedExecutable: generated, Argv: []string{generated, payload}, WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".hyperray/probes/probe-observation.json"},
 	}
 	report := executor.ConfirmProbes(context.Background(), fixture.baseline, []executor.ProbePlan{fixture.plan})
 
@@ -720,13 +720,13 @@ func TestCounterexampleExecutorProbeRejectsCompileStepObservation(t *testing.T) 
 	fixture.plan.Steps = []executor.ProbeStep{
 		{
 			ID: "compile", Kind: executor.ProbeStepCompile, Tool: &tool,
-			Argv:    []string{tool.Path, "-c", "printf '%s' \"$1\" > .ray/probes/probe-observation.json; cp .ray/probes/probe.sh .ray/probes/generated-probe; chmod 700 .ray/probes/generated-probe", "compile", payload},
-			WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), Outputs: []string{".ray/probes/generated-probe"},
+			Argv:    []string{tool.Path, "-c", "printf '%s' \"$1\" > .hyperray/probes/probe-observation.json; cp .hyperray/probes/probe.sh .hyperray/probes/generated-probe; chmod 700 .hyperray/probes/generated-probe", "compile", payload},
+			WorkDir: ".", Timeout: time.Second, PassSignal: executor.ExitCodeSignal(0), Outputs: []string{".hyperray/probes/generated-probe"},
 		},
 		{
 			ID: "run", Kind: executor.ProbeStepRun, Tool: &tool,
 			Argv: []string{tool.Path, "-c", "exit 0"}, WorkDir: ".", Timeout: time.Second,
-			PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".ray/probes/probe-observation.json",
+			PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".hyperray/probes/probe-observation.json",
 		},
 	}
 
@@ -743,7 +743,7 @@ func TestCounterexampleExecutorProbeRejectsCompileStepObservation(t *testing.T) 
 func TestCounterexampleExecutorProbeTimeoutKillsChildAndCleansWorkspace(t *testing.T) {
 	fixture := newExecutorProbeFixture(t, nil)
 	fixture.plan.Steps[0].Timeout = 80 * time.Millisecond
-	fixture.plan.Harness.Bytes = []byte("#!/bin/sh\nset -eu\nprintf '%s' \"$1\" > .ray/probes/probe-observation.json\nsleep 10 &\nprintf 'child:%s\\n' \"$!\"\nwait\n")
+	fixture.plan.Harness.Bytes = []byte("#!/bin/sh\nset -eu\nprintf '%s' \"$1\" > .hyperray/probes/probe-observation.json\nsleep 10 &\nprintf 'child:%s\\n' \"$!\"\nwait\n")
 	fixture.plan.Harness.SHA256 = executorTestDigest(fixture.plan.Harness.Bytes)
 
 	started := time.Now()
@@ -1182,9 +1182,9 @@ func newExecutorProbeFixture(t *testing.T, existingHarness []byte) executorProbe
 	root := executorCanonicalPath(t, t.TempDir())
 	sourceBody := []byte("solution\n")
 	source := writeExecutorFixture(t, root, "subject.txt", sourceBody)
-	harnessPath := ".ray/probes/probe.sh"
+	harnessPath := ".hyperray/probes/probe.sh"
 	if existingHarness != nil {
-		if err := os.MkdirAll(filepath.Join(root, ".ray", "probes"), 0o750); err != nil {
+		if err := os.MkdirAll(filepath.Join(root, ".hyperray", "probes"), 0o750); err != nil {
 			t.Fatal(err)
 		}
 		writeExecutorFixture(t, root, harnessPath, existingHarness)
@@ -1238,7 +1238,7 @@ func newExecutorProbeFixture(t *testing.T, existingHarness []byte) executorProbe
 		OutcomeIDs: append([]string(nil), witness.ObservedOutcomes...), Choices: append([]semanticir.BehaviorChoice(nil), witness.Choices...), TestPasses: witness.TestPasses,
 		RuntimeOutcomes: []semanticir.RuntimeOutcomeChoice{{Behavior: witness.Choices[0].Behavior, RawOutcome: rawBad, MappingOutcomeID: bad.ID}},
 	}
-	harness := []byte("#!/bin/sh\nset -eu\ntest \"$(cat subject.txt)\" = solution\nprintf '%s' \"$1\" > .ray/probes/probe-observation.json\nprintf 'probe stdout'\nprintf 'probe stderr' >&2\n")
+	harness := []byte("#!/bin/sh\nset -eu\ntest \"$(cat subject.txt)\" = solution\nprintf '%s' \"$1\" > .hyperray/probes/probe-observation.json\nprintf 'probe stdout'\nprintf 'probe stderr' >&2\n")
 	shellRef := semanticir.ToolRef{Name: "shell", Path: shellPath, Digest: executorTestDigest(shellBytes), Version: "frozen-test-shell"}
 	plan := executor.ProbePlan{
 		ID: "reference-probe", WitnessID: witness.ID, Obligation: semanticir.ObligationReferenceCorrectness,
@@ -1250,7 +1250,7 @@ func newExecutorProbeFixture(t *testing.T, existingHarness []byte) executorProbe
 		Steps: []executor.ProbeStep{{
 			ID: "run", Kind: executor.ProbeStepRun, Tool: &shellRef,
 			Argv: []string{shellPath, harnessPath}, WorkDir: ".", Timeout: time.Second,
-			PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".ray/probes/probe-observation.json",
+			PassSignal: executor.ExitCodeSignal(0), ObservationPath: ".hyperray/probes/probe-observation.json",
 		}},
 		ExpectedSemantics: expected,
 	}

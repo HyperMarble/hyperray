@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/sufficiency"
+	"github.com/HyperMarble/hyperray/internal/sufficiency"
 )
 
 // A unified diff, shaped like the ones real repo-modification tasks ship.

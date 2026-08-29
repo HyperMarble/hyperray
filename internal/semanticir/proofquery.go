@@ -125,11 +125,11 @@ func CanonicalProofQuery(claim ProofClaim) ([]byte, error) {
 		builder.Write(declaration)
 		builder.WriteByte('\n')
 	}
-	builder.WriteString("; ray-claim ")
+	builder.WriteString("; hyperray-claim ")
 	builder.WriteString(string(claim.Kind))
 	builder.WriteByte('\n')
 	for _, digest := range subjects {
-		builder.WriteString("; ray-subject ")
+		builder.WriteString("; hyperray-subject ")
 		builder.WriteString(digest)
 		builder.WriteByte('\n')
 	}

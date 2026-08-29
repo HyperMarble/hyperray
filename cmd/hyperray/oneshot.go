@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/repolint"
-	"github.com/HyperMarble/ray/internal/runner"
+	"github.com/HyperMarble/hyperray/internal/repolint"
+	"github.com/HyperMarble/hyperray/internal/runner"
 	toml "github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
@@ -60,12 +60,12 @@ func newOneshotCmd() *cobra.Command {
 				return err
 			}
 			var cfg oneshotConfig
-			raw, err := os.ReadFile(filepath.Join(taskDir, "ray.toml"))
+			raw, err := os.ReadFile(taskConfigPath(taskDir))
 			if err != nil {
-				return fmt.Errorf("oneshot: read ray.toml: %w", err)
+				return fmt.Errorf("oneshot: read hyperray.toml: %w", err)
 			}
 			if err := toml.Unmarshal(raw, &cfg); err != nil {
-				return fmt.Errorf("oneshot: parse ray.toml: %w", err)
+				return fmt.Errorf("oneshot: parse hyperray.toml: %w", err)
 			}
 			c := cfg.Oneshot
 			if c.Python == "" {
@@ -141,7 +141,7 @@ func newOneshotCmd() *cobra.Command {
 			// tree so the solution can be stashed and restored; without one
 			// the rung is blocked, never silently skipped.
 			if c.SourceRoot == "" || c.TestCommand == "" || c.TestFile == "" {
-				return fmt.Errorf("oneshot: blocked -- ray.toml needs source_root, test_command, test_file for fail-to-pass and discovery")
+				return fmt.Errorf("oneshot: blocked -- hyperray.toml needs source_root, test_command, test_file for fail-to-pass and discovery")
 			}
 			if _, err := os.Stat(filepath.Join(c.SourceRoot, ".git")); err != nil {
 				return fmt.Errorf("oneshot: blocked -- fail-to-pass needs source_root to be a git tree so the solution can be stashed and restored")

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 	"github.com/pelletier/go-toml/v2"
 )
 

@@ -10,8 +10,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // replayExhaustiveExecution is the central trust boundary for exact-literal

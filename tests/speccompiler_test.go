@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/speccompiler"
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/speccompiler"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 const strictHeader = "| mode | ID | Operation | Reachability | Required outcomes | Forbidden outcomes | Effects | Invariants | Enforced by | Evidence | Constraint reason |\n" +

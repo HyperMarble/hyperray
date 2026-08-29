@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func TestExhaustiveReplayHelperProcess(t *testing.T) {
@@ -211,10 +211,10 @@ func exhaustiveReplayFixture(t *testing.T) ExhaustiveReplayPlan {
 	environment := []semanticir.EnvironmentVariable{{Name: "RAY_EXECUTOR_REPLAY_HELPER", Value: "1"}}
 	environmentDigest, _ := semanticir.Digest(environment)
 	emptyDigest := digestBytes(nil)
-	output := semanticir.ProbeOutput{ID: "generated-helper", Path: ".ray/replay/generated-helper", AfterDigest: tool.Digest, Executable: true, Provenance: provenance}
+	output := semanticir.ProbeOutput{ID: "generated-helper", Path: ".hyperray/replay/generated-helper", AfterDigest: tool.Digest, Executable: true, Provenance: provenance}
 	setup := semanticir.ProbeStep{
 		ID: "compile", Kind: semanticir.ProbeStepSetup, Tool: tool,
-		Argv:        append(helperInvocation(), "setup", ".ray/replay/harness-helper", output.Path),
+		Argv:        append(helperInvocation(), "setup", ".hyperray/replay/harness-helper", output.Path),
 		StdinDigest: emptyDigest, WorkingDirectory: root, Environment: environment, EnvironmentDigest: environmentDigest,
 		ClearEnvironment: true, KillProcessGroup: true, TimeoutMillis: 5000, ExpectedExitCode: 0,
 		ExpectedStdoutDigest: emptyDigest, ExpectedStderrDigest: emptyDigest, ExpectedSignalDigest: emptyDigest,
@@ -269,7 +269,7 @@ func exhaustiveReplayFixture(t *testing.T) ExhaustiveReplayPlan {
 	evidence := semanticir.ExhaustiveExecutionEvidence{
 		ID: "exhaustive", Tool: tool, SourceDigest: source.Digest, WorkspaceTreeDigest: workspaceDigest,
 		IRKind: semanticir.CompilerIRLLVM, EmittedIRDigest: digestBytes([]byte("ir")),
-		Harness: toolBytes, HarnessPath: ".ray/replay/harness-helper", HarnessDigest: tool.Digest, ExecutableDigest: tool.Digest,
+		Harness: toolBytes, HarnessPath: ".hyperray/replay/harness-helper", HarnessDigest: tool.Digest, ExecutableDigest: tool.Digest,
 		Steps: []semanticir.ProbeStep{setup, makeRunStep(a), makeRunStep(b)},
 		Argv:  append([]string{tool.Path}, helperInvocation()...), WorkingDirectory: root,
 		Environment: environment, EnvironmentDigest: environmentDigest, ClearEnvironment: true, KillProcessGroup: true, TimeoutMillis: 5000,

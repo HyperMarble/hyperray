@@ -16,7 +16,7 @@ import (
 // real Shipd task, so a hundred adversaries is over an hour. Three things
 // remove almost all of that, and none of them is extra work:
 //
-//  1. The map is free. ray must already run the suite once to confirm the
+//  1. The map is free. hyperray must already run the suite once to confirm the
 //     unmodified solution passes -- without that baseline no adversary
 //     result means anything. Turning coverage on during THAT run costs
 //     nothing more.

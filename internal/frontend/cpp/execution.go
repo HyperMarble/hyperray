@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 const exhaustiveCaseTimeout = 5 * time.Second
@@ -96,7 +96,7 @@ func (l *lowerer) exhaustivelyExecute(ctx context.Context) (semanticir.Exhaustiv
 	if err != nil {
 		return semanticir.ExhaustiveExecutionEvidence{}, err
 	}
-	temporary, err := os.MkdirTemp("", "ray-cpp-exhaustive-")
+	temporary, err := os.MkdirTemp("", "hyperray-cpp-exhaustive-")
 	if err != nil {
 		return semanticir.ExhaustiveExecutionEvidence{}, fmt.Errorf("create exhaustive compiler workspace: %v", err)
 	}
@@ -179,7 +179,7 @@ func (l *lowerer) exhaustivelyExecute(ctx context.Context) (semanticir.Exhaustiv
 		ID: l.request.Artifact.ID + ":clang-exhaustive", Tool: l.request.Translator,
 		SourceDigest: l.request.Artifact.Digest, WorkspaceTreeDigest: l.request.Workspace.TreeDigest,
 		IRKind: semanticir.CompilerIRLLVM, EmittedIRDigest: semanticir.DigestBytes(ir),
-		Harness: append([]byte(nil), harness...), HarnessPath: ".ray-cpp-exhaustive.cpp",
+		Harness: append([]byte(nil), harness...), HarnessPath: ".hyperray-cpp-exhaustive.cpp",
 		HarnessDigest: semanticir.DigestBytes(harness), ExecutableDigest: executableDigest, Steps: steps,
 		Argv: argv, WorkingDirectory: workingDirectory, Environment: environment, EnvironmentDigest: environmentDigest,
 		ClearEnvironment: true, KillProcessGroup: true, TimeoutMillis: exhaustiveCaseTimeout.Milliseconds(),
@@ -198,7 +198,7 @@ func (l *lowerer) exhaustivelyExecute(ctx context.Context) (semanticir.Exhaustiv
 	for _, step := range evidence.Steps {
 		generated = append(generated, step.Outputs...)
 	}
-	cleanupPaths := []string{".ray-cpp-exhaustive.bin"}
+	cleanupPaths := []string{".hyperray-cpp-exhaustive.bin"}
 	cleanupDigest, err := semanticir.Digest(cleanupPaths)
 	if err != nil {
 		return semanticir.ExhaustiveExecutionEvidence{}, fmt.Errorf("digest exhaustive replay cleanup: %v", err)
@@ -276,7 +276,7 @@ func (l *lowerer) exhaustiveProbeSteps(common []string, harness []byte, executab
 	emptyDigest := semanticir.DigestBytes(nil)
 	noneSignalDigest := semanticir.DigestBytes(nil)
 	output := semanticir.ProbeOutput{
-		ID: "cpp-exhaustive-binary", Path: ".ray-cpp-exhaustive.bin", AfterDigest: executableDigest, Executable: true,
+		ID: "cpp-exhaustive-binary", Path: ".hyperray-cpp-exhaustive.bin", AfterDigest: executableDigest, Executable: true,
 		Provenance: provenance,
 	}
 	compileArgv := append(append([]string(nil), common...), "-o", output.Path, "-")

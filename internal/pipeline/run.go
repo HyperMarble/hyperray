@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/certificate"
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/proof"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/certificate"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/proof"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
-// Run executes Ray's sole production verification pipeline. It never accepts
+// Run executes Hyperray's sole production verification pipeline. It never accepts
 // stage hooks, mutation results, sampled evidence, or caller-supplied verdicts.
 func Run(ctx context.Context, request Request) Result {
 	result := Result{Verdict: ProofBlocked}
@@ -50,7 +50,7 @@ func Run(ctx context.Context, request Request) Result {
 		return blockResult(result, StageFreeze, freezeStart, err)
 	}
 	if configArtifact.Digest != semanticir.DigestBytes(configSource) {
-		return blockResult(result, StageFreeze, freezeStart, fmt.Errorf("ray config changed between strict decoding and freeze"))
+		return blockResult(result, StageFreeze, freezeStart, fmt.Errorf("hyperray config changed between strict decoding and freeze"))
 	}
 	manifestDigest, err := taskbundle.ManifestDigest(manifest)
 	if err != nil {

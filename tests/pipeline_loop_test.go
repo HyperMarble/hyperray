@@ -3,22 +3,22 @@ package tests
 import (
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/depharvest"
-	"github.com/HyperMarble/ray/internal/difftest"
+	"github.com/HyperMarble/hyperray/internal/depharvest"
+	"github.com/HyperMarble/hyperray/internal/difftest"
 )
 
-// TestPipeline_VerifyFixReverifyLoop tests ray's actual purpose: given a
+// TestPipeline_VerifyFixReverifyLoop tests hyperray's actual purpose: given a
 // built task, either hand back real issues, or say the task is ready.
 //
 // Both halves have to be trustworthy or the loop is worthless. If the
-// issues are artifacts, the report is noise. If ray goes quiet on code
+// issues are artifacts, the report is noise. If hyperray goes quiet on code
 // that is still broken, "ready" is a lie -- and that is the more
 // dangerous failure, because it is silent.
 //
 // So this runs three rounds, and the third is the load-bearing one:
 //
 //  1. the agent's submission, carrying a bug that survives review
-//  2. the same code after the fix ray's report pointed at
+//  2. the same code after the fix hyperray's report pointed at
 //  3. a CONTROL -- a different bug injected into the fixed code
 //
 // Round 2 going quiet only means something if round 3 does not. Without
@@ -67,10 +67,10 @@ def normalize(s):
     return s[0].upper() + s[1:]
 `)
 	if round1.Pass() {
-		t.Fatal("round 1 found nothing -- ray failed to report a real, reachable bug")
+		t.Fatal("round 1 found nothing -- hyperray failed to report a real, reachable bug")
 	}
 
-	// Round 2: the fix. This is where ray must go quiet.
+	// Round 2: the fix. This is where hyperray must go quiet.
 	round2 := run("fixed", `
 def normalize(s):
     s = s.strip()

@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	ReferenceIRSchemaV1   = "ray-reference-semantic-ir/v1"
-	TestIRSchemaV1        = "ray-test-semantic-ir/v1"
-	EnvironmentIRSchemaV1 = "ray-environment-semantic-ir/v1"
+	ReferenceIRSchemaV1   = "hyperray-reference-semantic-ir/v1"
+	TestIRSchemaV1        = "hyperray-test-semantic-ir/v1"
+	EnvironmentIRSchemaV1 = "hyperray-environment-semantic-ir/v1"
 )
 
 // ArtifactModelTranslationDigest hashes only frontend-authored translation

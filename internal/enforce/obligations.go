@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/coverage"
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/coverage"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 // Spec is the authored companion to a frozen spec.md: how to run the
@@ -26,8 +26,8 @@ type Spec struct {
 	ViolationOf map[string]string `json:"-"`
 }
 
-// FixSpec lets ray render the missing test for a proven false positive. The
-// task owns the shape of its tests via Template; ray owns only the row facts
+// FixSpec lets hyperray render the missing test for a proven false positive. The
+// task owns the shape of its tests via Template; hyperray owns only the row facts
 // substituted into it, so one mechanism serves every language:
 //
 //	{name}       the obligation's combo, flattened to an identifier
@@ -38,7 +38,7 @@ type Spec struct {
 //
 // A rendered test is derivation from the frozen spec row -- exactly as right
 // as the row, no more. Generated tests are appended under a marker naming
-// ray, and the report lists them, so a human reviews what the axiom implied.
+// hyperray, and the report lists them, so a human reviews what the axiom implied.
 type FixSpec struct {
 	File     string `json:"file"`
 	Template string `json:"template"`
@@ -139,7 +139,7 @@ func Build(tables []specparser.Table, covs []coverage.TableCoverage, spec *Spec)
 	return BuildWith(tables, covs, spec, nil)
 }
 
-// BuildWith additionally consults violations ray derived itself, used only
+// BuildWith additionally consults violations hyperray derived itself, used only
 // where the author wrote none. Authored always wins: an author can express
 // what synthesis cannot.
 func BuildWith(tables []specparser.Table, covs []coverage.TableCoverage, spec *Spec, derived []ScopedViolation) []Obligation {

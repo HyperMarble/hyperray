@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/certificate"
+	"github.com/HyperMarble/hyperray/internal/certificate"
 )
 
 const e2eTimeout = 4 * time.Minute
@@ -50,7 +50,7 @@ func TestE2ERealTaskJcodeProvenanceSplitReconstructsRealSource(t *testing.T) {
 	if err := json.Unmarshal(metadataSource, &metadata); err != nil {
 		t.Fatalf("decode jcode source metadata: %v", err)
 	}
-	if metadata.Schema != "ray.task-source/v1" || metadata.BaseCommit != "95087d57b3d5b5dd02c64a12c44e149d4426abad" || metadata.SolutionCommit != "f85c2d596f02d943dbb72e45a88e4e6071c9f8b7" {
+	if metadata.Schema != "hyperray.task-source/v1" || metadata.BaseCommit != "95087d57b3d5b5dd02c64a12c44e149d4426abad" || metadata.SolutionCommit != "f85c2d596f02d943dbb72e45a88e4e6071c9f8b7" {
 		t.Fatalf("unexpected jcode repository identity: %+v", metadata)
 	}
 	assertE2EFileSHA256(t, filepath.Join(root, "instruction.md"), "bd62bf12f53916f13be9007e595bd3823223765274688fd9cd772dd577d339d6")
@@ -140,8 +140,8 @@ func runRealTask(t *testing.T, subcommand, fixture string) cliResult {
 	if err := os.CopyFS(taskRoot, os.DirFS(fixtureRoot)); err != nil {
 		t.Fatalf("copy real task fixture: %v", err)
 	}
-	binary := filepath.Join(t.TempDir(), "ray")
-	build := exec.Command("go", "build", "-o", binary, "./cmd/ray")
+	binary := filepath.Join(t.TempDir(), "hyperray")
+	build := exec.Command("go", "build", "-o", binary, "./cmd/hyperray")
 	build.Dir = repo
 	if output, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build production CLI: %v\n%s", err, output)
@@ -257,7 +257,7 @@ func assertE2EProofBlocked(t *testing.T, result cliResult, stages ...string) {
 
 func readE2ECertificate(t *testing.T, root string) certificate.Certificate {
 	t.Helper()
-	path := filepath.Join(root, "ray-certificate.json")
+	path := filepath.Join(root, "hyperray-certificate.json")
 	cert, err := certificate.Read(path)
 	if err != nil {
 		t.Fatalf("read verified production certificate %s: %v", path, err)

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/depharvest"
+	"github.com/HyperMarble/hyperray/internal/depharvest"
 )
 
 // testHarvestPython locates an interpreter that has BOTH a real

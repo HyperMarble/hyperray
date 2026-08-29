@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func TestTranslateRealStatefulUnpauseSliceBlocksWithoutGenericReceiverConstruction(t *testing.T) {

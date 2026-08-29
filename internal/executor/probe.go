@@ -15,7 +15,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // ProbeWorkspace binds a direct probe to the immutable solution+new-tests
@@ -69,13 +69,13 @@ type ProbeStep struct {
 
 // ProbeObservation is the only JSON shape a generated harness may emit. It
 // contains runtime facts only: operation identity, semantic IDs, provenance,
-// and proof-witness structure remain Ray-owned plan data.
+// and proof-witness structure remain Hyperray-owned plan data.
 type ProbeObservation struct {
 	Traces []semanticir.RawOutcomeTrace `json:"traces"`
 }
 
 // ProbeObservedChoice is derived centrally by pairing one raw trace with the
-// corresponding Ray-owned behavior and classifying it against the frozen
+// corresponding Hyperray-owned behavior and classifying it against the frozen
 // operation outcome alphabet.
 type ProbeObservedChoice struct {
 	Behavior            semanticir.BehaviorRef     `json:"behavior"`
@@ -457,7 +457,7 @@ func prepareProbePlan(plan ProbePlan) (preparedProbe, *Blocker) {
 
 func validateProbeSemantics(expected semanticir.ExpectedSemantics, witness semanticir.Counterexample, operations []semanticir.Operation) error {
 	if !reflect.DeepEqual(expected.Conditions, witness.Conditions) || expected.OperationID != witness.OperationID || !reflect.DeepEqual(expected.OutcomeIDs, witness.ObservedOutcomes) || !reflect.DeepEqual(expected.Choices, witness.Choices) || expected.TestPasses != witness.TestPasses {
-		return fmt.Errorf("expected semantics do not preserve the complete Ray-owned proof witness")
+		return fmt.Errorf("expected semantics do not preserve the complete Hyperray-owned proof witness")
 	}
 	if len(witness.Choices) == 0 || len(witness.ObservedOutcomes) != len(witness.Choices) || len(expected.RuntimeOutcomes) != len(witness.Choices) {
 		return fmt.Errorf("expected runtime outcome vector is incomplete")
@@ -481,7 +481,7 @@ func validateProbeSemantics(expected semanticir.ExpectedSemantics, witness seman
 		operation, exists := operationByID[choice.Behavior.OperationID]
 		classified, err := semanticir.ClassifyRawOutcome(operation, runtime.RawOutcome, choice.Behavior.Provenance)
 		if !exists || err != nil || choice.Behavior.OperationID == "" || choice.OutcomeID == "" || witness.ObservedOutcomes[index] != choice.OutcomeID || !reflect.DeepEqual(runtime.Behavior, choice.Behavior) || runtime.MappingOutcomeID != classified || runtime.MappingOutcomeID != choice.OutcomeID {
-			return fmt.Errorf("runtime outcome %d is not centrally classified as its Ray-owned behavior choice", index)
+			return fmt.Errorf("runtime outcome %d is not centrally classified as its Hyperray-owned behavior choice", index)
 		}
 	}
 	return nil
@@ -1460,7 +1460,7 @@ func makeProbeWorkspaceCopy(sourceRoot, expectedDigest string) (string, string, 
 	if current != expectedDigest {
 		return "", "", "", fmt.Errorf("workspace became stale before isolated copy: got %s, want %s", current, expectedDigest)
 	}
-	tempParent, err := os.MkdirTemp("", "ray-probe-workspace-*")
+	tempParent, err := os.MkdirTemp("", "hyperray-probe-workspace-*")
 	if err != nil {
 		return "", "", "", err
 	}

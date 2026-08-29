@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // StaticRequest contains the independently translated verifier semantics.

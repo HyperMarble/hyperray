@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // This file contains only exact tool binding and replay helpers used by

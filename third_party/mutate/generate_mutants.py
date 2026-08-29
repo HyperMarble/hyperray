@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates every mutant of a source file, for ray's mutation pass:
+"""Generates every mutant of a source file, for hyperray's mutation pass:
 does the task's own test suite actually verify each requirement, or
 would it stay green while the behaviour changed?
 
@@ -8,7 +8,7 @@ tests against it:
 
   * tests fail  -> that behaviour IS verified; the mutant is "killed"
   * tests pass  -> the tests cannot tell the difference. If the mutant
-                   genuinely behaves differently (ray checks this
+                   genuinely behaves differently (hyperray checks this
                    separately, by running it), that is a PROVEN gap in
                    the test suite -- the exact false positive where an
                    agent meets requirements A and B, skips C, and still
@@ -148,7 +148,7 @@ def generate(path, language_name):
 
     # Boundary mutations: a constant n becomes n-1 and n+1. These are the
     # off-by-one errors, and the value that exposes each one is adjacent
-    # to the constant already written in the source -- which is why ray
+    # to the constant already written in the source -- which is why hyperray
     # derives its boundary test inputs from these same constants rather
     # than hoping a harvested value lands on them.
     if "number_nodes" in spec:

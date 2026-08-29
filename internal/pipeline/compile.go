@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/speccompiler"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/speccompiler"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 // compileSkeleton is the only proof-path reader of spec.md. It compiles the

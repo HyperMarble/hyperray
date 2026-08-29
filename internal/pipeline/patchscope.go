@@ -8,14 +8,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 // frontendChangedRanges derives the exact patch phase owned by one frontend:
 // test artifacts are the base-old -> base-new delta, while code artifacts are
 // the base-new -> solution-new delta. This happens before translation so a
-// frontend cannot use ray.toml entry-point selectors to omit changed
+// frontend cannot use hyperray.toml entry-point selectors to omit changed
 // declarations or impacted callers.
 func frontendChangedRanges(root string, manifest taskbundle.Manifest, declaration translationConfig, artifact semanticir.ArtifactRef) ([]semanticir.ChangedSourceRange, error) {
 	oldState, newState := taskbundle.BaseNewTests, taskbundle.SolutionNewTests
@@ -121,7 +121,7 @@ func sourceLineSlice(source []byte, start, end int) ([]byte, error) {
 	return append([]byte(nil), source[begin:finish]...), nil
 }
 
-// validatePatchScope prevents ray.toml entry-point names from shrinking the
+// validatePatchScope prevents hyperray.toml entry-point names from shrinking the
 // proof boundary. Every file changed between base+new-tests and
 // solution+new-tests must be an exactly translated code artifact, and every
 // changed solution line must lie inside compiler-backed source scope.

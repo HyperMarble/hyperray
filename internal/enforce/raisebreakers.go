@@ -33,7 +33,7 @@ func SuppressRaise(language, original, exceptionType, message string) string {
 	case "cpp":
 		return replaceCallThroughParen(original, message, "throw "+exceptionType+"(", ";")
 	default:
-		return replaceCallThroughParen(original, message, "raise "+exceptionType+"(", "pass  # ray suppressed raise")
+		return replaceCallThroughParen(original, message, "raise "+exceptionType+"(", "pass  # hyperray suppressed raise")
 	}
 }
 

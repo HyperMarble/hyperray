@@ -19,4 +19,4 @@ for path in sys.argv[1:]:
     except Exception as error:  # noqa: BLE001 - a probe error is an observation
         buffer.write(f"{type(error).__name__}: {error}")
     name = path.rsplit("/", 1)[-1]
-    sys.stdout.write(f"===RAY_PROBE {name}===\n{buffer.getvalue()}\n")
+    sys.stdout.write(f"===HYPERRAY_PROBE {name}===\n{buffer.getvalue()}\n")

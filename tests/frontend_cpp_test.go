@@ -16,9 +16,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	frontendcpp "github.com/HyperMarble/ray/internal/frontend/cpp"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	frontendcpp "github.com/HyperMarble/hyperray/internal/frontend/cpp"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func frontendCPPTool(t *testing.T) semanticir.ToolRef {
@@ -189,7 +189,7 @@ func frontendCPPTestRunner(t *testing.T, request *semanticir.FrontendRequest, te
 	if err != nil {
 		t.Fatal(err)
 	}
-	runner := semanticir.ToolRef{Name: "gtest", Path: runnerPath, Digest: semanticir.DigestBytes(runnerBytes), Version: "ray-cpp-gtest-fixture-v1"}
+	runner := semanticir.ToolRef{Name: "gtest", Path: runnerPath, Digest: semanticir.DigestBytes(runnerBytes), Version: "hyperray-cpp-gtest-fixture-v1"}
 	run := exec.Command(runnerPath, filter)
 	run.Env = []string{"PATH=" + os.Getenv("PATH")}
 	run.Dir = request.Workspace.Root
@@ -201,7 +201,7 @@ func frontendCPPTestRunner(t *testing.T, request *semanticir.FrontendRequest, te
 		SourceDigest string   `json:"source_digest"`
 		TestIDs      []string `json:"test_ids"`
 		RunnerDigest string   `json:"runner_digest"`
-	}{"ray-cpp-gtest-runner-v1", request.Artifact.Digest, ids, runner.Digest})
+	}{"hyperray-cpp-gtest-runner-v1", request.Artifact.Digest, ids, runner.Digest})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +264,7 @@ func frontendCPPSharedTestRunner(t *testing.T, requests []*semanticir.FrontendRe
 	if err != nil {
 		t.Fatal(err)
 	}
-	runner := semanticir.ToolRef{Name: "gtest", Path: runnerPath, Digest: semanticir.DigestBytes(runnerBytes), Version: "ray-cpp-shared-gtest-fixture-v1"}
+	runner := semanticir.ToolRef{Name: "gtest", Path: runnerPath, Digest: semanticir.DigestBytes(runnerBytes), Version: "hyperray-cpp-shared-gtest-fixture-v1"}
 	run := exec.Command(runnerPath, filter)
 	run.Env = []string{"PATH=" + os.Getenv("PATH")}
 	run.Dir = requests[0].Workspace.Root
@@ -275,7 +275,7 @@ func frontendCPPSharedTestRunner(t *testing.T, requests []*semanticir.FrontendRe
 		Schema       string   `json:"schema"`
 		TestIDs      []string `json:"test_ids"`
 		RunnerDigest string   `json:"runner_digest"`
-	}{"ray-cpp-shared-gtest-runner-v1", ids, runner.Digest})
+	}{"hyperray-cpp-shared-gtest-runner-v1", ids, runner.Digest})
 	if err != nil {
 		t.Fatal(err)
 	}

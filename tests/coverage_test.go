@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/coverage"
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/coverage"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 // testPictPath locates a pict binary for tests: RAY_PICT_PATH env var

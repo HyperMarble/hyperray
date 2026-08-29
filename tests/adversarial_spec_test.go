@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/speccompiler"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/speccompiler"
 )
 
 // Adversarial battery: every case is a spec that tries to get a defect past

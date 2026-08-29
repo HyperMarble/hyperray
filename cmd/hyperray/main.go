@@ -1,4 +1,4 @@
-// Command ray verifies that a coding task's spec, tests, and solution are
+// Command hyperray verifies that a coding task's spec, tests, and solution are
 // internally consistent, using formal methods layered with testing.
 package main
 
@@ -18,7 +18,7 @@ func main() {
 
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:           "ray",
+		Use:           "hyperray",
 		Short:         "Prove statement, solution, and tests agree over a bounded scope",
 		SilenceErrors: true,
 		SilenceUsage:  true,

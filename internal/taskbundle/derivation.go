@@ -79,7 +79,7 @@ func freezeRepository(ctx context.Context, taskRoot string, input *RepositoryInp
 	if err != nil {
 		return nil, nil, fmt.Errorf("freeze repository archive base commit: %w", err)
 	}
-	temp, err := os.MkdirTemp("", "ray-base-tree-*")
+	temp, err := os.MkdirTemp("", "hyperray-base-tree-*")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -100,7 +100,7 @@ func freezeRepository(ctx context.Context, taskRoot string, input *RepositoryInp
 }
 
 func replayWorkspacePatches(ctx context.Context, taskRoot string, archive []byte, repository Repository, state WorkspaceState, patchIDs []string, artifacts []Artifact, requiredInputs RequiredInputs) (PatchReplay, error) {
-	temp, err := os.MkdirTemp("", "ray-patch-replay-*")
+	temp, err := os.MkdirTemp("", "hyperray-patch-replay-*")
 	if err != nil {
 		return PatchReplay{}, err
 	}

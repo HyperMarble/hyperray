@@ -42,7 +42,7 @@ The focused native unit-test invocation is:
 cargo test --locked --lib tui::ui::inline_interactive_ui::tests::fallback_route_details_are_warning_limited -- --exact
 ```
 
-Ray must translate the real reference and the real embedded Rust verifier independently. A wrapper, copied function, generated replacement verifier, or sampled subset of the eight Boolean inputs is not accepted.
+Hyperray must translate the real reference and the real embedded Rust verifier independently. A wrapper, copied function, generated replacement verifier, or sampled subset of the eight Boolean inputs is not accepted.
 
 ## Verifier evidence discovered after the test-blind split
 

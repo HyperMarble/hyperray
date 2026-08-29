@@ -1,4 +1,4 @@
-// Package certificate issues and verifies canonical, hash-bound Ray
+// Package certificate issues and verifies canonical, hash-bound Hyperray
 // verification certificates. Certificates deliberately contain the complete
 // frozen manifest so artifact hashes, workspace commands/results, environment
 // identity, and tool versions travel with the proof result.
@@ -18,13 +18,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	proofengine "github.com/HyperMarble/ray/internal/proof"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	proofengine "github.com/HyperMarble/hyperray/internal/proof"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
-const SchemaVersion = "ray.verification-certificate/v3"
+const SchemaVersion = "hyperray.verification-certificate/v3"
 
 const maxCertificateBytes = 16 << 20
 
@@ -258,7 +258,7 @@ func Write(path string, cert Certificate) error {
 		return err
 	}
 	dir := filepath.Dir(path)
-	temp, err := os.CreateTemp(dir, ".ray-certificate-*")
+	temp, err := os.CreateTemp(dir, ".hyperray-certificate-*")
 	if err != nil {
 		return fmt.Errorf("create certificate: %w", err)
 	}

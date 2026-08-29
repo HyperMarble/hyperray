@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // Replay independently checks and reruns one compiler-path proof. The exact

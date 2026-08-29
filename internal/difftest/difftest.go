@@ -1,4 +1,4 @@
-// Package difftest implements ray's Layer 4: it runs the real solution
+// Package difftest implements hyperray's Layer 4: it runs the real solution
 // and the proven oracle model on the same concrete inputs and reports
 // where they disagree.
 //

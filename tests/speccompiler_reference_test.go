@@ -5,14 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/speccompiler"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/speccompiler"
 )
 
 // A `reference:` Evidence anchor cites the frozen reference solution instead
 // of the instruction (evidence-rule.md). spec-lint accepted these while the
 // production pipeline never passed the reference artifact, so every anchored
-// spec compiled at authoring time and failed inside ray check. The two paths
+// spec compiled at authoring time and failed inside hyperray check. The two paths
 // share speccompiler.Compile; these tests pin the contract at that seam.
 
 const referenceAnchoredSpec = `# Reference anchors

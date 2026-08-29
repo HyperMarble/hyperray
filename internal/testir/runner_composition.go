@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // ComposeRunner builds the global conjunction selected by the exact frozen

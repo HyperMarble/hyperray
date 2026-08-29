@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // evaluatedOutcome is populated only from a pinned-rustc executable (or from
@@ -206,7 +206,7 @@ func executeRustCases(ctx context.Context, request semanticir.FrontendRequest, c
 
 func discoverRustOutcomes(ctx context.Context, request semanticir.FrontendRequest, source []byte, cases []rustExecutionCase) (map[int]evaluatedOutcome, []semanticir.Diagnostic) {
 	whole := wholeSpan(request.Source)
-	tempDir, err := os.MkdirTemp("", "ray-rust-discovery-*")
+	tempDir, err := os.MkdirTemp("", "hyperray-rust-discovery-*")
 	if err != nil {
 		return nil, []semanticir.Diagnostic{diagnostic(request.Artifact, whole, semanticir.DiagnosticInvalidInput, "create Rust discovery workspace: "+err.Error())}
 	}
@@ -352,8 +352,8 @@ func compileAndRunRustHarness(ctx context.Context, request semanticir.FrontendRe
 		return nil, seed, []semanticir.Diagnostic{diagnostic(request.Artifact, whole, semanticir.DiagnosticStaleArtifact, "Rust execution workspace differs from its frozen tree digest")}
 	}
 	token := strings.TrimPrefix(request.Artifact.Digest, "sha256:")[:16]
-	sourceRelative := ".ray-rust-exhaustive-" + token + ".rs"
-	executableRelative := ".ray-rust-exhaustive-" + token
+	sourceRelative := ".hyperray-rust-exhaustive-" + token + ".rs"
+	executableRelative := ".hyperray-rust-exhaustive-" + token
 	sourcePath := filepath.Join(root, sourceRelative)
 	executablePath := filepath.Join(root, executableRelative)
 	for _, path := range []string{sourcePath, executablePath} {

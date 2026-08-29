@@ -1,4 +1,4 @@
-// ray update: replace this binary with the newest release. Asks GitHub for
+// hyperray update: replace this binary with the newest release. Asks GitHub for
 // the latest tag, skips the download when already current, and swaps the
 // binary in place atomically so a failed download never breaks the install.
 package main
@@ -17,12 +17,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const releaseAPI = "https://api.github.com/repos/HyperMarble/ray/releases/latest"
+const releaseAPI = "https://api.github.com/repos/HyperMarble/hyperray/releases/latest"
 
 func newUpdateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:          "update",
-		Short:        "Update ray to the latest release",
+		Short:        "Update hyperray to the latest release",
 		Args:         cobra.NoArgs,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -32,13 +32,13 @@ func newUpdateCmd() *cobra.Command {
 				return fmt.Errorf("update: %w", err)
 			}
 			if latest == version {
-				fmt.Fprintf(out, "ray %s is already the latest\n", version)
+				fmt.Fprintf(out, "hyperray %s is already the latest\n", version)
 				return nil
 			}
 			fmt.Fprintf(out, "updating %s -> %s\n", version, latest)
 
 			url := fmt.Sprintf(
-				"https://github.com/HyperMarble/ray/releases/download/%s/ray_%s_%s_%s.tar.gz",
+				"https://github.com/HyperMarble/hyperray/releases/download/%s/hyperray_%s_%s_%s.tar.gz",
 				latest, latest, runtime.GOOS, runtime.GOARCH,
 			)
 			binary, err := downloadBinary(url)
@@ -52,8 +52,8 @@ func newUpdateCmd() *cobra.Command {
 			}
 			// Write next to the real binary, then rename over it: rename on
 			// the same filesystem is atomic, so an interrupted update never
-			// leaves a half-written ray.
-			staging := filepath.Join(filepath.Dir(self), ".ray-update")
+			// leaves a half-written hyperray.
+			staging := filepath.Join(filepath.Dir(self), ".hyperray-update")
 			if err := os.WriteFile(staging, binary, 0o755); err != nil {
 				return fmt.Errorf("update: %w", err)
 			}
@@ -61,7 +61,7 @@ func newUpdateCmd() *cobra.Command {
 				os.Remove(staging)
 				return fmt.Errorf("update: %w", err)
 			}
-			fmt.Fprintf(out, "ray %s installed\n", latest)
+			fmt.Fprintf(out, "hyperray %s installed\n", latest)
 			return nil
 		},
 	}
@@ -110,9 +110,9 @@ func downloadBinary(url string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		if filepath.Base(header.Name) == "ray" {
+		if filepath.Base(header.Name) == "hyperray" {
 			return io.ReadAll(archive)
 		}
 	}
-	return nil, fmt.Errorf("release archive holds no ray binary")
+	return nil, fmt.Errorf("release archive holds no hyperray binary")
 }

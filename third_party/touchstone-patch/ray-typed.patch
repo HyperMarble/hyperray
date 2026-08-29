@@ -5,7 +5,7 @@
          if node.value is None:
              return None                                    # a bare annotation `x: T` binds nothing at runtime -> drop
 +        value = node.value
-+        # RAY PATCH: `x: bool = f(...)` (or int/float) where f is an unmodeled call -- module-qualified, a method,
++        # HYPERRAY PATCH: `x: bool = f(...)` (or int/float) where f is an unmodeled call -- module-qualified, a method,
 +        # or anything else that would otherwise decline to _Opaque -- narrows the result to a free value of the
 +        # declared scalar sort, instead of an opaque, uncomparable one. Wrapped as a marker call so every ev()
 +        # dispatch path (there are three: Name-call, Attribute-call, generic-call) is covered by one check, rather
@@ -26,7 +26,7 @@
          return _Complex(z3.FPVal(c.real, _F64), z3.FPVal(c.imag, _F64))
      if isinstance(node, ast.Constant) and node.value is None:   # None is a distinct value: arithmetic on it traps
          return _NoneVal()
-+    # RAY PATCH: `__ray_typed__("bool"/"int"/"float", <call>)` -- inserted by visit_AnnAssign for `x: T = f(...)`.
++    # HYPERRAY PATCH: `__ray_typed__("bool"/"int"/"float", <call>)` -- inserted by visit_AnnAssign for `x: T = f(...)`.
 +    # Evaluate the real (possibly unmodeled) call first; a decline -- either an _Opaque/_Closure result, or an
 +    # Unsupported raised while evaluating it (e.g. `isinstance(<opaque>, dict)` or `bool(<opaque>)`, which
 +    # decline by raising rather than by returning _Opaque) -- gets narrowed to a free value of the declared

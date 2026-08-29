@@ -9,12 +9,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	frontendcpp "github.com/HyperMarble/ray/internal/frontend/cpp"
-	frontendpython "github.com/HyperMarble/ray/internal/frontend/python"
-	frontendrust "github.com/HyperMarble/ray/internal/frontend/rust"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	frontendcpp "github.com/HyperMarble/hyperray/internal/frontend/cpp"
+	frontendpython "github.com/HyperMarble/hyperray/internal/frontend/python"
+	frontendrust "github.com/HyperMarble/hyperray/internal/frontend/rust"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 type translationRecord struct {

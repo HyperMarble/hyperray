@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/proof"
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/testir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/proof"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/testir"
 )
 
 type testIRFixture struct {
@@ -181,7 +181,7 @@ func TestTestIRRejectsUnreplayableCategoryProof(t *testing.T) {
 				for proofIndex := range model.CompilerEvidence[evidenceIndex].BehaviorProofs {
 					// The record remains structurally canonical, but its exact
 					// invocation cannot execute. Replay must catch that.
-					model.CompilerEvidence[evidenceIndex].BehaviorProofs[proofIndex].RealizationProof.WorkingDirectory = "/ray-testir-path-that-does-not-exist"
+					model.CompilerEvidence[evidenceIndex].BehaviorProofs[proofIndex].RealizationProof.WorkingDirectory = "/hyperray-testir-path-that-does-not-exist"
 				}
 			}
 		}
@@ -1243,7 +1243,7 @@ func fakeTask(operations []semanticir.Operation, domains []semanticir.Domain, ou
 		ID: "test-ir-task", Spec: semanticir.ArtifactRef{ID: "spec", Kind: semanticir.ArtifactSpec, Path: "spec.md", Digest: semanticir.DigestBytes([]byte("spec"))},
 		Instruction: semanticir.ArtifactRef{ID: "instruction", Kind: semanticir.ArtifactInstruction, Path: "instruction.md", Digest: semanticir.DigestBytes([]byte("instruction"))},
 		Domains:     domains, Operations: operations, Outcomes: outcomes, Provenance: prov,
-		Environment: &semanticir.EnvironmentModel{Provenance: fakeProvenance("environment", "ray.toml", []byte("environment"))},
+		Environment: &semanticir.EnvironmentModel{Provenance: fakeProvenance("environment", "hyperray.toml", []byte("environment"))},
 	}
 	for _, operation := range operations {
 		assignments := []semanticir.Assignment{{}}
@@ -1461,7 +1461,7 @@ func attachFakeProofEnvironment(task *semanticir.Task, bindings ...testir.Artifa
 	}
 	prover := bindings[0].Model.CompilerEvidence[0].Prover
 	environmentArtifact := semanticir.ArtifactRef{
-		ID: "environment", Kind: semanticir.ArtifactEnvironment, Path: "ray.toml",
+		ID: "environment", Kind: semanticir.ArtifactEnvironment, Path: "hyperray.toml",
 		Digest: semanticir.DigestBytes([]byte("environment")),
 	}
 	proofEnvironment := []semanticir.EnvironmentVariable{}

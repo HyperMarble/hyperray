@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Extracts every distinct terminal outcome -- every return, and every
-raise/throw/panic -- from a real source file in any of ray's target
+raise/throw/panic -- from a real source file in any of hyperray's target
 languages, for the sufficiency check (internal/sufficiency): does
 spec.md's Required-behavior text account for every real outcome the
 source can produce?
@@ -14,7 +14,7 @@ source text, and stop.
 Three earlier versions were replaced to get here, each for a real reason:
 
   1. A hand-rolled walk over Python's builtin `ast` module. Only ever
-     worked for Python -- useless for ray's Rust/C++/Go targets.
+     worked for Python -- useless for hyperray's Rust/C++/Go targets.
   2. A tree-sitter version that still hand-walked children looking for
      node types ("string", "type_identifier", ...) and munged qualified
      names with .split("::"). Those were guessed lists that would need a
@@ -89,7 +89,7 @@ _QUERIES = {
         #     ((macro_invocation (token_tree) @injection.content)
         #      (#set! injection.language "rust"))
         # -- i.e. re-parse a macro body as Rust. This matters acutely for
-        # ray: Verus code is entirely wrapped in `verus! { ... }`, so
+        # hyperray: Verus code is entirely wrapped in `verus! { ... }`, so
         # without injection the Rust verifier's own source yields zero
         # outcomes. Found by stress-testing real Verus sources, and fixed
         # using the grammar's declaration rather than a verus-specific
@@ -114,7 +114,7 @@ _QUERIES = {
         # raw-string injection, not preproc bodies, because a macro body
         # is frequently an unparseable fragment rather than standalone
         # code. Overriding that judgement would be guesswork. It is also
-        # moot for ray's pipeline: ESBMC preprocesses C++ before
+        # moot for hyperray's pipeline: ESBMC preprocesses C++ before
         # verifying, so macros are already expanded in what actually gets
         # checked. Found by stress-testing real system headers.
     },
@@ -139,7 +139,7 @@ def _captured_nodes(query, tree, capture="node"):
     """tree-sitter's capture API moved across binding versions: 0.25+ runs
     captures through a QueryCursor and returns a dict of capture-name ->
     nodes; older bindings called Query.captures directly and returned a
-    list of (node, name) pairs. Support both rather than pinning ray to
+    list of (node, name) pairs. Support both rather than pinning hyperray to
     one binding version."""
     if QueryCursor is not None:
         captures = QueryCursor(query).captures(tree.root_node)

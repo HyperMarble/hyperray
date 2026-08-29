@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
-	"github.com/HyperMarble/ray/internal/speccompiler"
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/speccompiler"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 func readSkillFile(t *testing.T, parts ...string) string {
@@ -341,7 +341,7 @@ func TestSpecSkillRejectsObsoleteArchitecture(t *testing.T) {
 	joined := strings.ToLower(strings.Join(files, "\n"))
 	for _, forbidden := range []string{
 		"finite-adapter",
-		"ray-adapter-v1",
+		"hyperray-adapter-v1",
 		"generated verifier",
 		"acceptance-init",
 		"phase-a-authoring-record",

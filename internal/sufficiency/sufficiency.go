@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 // Gap is a real outcome spec.md never mentions.

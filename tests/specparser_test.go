@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 func TestSpecParser_Simple(t *testing.T) {
@@ -247,7 +247,7 @@ func TestSpecParser_TrailingProseInParametersParagraphIsIgnored(t *testing.T) {
 // (no blank line before it) made the domain declaration silently
 // disappear entirely -- not corrupt, gone -- because the paragraph no
 // longer STARTED WITH "Parameters:". With no domain to check against,
-// ray spec-lint reported a clean PASS on a table containing a genuinely
+// hyperray spec-lint reported a clean PASS on a table containing a genuinely
 // undeclared cell value. Matching on Contains instead of HasPrefix keeps
 // the declaration regardless of what precedes it in the paragraph.
 func TestSpecParser_LeadInProseBeforeParametersIsNotLost(t *testing.T) {

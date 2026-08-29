@@ -3,7 +3,7 @@
 The Go frontend embeds this file and executes it with the system Python.  This
 script is not a verifier.  Its only job is to obtain Python's real parser and
 return a lossless-enough, explicitly tagged syntax tree for the constructs the
-Ray frontend supports.  Anything outside that allowlist is reported as an
+Hyperray frontend supports.  Anything outside that allowlist is reported as an
 unsupported node; callers must treat any such report as a proof blocker.
 """
 
@@ -125,7 +125,7 @@ class Normalizer:
                 value = self.expression(node.value.args[0])
                 if value is None:
                     return None
-                return {**base, "kind": "call", "name": "__ray_type_name__", "args": [value]}
+                return {**base, "kind": "call", "name": "__hyperray_type_name__", "args": [value]}
             if not self.exhaustive:
                 self.reject(node, "PY_DYNAMIC_ATTRIBUTE", "attribute lookup can invoke descriptors and requires exact exhaustive CPython evidence")
                 return None

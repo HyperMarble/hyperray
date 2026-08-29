@@ -10,7 +10,7 @@ import (
 )
 
 // newDepHarvestCmd collects a pinned dependency's own tested edge values.
-// An SMT solver cannot reason through a complex dependency, so ray does not
+// An SMT solver cannot reason through a complex dependency, so hyperray does not
 // try: the dependency's test suite is a curated list of inputs its authors
 // proved they care about, and those literals become candidate domain values
 // for the author to review into spec.md. Cached per (package, version)
@@ -24,7 +24,7 @@ func newDepHarvestCmd() *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			harvester := filepath.Join(rayRepoRoot(), "third_party", "mutate", "harvest_dep.py")
+			harvester := filepath.Join(hyperrayRepoRoot(), "third_party", "mutate", "harvest_dep.py")
 			sub := exec.Command(pythonPath, harvester, args[0])
 			body, err := sub.Output()
 			if err != nil {
@@ -34,7 +34,7 @@ func newDepHarvestCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			cacheDir := filepath.Join(home, ".ray", "depharvest")
+			cacheDir := filepath.Join(home, ".hyperray", "depharvest")
 			if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 				return err
 			}

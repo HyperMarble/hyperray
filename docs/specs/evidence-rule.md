@@ -59,7 +59,7 @@ reference:94-101   solution.patch lines 94-101
 reference:187-193; reference:226   two spans, semicolon separated
 ```
 
-`ray spec-lint` takes `--reference <path>` alongside `--instruction <path>`. A
+`hyperray spec-lint` takes `--reference <path>` alongside `--instruction <path>`. A
 `reference:` anchor without `--reference` is rejected. A row anchored only into
 the reference contributes no instruction clause, which is what lets it state a
 mechanism detail the prose could not carry.

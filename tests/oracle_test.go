@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/oracle"
+	"github.com/HyperMarble/hyperray/internal/oracle"
 )
 
 // testOraclePython locates the patched touchstone-prover venv's python3 for
@@ -93,7 +93,7 @@ func TestOracle_AutoAnnotate_DeclinesWithoutStub(t *testing.T) {
 	}
 }
 
-// typedNarrowingCases is the ray-typed.patch regression suite: 20 real,
+// typedNarrowingCases is the hyperray-typed.patch regression suite: 20 real,
 // distinct dependencies pulled unbiased from the real task corpora
 // (/Volumes/Hak_SSD/pluto/tasks, /Volumes/Hak_SSD/deep-swe/tasks) via their
 // actual Dockerfile/requirements.txt pip installs, not hand-picked for
@@ -276,7 +276,7 @@ func TestOracle_TypedNarrowing(t *testing.T) {
 				t.Fatalf("Prove: %v", err)
 			}
 			if v.Status != "PROVED" {
-				t.Fatalf("got status %q, want PROVED (ray-typed patch not narrowing the unmodeled call): %+v", v.Status, v)
+				t.Fatalf("got status %q, want PROVED (hyperray-typed patch not narrowing the unmodeled call): %+v", v.Status, v)
 			}
 		})
 		t.Run(c.name+"/false_claim_refutes", func(t *testing.T) {

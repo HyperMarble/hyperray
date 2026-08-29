@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/bridges"
+	"github.com/HyperMarble/hyperray/internal/bridges"
 )
 
 const rustFilledEntry = `pub fn run(operation: &str, values: &[(String, String)]) -> String {
@@ -53,8 +53,8 @@ func writeExecutable(t *testing.T, path, body string) {
 func TestRustProbes_ObserveSuccessAndPanic(t *testing.T) {
 	requireTool(t, "cargo")
 	crate := copyRustFixture(t)
-	writeExecutable(t, filepath.Join(crate, "examples", "ray_probes.rs"), bridges.RustHarness())
-	writeExecutable(t, filepath.Join(crate, "examples", "ray_entry.rs"), rustFilledEntry)
+	writeExecutable(t, filepath.Join(crate, "examples", "hyperray_probes.rs"), bridges.RustHarness())
+	writeExecutable(t, filepath.Join(crate, "examples", "hyperray_entry.rs"), rustFilledEntry)
 	bridgesDir := filepath.Join(crate, "bridges")
 
 	ok := filepath.Join(bridgesDir, "wit_compose__two.sh")
@@ -76,8 +76,8 @@ func TestCppProbes_ObserveSuccessAndException(t *testing.T) {
 	requireTool(t, "c++")
 	root := t.TempDir()
 	bridgesDir := filepath.Join(root, "bridges")
-	writeExecutable(t, filepath.Join(bridgesDir, "ray_probes.cpp"), bridges.CppHarness())
-	writeExecutable(t, filepath.Join(bridgesDir, "ray_entry.cpp"), cppFilledEntry)
+	writeExecutable(t, filepath.Join(bridgesDir, "hyperray_probes.cpp"), bridges.CppHarness())
+	writeExecutable(t, filepath.Join(bridgesDir, "hyperray_entry.cpp"), cppFilledEntry)
 
 	ok := filepath.Join(bridgesDir, "wit_compose__two.sh")
 	writeExecutable(t, ok, bridges.WrapperScript("cpp", "compose", map[string]string{"parts": "two"}))

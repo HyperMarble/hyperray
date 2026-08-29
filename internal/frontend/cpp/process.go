@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func cppWorkspaceEnvironment(workspace semanticir.WorkspaceRef) []string {

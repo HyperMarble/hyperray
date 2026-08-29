@@ -10,7 +10,7 @@ real, complete type checker already solves inheritance, generics,
 overloads, and re-exports correctly, so this asks mypy directly (via
 `reveal_type`) instead of reimplementing a fraction of one.
 
-Deliberately narrow, same posture as ray-typed.patch itself: only
+Deliberately narrow, same posture as hyperray-typed.patch itself: only
 auto-annotates when mypy's revealed type is EXACTLY a bare `bool`/`int`/
 `float` (accepting mypy's fully-qualified `builtins.X` spelling too).
 Anything else -- `Any`, a union, an unresolvable attribute mypy itself
@@ -63,7 +63,7 @@ def auto_annotate(src: str, python_executable: str | None = None) -> str:
         node = candidates[i]
         target = node.targets[0].id
         indent = re.match(r"[ \t]*", annotated_lines[node.lineno - 1 + inserted]).group(0)
-        annotated_lines.insert(node.lineno + inserted, f"{indent}reveal_type({target})  # ray-candidate-{i}\n")
+        annotated_lines.insert(node.lineno + inserted, f"{indent}reveal_type({target})  # hyperray-candidate-{i}\n")
         inserted += 1
 
     probe_src = "".join(annotated_lines)
@@ -89,7 +89,7 @@ def auto_annotate(src: str, python_executable: str | None = None) -> str:
         line_no = int(out_line.split(":", 2)[1]) if out_line.count(":") >= 2 else None
         if line_no is None or line_no - 1 >= len(annotated_lines):
             continue
-        marker = re.search(r"# ray-candidate-(\d+)", annotated_lines[line_no - 1])
+        marker = re.search(r"# hyperray-candidate-(\d+)", annotated_lines[line_no - 1])
         if marker:
             resolved[int(marker.group(1))] = m.group(1)
 

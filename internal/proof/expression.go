@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func evaluateInvariant(task *semanticir.Task, invariant semanticir.Invariant, assignment semanticir.Assignment, outcome semanticir.ObservableOutcome) (bool, error) {

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/executor"
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/executor"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 var probePathCharacters = regexp.MustCompile(`[^A-Za-z0-9_.-]+`)
@@ -109,9 +109,9 @@ func GenerateProbe(ctx context.Context, request semanticir.MaterializationReques
 	if safeID == "" {
 		safeID = "witness"
 	}
-	harnessName := ".ray-cpp-probe-" + safeID + ".cpp"
-	binaryName := ".ray-cpp-probe-" + safeID + ".bin"
-	observationName := ".ray-cpp-probe-" + safeID + ".json"
+	harnessName := ".hyperray-cpp-probe-" + safeID + ".cpp"
+	binaryName := ".hyperray-cpp-probe-" + safeID + ".bin"
+	observationName := ".hyperray-cpp-probe-" + safeID + ".json"
 	// Stage generated files in the declared working directory. The executor
 	// recreates this workspace-relative layout in its isolated copy, so argv
 	// never embeds a path in the original (possibly aliased) workspace.
@@ -224,7 +224,7 @@ func probeExpectedSemantics(request semanticir.MaterializationRequest) (semantic
 		}
 		classified, err := semanticir.ClassifyRawOutcome(operation, trace, choice.Behavior.Provenance)
 		if err != nil || classified != choice.OutcomeID || witness.ObservedOutcomes[index] != choice.OutcomeID {
-			return semanticir.ExpectedSemantics{}, fmt.Errorf("probe behavior %d raw trace does not classify as its Ray-owned outcome", index)
+			return semanticir.ExpectedSemantics{}, fmt.Errorf("probe behavior %d raw trace does not classify as its Hyperray-owned outcome", index)
 		}
 		expected.RuntimeOutcomes = append(expected.RuntimeOutcomes, semanticir.RuntimeOutcomeChoice{
 			Behavior: choice.Behavior, RawOutcome: trace, MappingOutcomeID: classified,

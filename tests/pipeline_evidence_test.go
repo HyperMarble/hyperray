@@ -3,19 +3,19 @@ package tests
 import (
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/depharvest"
-	"github.com/HyperMarble/ray/internal/difftest"
+	"github.com/HyperMarble/hyperray/internal/depharvest"
+	"github.com/HyperMarble/hyperray/internal/difftest"
 )
 
 // TestPipeline_HarvestedInputsCatchWhatNaiveTestingMisses is the single
-// most load-bearing test in ray, because it is the only one that tests
-// ray's actual claim rather than one of its parts.
+// most load-bearing test in hyperray, because it is the only one that tests
+// hyperray's actual claim rather than one of its parts.
 //
 // Every other test here shows a component works. This one asks whether
 // the pipeline does something that ordinary testing does not. The
 // distinction matters: a diff-test that only "catches" bugs on inputs
 // the author hand-picked to hit them proves nothing -- it is a rigged
-// demo. The real question is whether inputs ray obtains on its own reach
+// demo. The real question is whether inputs hyperray obtains on its own reach
 // branches a plausible hand-written test suite misses.
 //
 // The bug below is deliberately the kind that survives review: after
@@ -25,7 +25,7 @@ import (
 // Measured result: 5 plausible hand-picked strings find nothing, while
 // values harvested from jsonschema's own pinned test suite find it --
 // on "                ", a value chosen by that dependency's
-// maintainers, not by ray's author.
+// maintainers, not by hyperray's author.
 func TestPipeline_HarvestedInputsCatchWhatNaiveTestingMisses(t *testing.T) {
 	python := testPython3(t)
 	harvestPython := testHarvestPython(t)
@@ -55,7 +55,7 @@ def normalize(s):
 			"this test no longer demonstrates anything: %+v", naiveRes.Disagreements)
 	}
 
-	// Values ray obtains on its own, from a real dependency's real suite.
+	// Values hyperray obtains on its own, from a real dependency's real suite.
 	h, err := depharvest.Run(harvestPython, "jsonschema", harvestTests, 60000)
 	if err != nil {
 		t.Fatalf("depharvest: %v", err)

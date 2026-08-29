@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func pinnedRustProver(ctx context.Context, request semanticir.FrontendRequest) (semanticir.ToolRef, []string, []semanticir.EnvironmentVariable, []semanticir.Diagnostic) {

@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/oracle"
+	"github.com/HyperMarble/hyperray/internal/oracle"
 )
 
 // testVerusPath locates the verus binary: RAY_VERUS_PATH env var, then

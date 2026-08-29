@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/oracle"
+	"github.com/HyperMarble/hyperray/internal/oracle"
 )
 
 // taintBoundedCases locks in a real finding: a real task

@@ -11,13 +11,15 @@ import (
 
 	"github.com/pelletier/go-toml/v2"
 
-	"github.com/HyperMarble/ray/internal/taskbundle"
+	"github.com/HyperMarble/hyperray/internal/taskbundle"
 )
 
 const (
 	ConfigVersion     = 1
-	DefaultConfigName = "ray.toml"
-	defaultCertName   = "ray-certificate.json"
+	DefaultConfigName = "hyperray.toml"
+	// LegacyConfigName still loads for task folders created before the rename.
+	LegacyConfigName = "hyperray.toml"
+	defaultCertName  = "hyperray-certificate.json"
 )
 
 // config is deliberately private: callers select immutable task bytes, not
@@ -181,25 +183,33 @@ func loadConfig(req Request) (config, string, []byte, error) {
 	path := req.ConfigPath
 	if path == "" {
 		path = filepath.Join(root, DefaultConfigName)
+		if _, statErr := os.Stat(path); statErr != nil {
+			// Old task folders still carry hyperray.toml; load it instead of
+			// failing on the new name.
+			legacy := filepath.Join(root, LegacyConfigName)
+			if _, statErr := os.Stat(legacy); statErr == nil {
+				path = legacy
+			}
+		}
 	} else if !filepath.IsAbs(path) {
 		path = filepath.Join(root, path)
 	}
 	path, err = filepath.Abs(path)
 	if err != nil {
-		return config{}, "", nil, fmt.Errorf("resolve ray config: %w", err)
+		return config{}, "", nil, fmt.Errorf("resolve hyperray config: %w", err)
 	}
 	if !withinRoot(root, path) {
-		return config{}, "", nil, fmt.Errorf("ray config %q is outside task root", path)
+		return config{}, "", nil, fmt.Errorf("hyperray config %q is outside task root", path)
 	}
 
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return config{}, "", nil, fmt.Errorf("read ray config: %w", err)
+		return config{}, "", nil, fmt.Errorf("read hyperray config: %w", err)
 	}
 	decoder := toml.NewDecoder(bytes.NewReader(content)).DisallowUnknownFields()
 	var cfg config
 	if err := decoder.Decode(&cfg); err != nil {
-		return config{}, "", nil, fmt.Errorf("decode ray config: %w", err)
+		return config{}, "", nil, fmt.Errorf("decode hyperray config: %w", err)
 	}
 	if req.CertificatePath != "" {
 		cfg.CertificatePath = req.CertificatePath
@@ -212,56 +222,56 @@ func loadConfig(req Request) (config, string, []byte, error) {
 
 func (cfg config) validate(root, configPath string) error {
 	if cfg.Version != ConfigVersion {
-		return fmt.Errorf("ray config version %d, want %d", cfg.Version, ConfigVersion)
+		return fmt.Errorf("hyperray config version %d, want %d", cfg.Version, ConfigVersion)
 	}
 	if strings.TrimSpace(cfg.TaskID) == "" {
-		return errors.New("ray config: task_id is required")
+		return errors.New("hyperray config: task_id is required")
 	}
 	if strings.TrimSpace(cfg.SpecArtifactID) == "" {
-		return errors.New("ray config: spec_artifact_id is required")
+		return errors.New("hyperray config: spec_artifact_id is required")
 	}
 	if strings.TrimSpace(cfg.InstructionArtifactID) == "" {
-		return errors.New("ray config: instruction_artifact_id is required")
+		return errors.New("hyperray config: instruction_artifact_id is required")
 	}
 	if cfg.SpecArtifactID == cfg.InstructionArtifactID {
-		return errors.New("ray config: spec and instruction must be distinct frozen artifacts")
+		return errors.New("hyperray config: spec and instruction must be distinct frozen artifacts")
 	}
 	if cfg.Freeze.RequiredInputs.SpecArtifactID != cfg.SpecArtifactID || cfg.Freeze.RequiredInputs.InstructionArtifactID != cfg.InstructionArtifactID {
-		return errors.New("ray config: top-level spec/instruction IDs must exactly equal freeze.required_inputs role bindings")
+		return errors.New("hyperray config: top-level spec/instruction IDs must exactly equal freeze.required_inputs role bindings")
 	}
 	if len(cfg.Freeze.Artifacts) == 0 {
-		return errors.New("ray config: at least one freeze.artifact is required")
+		return errors.New("hyperray config: at least one freeze.artifact is required")
 	}
 	if len(cfg.Freeze.Workspaces) != 3 {
-		return fmt.Errorf("ray config: exactly three freeze.workspace entries are required, got %d", len(cfg.Freeze.Workspaces))
+		return fmt.Errorf("hyperray config: exactly three freeze.workspace entries are required, got %d", len(cfg.Freeze.Workspaces))
 	}
 	toolNames := map[string]bool{}
 	for _, tool := range cfg.Freeze.Environment.Tools {
 		if tool.Name == "" || tool.Version == "" {
-			return errors.New("ray config: every freeze.environment.tool requires name and version")
+			return errors.New("hyperray config: every freeze.environment.tool requires name and version")
 		}
 		if toolNames[tool.Name] {
-			return fmt.Errorf("ray config: duplicate environment tool %q", tool.Name)
+			return fmt.Errorf("hyperray config: duplicate environment tool %q", tool.Name)
 		}
 		toolNames[tool.Name] = true
 	}
 	if cfg.Freeze.Repository == nil {
-		return errors.New("ray config: freeze.repository is required to prove every prepared workspace from an exact base commit and ordered patches")
+		return errors.New("hyperray config: freeze.repository is required to prove every prepared workspace from an exact base commit and ordered patches")
 	}
 	repository := cfg.Freeze.Repository
 	if repository.Root == "" || filepath.IsAbs(repository.Root) || strings.HasPrefix(filepath.Clean(repository.Root), "..") {
-		return errors.New("ray config: freeze.repository.root must be task-relative")
+		return errors.New("hyperray config: freeze.repository.root must be task-relative")
 	}
 	if strings.TrimSpace(repository.BaseCommit) == "" || strings.TrimSpace(repository.ToolName) == "" || !toolNames[repository.ToolName] || repository.TimeoutMillis <= 0 {
-		return errors.New("ray config: freeze.repository requires base_commit, a declared tool_name, and a positive timeout_millis")
+		return errors.New("hyperray config: freeze.repository requires base_commit, a declared tool_name, and a positive timeout_millis")
 	}
 	declaredArtifactKinds := make(map[string]string, len(cfg.Freeze.Artifacts))
 	for _, artifact := range cfg.Freeze.Artifacts {
 		if strings.TrimSpace(artifact.ID) == "" || strings.TrimSpace(artifact.Kind) == "" || strings.TrimSpace(artifact.Path) == "" {
-			return errors.New("ray config: every freeze.artifact requires id, kind, and path")
+			return errors.New("hyperray config: every freeze.artifact requires id, kind, and path")
 		}
 		if _, duplicate := declaredArtifactKinds[artifact.ID]; duplicate {
-			return fmt.Errorf("ray config: duplicate freeze artifact %q", artifact.ID)
+			return fmt.Errorf("hyperray config: duplicate freeze artifact %q", artifact.ID)
 		}
 		declaredArtifactKinds[artifact.ID] = artifact.Kind
 	}
@@ -275,27 +285,27 @@ func (cfg config) validate(root, configPath string) error {
 	for _, workspace := range cfg.Freeze.Workspaces {
 		state := taskbundle.WorkspaceState(workspace.State)
 		if _, duplicate := workspaceByState[state]; duplicate {
-			return fmt.Errorf("ray config: duplicate workspace state %q", workspace.State)
+			return fmt.Errorf("hyperray config: duplicate workspace state %q", workspace.State)
 		}
 		workspaceByState[state] = workspace
 		if strings.TrimSpace(workspace.Command.ShellToolName) == "" {
-			return fmt.Errorf("ray config: workspace %q command requires shell_tool_name", workspace.State)
+			return fmt.Errorf("hyperray config: workspace %q command requires shell_tool_name", workspace.State)
 		}
 		if !toolNames[workspace.Command.ShellToolName] {
-			return fmt.Errorf("ray config: workspace %q command references undeclared shell tool %q", workspace.State, workspace.Command.ShellToolName)
+			return fmt.Errorf("hyperray config: workspace %q command references undeclared shell tool %q", workspace.State, workspace.Command.ShellToolName)
 		}
 		signal := workspace.Command.PassSignal
 		if signal.Match != "exact" || (signal.Source != "exit-code" && signal.Source != "file") {
-			return fmt.Errorf("ray config: workspace %q pass signal must be exact exit-code or file for executable confirmation", workspace.State)
+			return fmt.Errorf("hyperray config: workspace %q pass signal must be exact exit-code or file for executable confirmation", workspace.State)
 		}
 		if len(workspace.Derivation.Changes) != 0 {
-			return fmt.Errorf("ray config: repository-backed workspace %q cannot use caller-asserted whole-file changes", workspace.State)
+			return fmt.Errorf("hyperray config: repository-backed workspace %q cannot use caller-asserted whole-file changes", workspace.State)
 		}
 		seenPatches := map[string]bool{}
 		for index, artifactID := range workspace.Derivation.PatchArtifactIDs {
 			_, declared := declaredArtifactKinds[artifactID]
 			if artifactID == "" || !declared || seenPatches[artifactID] {
-				return fmt.Errorf("ray config: workspace %q has an empty, undeclared, or repeated patch artifact at position %d", workspace.State, index)
+				return fmt.Errorf("hyperray config: workspace %q has an empty, undeclared, or repeated patch artifact at position %d", workspace.State, index)
 			}
 			seenPatches[artifactID] = true
 		}
@@ -304,121 +314,121 @@ func (cfg config) validate(root, configPath string) error {
 	tests, testsOK := workspaceByState[taskbundle.BaseNewTests]
 	solution, solutionOK := workspaceByState[taskbundle.SolutionNewTests]
 	if !baseOK || !testsOK || !solutionOK {
-		return errors.New("ray config: workspace triple must contain base+old-tests, base+new-tests, and base+solution+new-tests")
+		return errors.New("hyperray config: workspace triple must contain base+old-tests, base+new-tests, and base+solution+new-tests")
 	}
 	if base.Derivation.Parent != "" || len(base.Derivation.PatchArtifactIDs) != 0 {
-		return errors.New("ray config: base+old-tests must be the unpatched repository base commit")
+		return errors.New("hyperray config: base+old-tests must be the unpatched repository base commit")
 	}
 	testPatchPrefix := tests.Derivation.PatchArtifactIDs
 	if tests.Derivation.Parent != string(taskbundle.BaseOldTests) || len(testPatchPrefix) == 0 {
-		return errors.New("ray config: base+new-tests must apply at least one declared test patch to base+old-tests")
+		return errors.New("hyperray config: base+new-tests must apply at least one declared test patch to base+old-tests")
 	}
 	for _, artifactID := range testPatchPrefix {
 		if declaredArtifactKinds[artifactID] != "tests" {
-			return fmt.Errorf("ray config: test patch %q has kind %q, want tests", artifactID, declaredArtifactKinds[artifactID])
+			return fmt.Errorf("hyperray config: test patch %q has kind %q, want tests", artifactID, declaredArtifactKinds[artifactID])
 		}
 	}
 	solutionPatches := solution.Derivation.PatchArtifactIDs
 	if solution.Derivation.Parent != string(taskbundle.BaseNewTests) || len(solutionPatches) <= len(testPatchPrefix) || !reflect.DeepEqual(solutionPatches[:len(testPatchPrefix)], testPatchPrefix) {
-		return errors.New("ray config: base+solution+new-tests must preserve the exact test-patch prefix and append a solution patch")
+		return errors.New("hyperray config: base+solution+new-tests must preserve the exact test-patch prefix and append a solution patch")
 	}
 	for _, artifactID := range solutionPatches[len(testPatchPrefix):] {
 		kind := declaredArtifactKinds[artifactID]
 		if kind != "solution" && kind != "code" {
-			return fmt.Errorf("ray config: solution patch %q has kind %q, want solution or code", artifactID, kind)
+			return fmt.Errorf("hyperray config: solution patch %q has kind %q, want solution or code", artifactID, kind)
 		}
 	}
 	for i := 1; i < len(cfg.Freeze.Workspaces); i++ {
 		if !reflect.DeepEqual(cfg.Freeze.Workspaces[0].Command, cfg.Freeze.Workspaces[i].Command) {
-			return errors.New("ray config: all three workspace states must use the same verifier command and pass signal")
+			return errors.New("hyperray config: all three workspace states must use the same verifier command and pass signal")
 		}
 	}
 	if len(cfg.Translations) == 0 {
-		return errors.New("ray config: independent code and test translations are required")
+		return errors.New("hyperray config: independent code and test translations are required")
 	}
 	seenTranslations := map[string]bool{}
 	seenWorkspacePaths := map[string]bool{}
 	for i, translation := range cfg.Translations {
 		if translation.ArtifactID == "" {
-			return fmt.Errorf("ray config: translation %d has no artifact_id", i)
+			return fmt.Errorf("hyperray config: translation %d has no artifact_id", i)
 		}
 		if translation.WorkspacePath == "" || filepath.IsAbs(translation.WorkspacePath) || strings.HasPrefix(filepath.Clean(translation.WorkspacePath), "..") {
-			return fmt.Errorf("ray config: translation %q requires a solution-workspace-relative workspace_path", translation.ArtifactID)
+			return fmt.Errorf("hyperray config: translation %q requires a solution-workspace-relative workspace_path", translation.ArtifactID)
 		}
 		cleanWorkspacePath := filepath.ToSlash(filepath.Clean(filepath.FromSlash(translation.WorkspacePath)))
 		if seenWorkspacePaths[cleanWorkspacePath] {
-			return fmt.Errorf("ray config: multiple translations bind workspace_path %q", cleanWorkspacePath)
+			return fmt.Errorf("hyperray config: multiple translations bind workspace_path %q", cleanWorkspacePath)
 		}
 		seenWorkspacePaths[cleanWorkspacePath] = true
 		if translation.ToolName == "" {
-			return fmt.Errorf("ray config: translation %q requires tool_name", translation.ArtifactID)
+			return fmt.Errorf("hyperray config: translation %q requires tool_name", translation.ArtifactID)
 		}
 		if !toolNames[translation.ToolName] {
-			return fmt.Errorf("ray config: translation %q references undeclared tool %q", translation.ArtifactID, translation.ToolName)
+			return fmt.Errorf("hyperray config: translation %q references undeclared tool %q", translation.ArtifactID, translation.ToolName)
 		}
 		if translation.ProverToolName == "" {
-			return fmt.Errorf("ray config: translation %q requires prover_tool_name", translation.ArtifactID)
+			return fmt.Errorf("hyperray config: translation %q requires prover_tool_name", translation.ArtifactID)
 		}
 		if !toolNames[translation.ProverToolName] {
-			return fmt.Errorf("ray config: translation %q references undeclared prover tool %q", translation.ArtifactID, translation.ProverToolName)
+			return fmt.Errorf("hyperray config: translation %q references undeclared prover tool %q", translation.ArtifactID, translation.ProverToolName)
 		}
 		if seenTranslations[translation.ArtifactID] {
-			return fmt.Errorf("ray config: duplicate translation for artifact %q", translation.ArtifactID)
+			return fmt.Errorf("hyperray config: duplicate translation for artifact %q", translation.ArtifactID)
 		}
 		seenTranslations[translation.ArtifactID] = true
 		if declaredArtifactKinds[translation.ArtifactID] != translation.Kind {
-			return fmt.Errorf("ray config: translation %q relabels frozen artifact kind %q as %q", translation.ArtifactID, declaredArtifactKinds[translation.ArtifactID], translation.Kind)
+			return fmt.Errorf("hyperray config: translation %q relabels frozen artifact kind %q as %q", translation.ArtifactID, declaredArtifactKinds[translation.ArtifactID], translation.Kind)
 		}
 		switch translation.Kind {
 		case "code":
 			if len(translation.ObservedOperations) != 0 {
-				return fmt.Errorf("ray config: code translation %q cannot declare observed_operations", translation.ArtifactID)
+				return fmt.Errorf("hyperray config: code translation %q cannot declare observed_operations", translation.ArtifactID)
 			}
 			if translation.RunnerToolName != "" {
-				return fmt.Errorf("ray config: code translation %q cannot declare runner_tool_name", translation.ArtifactID)
+				return fmt.Errorf("hyperray config: code translation %q cannot declare runner_tool_name", translation.ArtifactID)
 			}
 			if translation.RunnerConfigurationArtifactID != "" {
-				return fmt.Errorf("ray config: code translation %q cannot declare runner_configuration_artifact_id", translation.ArtifactID)
+				return fmt.Errorf("hyperray config: code translation %q cannot declare runner_configuration_artifact_id", translation.ArtifactID)
 			}
 		case "tests":
 			if translation.RunnerToolName == "" {
-				return fmt.Errorf("ray config: test translation %q requires runner_tool_name", translation.ArtifactID)
+				return fmt.Errorf("hyperray config: test translation %q requires runner_tool_name", translation.ArtifactID)
 			}
 			if !toolNames[translation.RunnerToolName] {
-				return fmt.Errorf("ray config: test translation %q references undeclared runner tool %q", translation.ArtifactID, translation.RunnerToolName)
+				return fmt.Errorf("hyperray config: test translation %q references undeclared runner tool %q", translation.ArtifactID, translation.RunnerToolName)
 			}
 			if translation.RunnerConfigurationArtifactID == "" {
-				return fmt.Errorf("ray config: test translation %q requires runner_configuration_artifact_id", translation.ArtifactID)
+				return fmt.Errorf("hyperray config: test translation %q requires runner_configuration_artifact_id", translation.ArtifactID)
 			}
 		default:
-			return fmt.Errorf("ray config: translation %q kind must be code or tests", translation.ArtifactID)
+			return fmt.Errorf("hyperray config: translation %q kind must be code or tests", translation.ArtifactID)
 		}
 		switch translation.Language {
 		case "python", "rust", "cpp":
 		default:
-			return fmt.Errorf("ray config: translation %q has unsupported language %q", translation.ArtifactID, translation.Language)
+			return fmt.Errorf("hyperray config: translation %q has unsupported language %q", translation.ArtifactID, translation.Language)
 		}
 		if translation.Kind == "code" && len(translation.EntryPoints) == 0 {
-			return fmt.Errorf("ray config: code translation %q requires entry_points", translation.ArtifactID)
+			return fmt.Errorf("hyperray config: code translation %q requires entry_points", translation.ArtifactID)
 		}
 		seenEntryPoints := map[string]bool{}
 		for _, entryPoint := range translation.EntryPoints {
 			if strings.TrimSpace(entryPoint) == "" || seenEntryPoints[entryPoint] {
-				return fmt.Errorf("ray config: translation %q has an empty or duplicate entry point", translation.ArtifactID)
+				return fmt.Errorf("hyperray config: translation %q has an empty or duplicate entry point", translation.ArtifactID)
 			}
 			seenEntryPoints[entryPoint] = true
 		}
 		seenObserved := map[string]bool{}
 		for _, operation := range translation.ObservedOperations {
 			if strings.TrimSpace(operation) == "" || seenObserved[operation] {
-				return fmt.Errorf("ray config: translation %q has an empty or duplicate observed operation", translation.ArtifactID)
+				return fmt.Errorf("hyperray config: translation %q has an empty or duplicate observed operation", translation.ArtifactID)
 			}
 			seenObserved[operation] = true
 		}
 	}
 	configRel, err := filepath.Rel(root, configPath)
 	if err != nil {
-		return fmt.Errorf("ray config: resolve config artifact: %w", err)
+		return fmt.Errorf("hyperray config: resolve config artifact: %w", err)
 	}
 	configRel = filepath.ToSlash(configRel)
 	declaresConfig, declaresSpec, declaresInstruction := false, false, false
@@ -427,35 +437,35 @@ func (cfg config) validate(root, configPath string) error {
 		declaredArtifacts[artifact.ID] = true
 		if filepath.ToSlash(filepath.Clean(artifact.Path)) == configRel {
 			if artifact.Kind != "configuration" {
-				return errors.New("ray config: ray.toml must retain frozen artifact kind configuration")
+				return errors.New("hyperray config: hyperray.toml must retain frozen artifact kind configuration")
 			}
 			declaresConfig = true
 		}
 		if artifact.ID == cfg.SpecArtifactID {
 			if artifact.Kind != "spec" {
-				return fmt.Errorf("ray config: final spec artifact %q must have kind spec", artifact.ID)
+				return fmt.Errorf("hyperray config: final spec artifact %q must have kind spec", artifact.ID)
 			}
 			declaresSpec = true
 		}
 		if artifact.ID == cfg.InstructionArtifactID {
 			if artifact.Kind != "instruction" {
-				return fmt.Errorf("ray config: instruction artifact %q must have kind instruction", artifact.ID)
+				return fmt.Errorf("hyperray config: instruction artifact %q must have kind instruction", artifact.ID)
 			}
 			declaresInstruction = true
 		}
 	}
 	if !declaresConfig {
-		return errors.New("ray config: the ray.toml file must itself be a declared frozen artifact")
+		return errors.New("hyperray config: the hyperray.toml file must itself be a declared frozen artifact")
 	}
 	if !declaresSpec {
-		return fmt.Errorf("ray config: spec artifact %q is not declared", cfg.SpecArtifactID)
+		return fmt.Errorf("hyperray config: spec artifact %q is not declared", cfg.SpecArtifactID)
 	}
 	if !declaresInstruction {
-		return fmt.Errorf("ray config: instruction artifact %q is not declared", cfg.InstructionArtifactID)
+		return fmt.Errorf("hyperray config: instruction artifact %q is not declared", cfg.InstructionArtifactID)
 	}
 	for _, translation := range cfg.Translations {
 		if !declaredArtifacts[translation.ArtifactID] {
-			return fmt.Errorf("ray config: translation artifact %q is not declared", translation.ArtifactID)
+			return fmt.Errorf("hyperray config: translation artifact %q is not declared", translation.ArtifactID)
 		}
 	}
 	if cfg.CertificatePath == "" {
@@ -467,12 +477,12 @@ func (cfg config) validate(root, configPath string) error {
 	}
 	certPath, err = filepath.Abs(certPath)
 	if err != nil || !withinRoot(root, certPath) {
-		return fmt.Errorf("ray config: certificate_path must resolve within task root")
+		return fmt.Errorf("hyperray config: certificate_path must resolve within task root")
 	}
 	for _, artifact := range cfg.Freeze.Artifacts {
 		artifactPath := filepath.Join(root, filepath.FromSlash(artifact.Path))
 		if samePath(certPath, artifactPath) {
-			return fmt.Errorf("ray config: certificate_path would overwrite frozen artifact %q", artifact.ID)
+			return fmt.Errorf("hyperray config: certificate_path would overwrite frozen artifact %q", artifact.ID)
 		}
 	}
 	for _, workspace := range cfg.Freeze.Workspaces {
@@ -482,7 +492,7 @@ func (cfg config) validate(root, configPath string) error {
 		}
 		workspacePath, _ = filepath.Abs(workspacePath)
 		if withinRoot(workspacePath, certPath) {
-			return fmt.Errorf("ray config: certificate_path is inside frozen workspace %q", workspace.State)
+			return fmt.Errorf("hyperray config: certificate_path is inside frozen workspace %q", workspace.State)
 		}
 	}
 	return nil
@@ -504,10 +514,10 @@ func validateRequiredInputsConfig(inputs requiredInputsConfig, artifacts map[str
 	seen := map[string]string{}
 	bind := func(label, id, kind string) error {
 		if id == "" || artifacts[id] != kind {
-			return fmt.Errorf("ray config: freeze.required_inputs.%s references %q with kind %q, want %q", label, id, artifacts[id], kind)
+			return fmt.Errorf("hyperray config: freeze.required_inputs.%s references %q with kind %q, want %q", label, id, artifacts[id], kind)
 		}
 		if previous := seen[id]; previous != "" {
-			return fmt.Errorf("ray config: frozen artifact %q is assigned to both %s and %s", id, previous, label)
+			return fmt.Errorf("hyperray config: frozen artifact %q is assigned to both %s and %s", id, previous, label)
 		}
 		seen[id] = label
 		return nil
@@ -520,7 +530,7 @@ func validateRequiredInputsConfig(inputs requiredInputsConfig, artifacts map[str
 	}
 	for _, role := range want {
 		if role.required && len(role.ids) == 0 {
-			return fmt.Errorf("ray config: freeze.required_inputs.%s must not be empty", role.label)
+			return fmt.Errorf("hyperray config: freeze.required_inputs.%s must not be empty", role.label)
 		}
 		for _, id := range role.ids {
 			if err := bind(role.label, id, role.kind); err != nil {
@@ -533,7 +543,7 @@ func validateRequiredInputsConfig(inputs requiredInputsConfig, artifacts map[str
 
 func (cfg diagnosticsConfig) validate(tools map[string]bool, artifacts map[string]string) error {
 	if !tools[cfg.PICT.ToolName] || cfg.PICT.Strength <= 0 {
-		return errors.New("ray config: diagnostics.pict requires a frozen tool_name and positive strength")
+		return errors.New("hyperray config: diagnostics.pict requires a frozen tool_name and positive strength")
 	}
 	if err := cfg.Oracle.validate("oracle", tools, artifacts, false, false); err != nil {
 		return err
@@ -544,63 +554,63 @@ func (cfg diagnosticsConfig) validate(tools map[string]bool, artifacts map[strin
 	switch cfg.Dependency.Mode {
 	case "not-applicable":
 		if strings.TrimSpace(cfg.Dependency.Reason) == "" || len(cfg.Dependency.DependencyInputs) != 0 || !reflect.DeepEqual(cfg.Dependency.Run, commandDiagnosticConfig{}) {
-			return errors.New("ray config: dependency not-applicable requires a reason, no dependency IDs, and no run command")
+			return errors.New("hyperray config: dependency not-applicable requires a reason, no dependency IDs, and no run command")
 		}
 	case "run":
 		if len(cfg.Dependency.DependencyInputs) == 0 {
-			return errors.New("ray config: dependency run requires dependency_artifact_ids")
+			return errors.New("hyperray config: dependency run requires dependency_artifact_ids")
 		}
 		for _, id := range cfg.Dependency.DependencyInputs {
 			if artifacts[id] != "dependency" {
-				return fmt.Errorf("ray config: dependency diagnostic artifact %q must retain kind dependency", id)
+				return fmt.Errorf("hyperray config: dependency diagnostic artifact %q must retain kind dependency", id)
 			}
 		}
 		if err := cfg.Dependency.Run.validate("dependency.run", tools, artifacts, false, false); err != nil {
 			return err
 		}
 	default:
-		return errors.New("ray config: diagnostics.dependency.mode must be run or not-applicable")
+		return errors.New("hyperray config: diagnostics.dependency.mode must be run or not-applicable")
 	}
 	return nil
 }
 
 func (cfg commandDiagnosticConfig) validate(label string, tools map[string]bool, artifacts map[string]string, requireInputs, requireSecondary bool) error {
 	if !tools[cfg.ToolName] || cfg.TimeoutMillis <= 0 {
-		return fmt.Errorf("ray config: diagnostics.%s requires a frozen tool_name and positive timeout_millis", label)
+		return fmt.Errorf("hyperray config: diagnostics.%s requires a frozen tool_name and positive timeout_millis", label)
 	}
 	if cfg.ArtifactID == "" || artifacts[cfg.ArtifactID] == "" {
-		return fmt.Errorf("ray config: diagnostics.%s requires a frozen artifact_id", label)
+		return fmt.Errorf("hyperray config: diagnostics.%s requires a frozen artifact_id", label)
 	}
 	if _, err := cleanTaskRelativePath(cfg.WorkspacePath); err != nil {
-		return fmt.Errorf("ray config: diagnostics.%s workspace_path: %w", label, err)
+		return fmt.Errorf("hyperray config: diagnostics.%s workspace_path: %w", label, err)
 	}
 	if requireSecondary {
 		if cfg.SecondaryArtifactID == "" || artifacts[cfg.SecondaryArtifactID] == "" {
-			return fmt.Errorf("ray config: diagnostics.%s requires a frozen secondary_artifact_id", label)
+			return fmt.Errorf("hyperray config: diagnostics.%s requires a frozen secondary_artifact_id", label)
 		}
 		if _, err := cleanTaskRelativePath(cfg.SecondaryPath); err != nil {
-			return fmt.Errorf("ray config: diagnostics.%s secondary_path: %w", label, err)
+			return fmt.Errorf("hyperray config: diagnostics.%s secondary_path: %w", label, err)
 		}
 	} else if cfg.SecondaryArtifactID != "" || cfg.SecondaryPath != "" {
-		return fmt.Errorf("ray config: diagnostics.%s cannot declare a secondary artifact", label)
+		return fmt.Errorf("hyperray config: diagnostics.%s cannot declare a secondary artifact", label)
 	}
 	if requireInputs {
 		if cfg.InputsArtifactID == "" || artifacts[cfg.InputsArtifactID] == "" {
-			return fmt.Errorf("ray config: diagnostics.%s requires a frozen inputs_artifact_id", label)
+			return fmt.Errorf("hyperray config: diagnostics.%s requires a frozen inputs_artifact_id", label)
 		}
 		if _, err := cleanTaskRelativePath(cfg.InputsPath); err != nil {
-			return fmt.Errorf("ray config: diagnostics.%s inputs_path: %w", label, err)
+			return fmt.Errorf("hyperray config: diagnostics.%s inputs_path: %w", label, err)
 		}
 	}
 	if _, err := cleanWorkingDirectory(cfg.WorkingDirectory); err != nil {
-		return fmt.Errorf("ray config: diagnostics.%s working_directory: %w", label, err)
+		return fmt.Errorf("hyperray config: diagnostics.%s working_directory: %w", label, err)
 	}
 	if len(cfg.Argv) == 0 {
-		return fmt.Errorf("ray config: diagnostics.%s argv must not be empty", label)
+		return fmt.Errorf("hyperray config: diagnostics.%s argv must not be empty", label)
 	}
 	for index, argument := range cfg.Argv {
 		if argument == "" || strings.ContainsRune(argument, '\x00') {
-			return fmt.Errorf("ray config: diagnostics.%s argv[%d] is empty or contains NUL", label, index)
+			return fmt.Errorf("hyperray config: diagnostics.%s argv[%d] is empty or contains NUL", label, index)
 		}
 	}
 	return nil

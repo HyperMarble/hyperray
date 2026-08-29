@@ -5,8 +5,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/HyperMarble/ray/internal/enforce"
-	"github.com/HyperMarble/ray/internal/mutate"
+	"github.com/HyperMarble/hyperray/internal/enforce"
+	"github.com/HyperMarble/hyperray/internal/mutate"
 )
 
 // probe runs the real entry point on one input and prints what came back,
@@ -53,7 +53,7 @@ func TestDiscover_FindsFalsePositivesWithoutPerCaseRules(t *testing.T) {
 		t.Fatal("no adversaries generated")
 	}
 	// A bounded slice keeps the test quick; the mechanism is identical for
-	// the full set, which is what `ray check` runs.
+	// the full set, which is what `hyperray check` runs.
 	// Probes must reach beyond what the task's own tests exercise. A probe
 	// set drawn only from passing inputs can never expose a rule that only
 	// fires on inputs nobody tests -- the same circularity that made

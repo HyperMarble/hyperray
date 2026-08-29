@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // AcceptanceRecordV1 is the canonical JSON author/reviewer attestation. The
@@ -51,7 +51,7 @@ type AcceptanceLedgerV1 struct {
 	Entries []AcceptanceLedgerEntry `json:"entries"`
 }
 
-const AcceptanceLedgerSchemaV1 = "ray.spec-acceptance-ledger/v1"
+const AcceptanceLedgerSchemaV1 = "hyperray.spec-acceptance-ledger/v1"
 
 type AcceptanceRequest struct {
 	AuthoringRecord         semanticir.ArtifactRef `json:"authoring_record"`

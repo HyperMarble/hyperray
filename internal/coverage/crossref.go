@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/specparser"
+	"github.com/HyperMarble/hyperray/internal/specparser"
 )
 
 // This file is layer 2's actual job. Generating the combination matrix
@@ -27,7 +27,7 @@ type Status int
 const (
 	// Declared: a row covers the combination and names a test that exists.
 	// Not proof the test enforces it -- see internal/enforce -- but the
-	// author has committed to a specific claim ray can go check.
+	// author has committed to a specific claim hyperray can go check.
 	Declared Status = iota
 	// Unenforced: a row covers the combination and names no test.
 	Unenforced
@@ -66,7 +66,7 @@ func (f Finding) String() string {
 	return fmt.Sprintf("%s: %s", f.Section, combo)
 }
 
-// testNamePattern matches a test declaration in the languages ray
+// testNamePattern matches a test declaration in the languages hyperray
 // targets. Only definitions count: a test's own name appearing inside
 // another test's body must not make it look defined.
 var testNamePattern = regexp.MustCompile(

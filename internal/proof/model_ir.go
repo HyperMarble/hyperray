@@ -3,7 +3,7 @@ package proof
 import (
 	"fmt"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // validateIndependentIR establishes the three non-property authorities used

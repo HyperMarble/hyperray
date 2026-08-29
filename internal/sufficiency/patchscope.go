@@ -92,7 +92,7 @@ func ScopeToPatch(outcomes []Outcome, sourcePath, patch string) []Outcome {
 //
 // This is what makes a patch-shaped task readable without its environment.
 // The statements a spec row names are all in the patch -- it IS the task's
-// new code -- so ray can find them from a 47KB file on disk instead of
+// new code -- so hyperray can find them from a 47KB file on disk instead of
 // reaching into a 4.6GB container. Line numbers are not preserved and are
 // not needed: a violation is located by matching statement TEXT, not by
 // position.

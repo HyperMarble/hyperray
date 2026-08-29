@@ -9,7 +9,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 // Verify validates the complete finite universe and proves all three required

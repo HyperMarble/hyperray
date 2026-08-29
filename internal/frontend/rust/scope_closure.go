@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HyperMarble/ray/internal/semanticir"
+	"github.com/HyperMarble/hyperray/internal/semanticir"
 )
 
 func buildRustScopeClosure(ctx context.Context, request semanticir.FrontendRequest, functions []functionDecl, compiler rustCompilerOutput, operations []semanticir.Operation) (*semanticir.ScopeClosureEvidence, []semanticir.Diagnostic) {
