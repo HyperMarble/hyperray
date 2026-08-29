@@ -19,7 +19,7 @@ func main() {
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "ray",
-		Short:         "Prove one frozen finite coding task against its specification",
+		Short:         "Prove statement, solution, and tests agree over a bounded scope",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
@@ -35,5 +35,7 @@ func newRootCmd() *cobra.Command {
 	root.AddCommand(newProseLintCmd())
 	root.AddCommand(newStartCmd())
 	root.AddCommand(newStrictSpecLintCmd())
+	root.AddCommand(newVersionCmd())
+	root.AddCommand(newUpdateCmd())
 	return root
 }

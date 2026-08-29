@@ -1,0 +1,31 @@
+# CI: every push runs the same ladder guards we run locally -- build, vet,
+# and the full test suite. The suite includes the real-tool tests (ruff,
+# cargo, c++); tests skip cleanly where a tool is absent, so what runs here
+# is what the runner can honestly provide.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+      - name: install lint and language tools
+        run: |
+          pipx install ruff
+          rustup default stable
+      - name: gofmt is clean
+        run: test -z "$(gofmt -l cmd internal tests)"
+      - name: vet
+        run: go vet ./...
+      - name: build
+        run: go build ./...
+      - name: tests
+        run: go test ./tests/ -timeout 20m
