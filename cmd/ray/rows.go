@@ -180,10 +180,8 @@ func (run *rowsRun) enforceRaiseRows() error {
 		}
 		original := run.sources[file]
 		exceptionType := raiseType(requirement, run.outcomes)
-		// The row requires the message to CONTAIN the substring, so the
-		// wrong-message breaker must make the substring disappear -- appending
-		// to it would leave every substring-matching test green and report
-		// false holes, which is exactly what the first run of this command did.
+		// The rule matches a substring, so the breaker must remove it;
+		// appending would leave substring-matching tests green.
 		breakers := []struct{ kind, broken string }{
 			{"wrong-message", strings.Replace(original, message, "ray broke this message", 1)},
 			{"wrong-type", enforce.SwapRaiseType(run.language, original, exceptionType, message)},

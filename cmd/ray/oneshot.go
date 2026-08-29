@@ -106,9 +106,7 @@ func newOneshotCmd() *cobra.Command {
 				return fmt.Errorf("oneshot: spec-lint failed")
 			}
 
-			// Rung 1.1: bundle completeness. The container's canonical
-			// runner ships inside the test patch; a patch that lost it
-			// fails every verify remotely and nothing locally.
+			// Rung 1.1: the test patch must deliver the canonical runner.
 			if len(c.RequiredTestFiles) > 0 {
 				patchBytes, err := os.ReadFile(filepath.Join(taskDir, "test.patch"))
 				if err != nil {
@@ -120,19 +118,13 @@ func newOneshotCmd() *cobra.Command {
 				fmt.Fprintf(out, "bundle: test.patch delivers all %d required file(s)\n", len(c.RequiredTestFiles))
 			}
 
-			// Rung 1.25: the statement itself. Non-ASCII bytes bounce at the
-			// platform, and a promise-bearing line with no spec row anchored
-			// to it is behavior nothing downstream will check.
+			// Rung 1.25: statement gate -- ASCII and promise coverage.
 			if err := run("prose-lint", "prose-lint", taskDir); err != nil {
 				return fmt.Errorf("oneshot: prose lint failed")
 			}
 
-			// Rung 1.5: the host repository's own lint gate. Review bounces a
-			// solution that violates the repo's configured linter even when
-			// every test passes, so the gate runs here with the repo's own
-			// tool and config. Container mode is warned about, not failed:
-			// the lint config lives in the source tree, which container
-			// tasks expose only inside the box.
+			// Rung 1.5: the repo's own lint gate. Container mode warns
+			// instead of failing: the config lives inside the box.
 			if c.Container != "" {
 				fmt.Fprintln(out, "repo-lint: not run in container mode -- run it on a host checkout")
 			} else if c.SourceRoot != "" && len(c.SolutionFiles) > 0 {
@@ -188,10 +180,7 @@ func newOneshotCmd() *cobra.Command {
 			// once, attributed where a probe owns them and reported as
 			// file-level findings where none does. One sweep, not two.
 
-			// Rung 3.5: test hygiene. A verifier must be an instrument:
-			// same tree, same verdict. Run twice (flakiness), then run the
-			// tests in reverse order (order dependence). Differences are
-			// named tests, not vibes.
+			// Rung 3.5: hygiene -- same tree, same verdict, any order.
 			if err := run("hygiene", "hygiene", taskDir,
 				"--source-root", c.SourceRoot,
 				"--test-command", c.TestCommand,
