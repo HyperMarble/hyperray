@@ -15,7 +15,7 @@ import (
 // or depends on its neighbours poisons every other verdict ray produces, so
 // this runs before any per-row work is trusted.
 func newHygieneCmd() *cobra.Command {
-	var sourceRoot, testCommand, pythonPath, testFile, language string
+	var sourceRoot, testCommand, pythonPath, testFile, language, gtestBinary string
 	command := &cobra.Command{
 		Use:          "hygiene <task-dir>",
 		Hidden:       true,
@@ -27,6 +27,9 @@ func newHygieneCmd() *cobra.Command {
 			frameworkRunner, err := runner.New(language, pythonPath, testFile, testCommand)
 			if err != nil {
 				return err
+			}
+			if gtestBinary != "" {
+				frameworkRunner = frameworkRunner.WithGtestBinary(gtestBinary)
 			}
 			runOnce := func(command string) (bool, []string) {
 				sub := exec.Command("sh", "-c", command)
@@ -71,5 +74,6 @@ func newHygieneCmd() *cobra.Command {
 	command.Flags().StringVar(&pythonPath, "python", "python3", "interpreter (python tasks)")
 	command.Flags().StringVar(&testFile, "test-file", "", "test file for ordered collection (python tasks)")
 	command.Flags().StringVar(&language, "language", "python", "task language: python, rust, or cpp")
+	command.Flags().StringVar(&gtestBinary, "gtest-binary", "", "cpp only: drive this googletest binary instead of ctest")
 	return command
 }
