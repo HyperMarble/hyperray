@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/HyperMarble/ray/internal/enforce"
+	"github.com/HyperMarble/ray/internal/runner"
 )
 
 // newHygieneCmd checks the verifier is an instrument: the same tree must
@@ -15,7 +15,7 @@ import (
 // or depends on its neighbours poisons every other verdict ray produces, so
 // this runs before any per-row work is trusted.
 func newHygieneCmd() *cobra.Command {
-	var sourceRoot, testCommand, pythonPath, testFile string
+	var sourceRoot, testCommand, pythonPath, testFile, language string
 	command := &cobra.Command{
 		Use:          "hygiene <task-dir>",
 		Hidden:       true,
@@ -24,20 +24,23 @@ func newHygieneCmd() *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
-			runOnce := func(command string) (bool, []string) {
-				sub := exec.Command("sh", "-c", command+" -rf")
-				sub.Dir = sourceRoot
-				output, err := sub.CombinedOutput()
-				return err == nil, enforce.FailedTestNames(string(output))
+			frameworkRunner, err := runner.New(language, pythonPath, testFile, testCommand)
+			if err != nil {
+				return err
 			}
-			firstPass, firstFailed := runOnce(testCommand)
-			secondPass, secondFailed := runOnce(testCommand)
+			runOnce := func(command string) (bool, []string) {
+				sub := exec.Command("sh", "-c", command)
+				sub.Dir = sourceRoot
+				output, runErr := sub.CombinedOutput()
+				return runErr == nil, frameworkRunner.FailedNames(string(output))
+			}
+			firstPass, firstFailed := runOnce(frameworkRunner.SuiteCommand())
+			secondPass, secondFailed := runOnce(frameworkRunner.SuiteCommand())
 			if firstPass != secondPass || strings.Join(firstFailed, ",") != strings.Join(secondFailed, ",") {
 				fmt.Fprintf(out, "FLAKY: two identical runs disagree (run1 failed=%v, run2 failed=%v)\n", firstFailed, secondFailed)
 				return fmt.Errorf("hygiene: flaky verifier")
 			}
-			// Reverse order: pytest honours the order of given node ids.
-			collect := exec.Command("sh", "-c", pythonPath+" -m pytest -q -o addopts= --collect-only "+testFile+" | grep '::' ")
+			collect := exec.Command("sh", "-c", frameworkRunner.ListCommand())
 			collect.Dir = sourceRoot
 			listing, err := collect.Output()
 			if err != nil {
@@ -54,13 +57,7 @@ func newHygieneCmd() *cobra.Command {
 			for left, right := 0, len(ids)-1; left < right; left, right = left+1, right-1 {
 				ids[left], ids[right] = ids[right], ids[left]
 			}
-			// Parametrized ids carry [brackets]; unquoted they are shell
-			// globs and pytest receives nothing -- which once made a clean
-			// suite read as order-dependent.
-			for index, id := range ids {
-				ids[index] = "'" + id + "'"
-			}
-			reversedPass, reversedFailed := runOnce(pythonPath + " -m pytest -q -o addopts= " + strings.Join(ids, " "))
+			reversedPass, reversedFailed := runOnce(frameworkRunner.OrderedCommand(ids))
 			if reversedPass != firstPass || strings.Join(reversedFailed, ",") != strings.Join(firstFailed, ",") {
 				fmt.Fprintf(out, "ORDER-DEPENDENT: reversed order disagrees (normal failed=%v, reversed failed=%v)\n", firstFailed, reversedFailed)
 				return fmt.Errorf("hygiene: order-dependent verifier")
@@ -71,7 +68,8 @@ func newHygieneCmd() *cobra.Command {
 	}
 	command.Flags().StringVar(&sourceRoot, "source-root", "", "tree the tests run in")
 	command.Flags().StringVar(&testCommand, "test-command", "", "the verifier command")
-	command.Flags().StringVar(&pythonPath, "python", "python3", "interpreter")
-	command.Flags().StringVar(&testFile, "test-file", "", "test file for ordered collection")
+	command.Flags().StringVar(&pythonPath, "python", "python3", "interpreter (python tasks)")
+	command.Flags().StringVar(&testFile, "test-file", "", "test file for ordered collection (python tasks)")
+	command.Flags().StringVar(&language, "language", "python", "task language: python, rust, or cpp")
 	return command
 }
