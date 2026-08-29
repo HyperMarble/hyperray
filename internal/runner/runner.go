@@ -56,10 +56,13 @@ func (r Runner) Language() string { return r.language }
 func (r Runner) ListCommand() string {
 	switch r.language {
 	case "rust":
-		return "cargo test --quiet -- --list 2>/dev/null | sed -n 's/: test$//p'"
+		return r.cargoInvocation() + " -- --list 2>/dev/null | sed -n 's/: test$//p'"
 	case "cpp":
 		if r.gtestBinary != "" {
-			return r.gtestBinary + ` --gtest_list_tests | awk '/^[A-Za-z_].*\.$/{suite=$1} /^  /{print suite $1}'`
+			// The frozen verifier's own filter scopes the listing to the
+			// task's suite; without it the whole binary's thousands of
+			// tests flood every per-test rung.
+			return r.gtestBinary + r.frozenGtestFilter() + ` --gtest_list_tests | awk '/^[A-Za-z_].*\.$/{suite=$1} /^  /{print suite $1}'`
 		}
 		return "ctest -N | sed -n 's/^ *Test *#[0-9]*: //p'"
 	default:
@@ -71,7 +74,7 @@ func (r Runner) ListCommand() string {
 func (r Runner) OneTestCommand(test string) string {
 	switch r.language {
 	case "rust":
-		return fmt.Sprintf("cargo test --quiet '%s' -- --exact", test)
+		return fmt.Sprintf("%s '%s' -- --exact", r.cargoInvocation(), test)
 	case "cpp":
 		if r.gtestBinary != "" {
 			return fmt.Sprintf("%s --gtest_filter='%s'", r.gtestBinary, test)
@@ -135,6 +138,27 @@ var (
 	cargoFailedPattern  = regexp.MustCompile("(?m)^(?:test )?(\\S+) (?:\\.\\.\\.|---) FAILED$")
 	ctestFailedPattern  = regexp.MustCompile(`(?m)^\s*\d+ - (\S+) \((Failed|Timeout|Subprocess aborted)\)`)
 )
+
+// frozenGtestFilter lifts the --gtest_filter argument out of the frozen
+// verifier command, so listing and the suite agree on scope.
+func (r Runner) frozenGtestFilter() string {
+	for _, field := range strings.Fields(r.testCommand) {
+		if strings.HasPrefix(field, "--gtest_filter=") {
+			return " '" + field + "'"
+		}
+	}
+	return ""
+}
+
+// cargoInvocation reuses the task's own frozen cargo command -- its
+// package, test-target, and feature flags scope compilation to the task --
+// falling back to a bare cargo test when the verifier is a wrapper script.
+func (r Runner) cargoInvocation() string {
+	if strings.HasPrefix(r.testCommand, "cargo test") {
+		return r.testCommand
+	}
+	return "cargo test --quiet"
+}
 
 // FailedNames reads failing test names from the framework's own report.
 func (r Runner) FailedNames(output string) []string {
