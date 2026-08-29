@@ -5,7 +5,7 @@
 set -eu
 
 REPO="HyperMarble/ray"
-VERSION="${RAY_VERSION:-v0.1.0}"
+VERSION="${RAY_VERSION:-v0.1.1}"
 
 # Only animate on a real terminal; piped output gets plain lines.
 if [ -t 1 ]; then
