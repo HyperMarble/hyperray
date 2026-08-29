@@ -35,6 +35,10 @@ type oneshotConfig struct {
 		// FastKill makes the rows rung stop each breaker's suite at the
 		// first failing test: same verdicts, far fewer test executions.
 		FastKill bool `toml:"fast_kill"`
+		// GtestBinary, on a cpp task, points at the googletest binary the
+		// verifier drives; the runner then lists and filters through it
+		// instead of ctest.
+		GtestBinary string `toml:"gtest_binary"`
 	} `toml:"oneshot"`
 }
 
@@ -159,6 +163,9 @@ func newOneshotCmd() *cobra.Command {
 			if runnerErr != nil {
 				return runnerErr
 			}
+			if c.GtestBinary != "" {
+				frameworkRunner = frameworkRunner.WithGtestBinary(c.GtestBinary)
+			}
 			testList := frameworkRunner.ListCommand()
 			if frameworkRunner.Language() == "python" {
 				testList += " | sed 's/.*:://' | sort -u"
@@ -190,7 +197,8 @@ func newOneshotCmd() *cobra.Command {
 				"--test-command", c.TestCommand,
 				"--python", c.Python,
 				"--test-file", c.TestFile,
-				"--language", c.Language); err != nil {
+				"--language", c.Language,
+				"--gtest-binary", c.GtestBinary); err != nil {
 				return fmt.Errorf("oneshot: test hygiene failed")
 			}
 
