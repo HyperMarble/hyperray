@@ -86,3 +86,18 @@ func TestRunner_PythonSuiteAddsReportingFlag(t *testing.T) {
 		t.Fatalf("rust suite must be the frozen command untouched: %s", got)
 	}
 }
+
+func TestRunner_GtestModeListsFiltersAndParses(t *testing.T) {
+	r := mustRunner(t, "cpp").WithGtestBinary("./build/test/opt/test_opt")
+	if got := r.ListCommand(); !strings.Contains(got, "--gtest_list_tests") {
+		t.Fatalf("gtest list: %s", got)
+	}
+	if got := r.OneTestCommand("Suite.Case"); !strings.Contains(got, "--gtest_filter='Suite.Case'") {
+		t.Fatalf("gtest one-test: %s", got)
+	}
+	output := "[ RUN      ] CopyPropArrayComponentTest.KeepsLoad\n[  FAILED  ] CopyPropArrayComponentTest.KeepsLoad (12 ms)\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] CopyPropArrayComponentTest.KeepsLoad\n"
+	names := r.FailedNames(output)
+	if len(names) != 1 || names[0] != "CopyPropArrayComponentTest.KeepsLoad" {
+		t.Fatalf("gtest failure names: %v", names)
+	}
+}

@@ -19,6 +19,10 @@ type Runner struct {
 	python      string
 	testFile    string
 	testCommand string
+	// gtestBinary, when set on a cpp task, switches the runner from ctest
+	// to driving that googletest binary directly -- the shape real
+	// platform C++ tasks use (test.sh execs the binary with a filter).
+	gtestBinary string
 }
 
 // New picks the language's runner. python interpreter and testFile matter
@@ -30,6 +34,12 @@ func New(language, python, testFile, testCommand string) (Runner, error) {
 	default:
 		return Runner{}, fmt.Errorf("runner: unsupported language %q (python, rust, cpp)", language)
 	}
+}
+
+// WithGtestBinary switches a cpp runner to googletest-binary mode.
+func (r Runner) WithGtestBinary(binary string) Runner {
+	r.gtestBinary = binary
+	return r
 }
 
 func normalize(language string) string {
@@ -48,6 +58,9 @@ func (r Runner) ListCommand() string {
 	case "rust":
 		return "cargo test --quiet -- --list 2>/dev/null | sed -n 's/: test$//p'"
 	case "cpp":
+		if r.gtestBinary != "" {
+			return r.gtestBinary + ` --gtest_list_tests | awk '/^[A-Za-z_].*\.$/{suite=$1} /^  /{print suite $1}'`
+		}
 		return "ctest -N | sed -n 's/^ *Test *#[0-9]*: //p'"
 	default:
 		return fmt.Sprintf("%s -m pytest -q -o addopts= --collect-only %s | grep '::'", r.python, r.testFile)
@@ -60,6 +73,9 @@ func (r Runner) OneTestCommand(test string) string {
 	case "rust":
 		return fmt.Sprintf("cargo test --quiet '%s' -- --exact", test)
 	case "cpp":
+		if r.gtestBinary != "" {
+			return fmt.Sprintf("%s --gtest_filter='%s'", r.gtestBinary, test)
+		}
 		return fmt.Sprintf("ctest --output-on-failure -R '^%s$'", regexp.QuoteMeta(test))
 	default:
 		return fmt.Sprintf("%s -m pytest -q -o addopts= '%s::%s'", r.python, r.testFile, test)
@@ -84,6 +100,9 @@ func (r Runner) FastKillSuffix() string {
 	case "rust":
 		return "" // libtest reports all failures; no stable stop-at-first flag
 	case "cpp":
+		if r.gtestBinary != "" {
+			return " --gtest_fail_fast"
+		}
 		return " --stop-on-failure"
 	default:
 		return " -x"
@@ -112,6 +131,7 @@ func (r Runner) OrderedCommand(ids []string) string {
 
 var (
 	pytestFailedPattern = regexp.MustCompile(`FAILED [^\s:]*::([A-Za-z0-9_\[\]-]+)`)
+	gtestFailedPattern  = regexp.MustCompile(`(?m)^\[  FAILED  \] (\S+?)(?: \(.*\))?$`)
 	cargoFailedPattern  = regexp.MustCompile("(?m)^(?:test )?(\\S+) (?:\\.\\.\\.|---) FAILED$")
 	ctestFailedPattern  = regexp.MustCompile(`(?m)^\s*\d+ - (\S+) \((Failed|Timeout|Subprocess aborted)\)`)
 )
@@ -124,6 +144,9 @@ func (r Runner) FailedNames(output string) []string {
 		pattern = cargoFailedPattern
 	case "cpp":
 		pattern = ctestFailedPattern
+		if r.gtestBinary != "" {
+			pattern = gtestFailedPattern
+		}
 	}
 	seen := map[string]bool{}
 	var names []string
