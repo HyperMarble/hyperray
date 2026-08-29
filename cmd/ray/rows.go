@@ -16,6 +16,7 @@ import (
 
 	"github.com/HyperMarble/ray/internal/enforce"
 	"github.com/HyperMarble/ray/internal/mutate"
+	"github.com/HyperMarble/ray/internal/runner"
 	"github.com/HyperMarble/ray/internal/semanticir"
 	"github.com/HyperMarble/ray/internal/speccompiler"
 )
@@ -35,7 +36,7 @@ import (
 // Rows whose breakers are not yet derivable (labels, effects) are listed as
 // not-derived, never silently skipped.
 func newRowsCmd() *cobra.Command {
-	var sourceRoot, testCommand, probeRunner, pythonPath string
+	var sourceRoot, testCommand, probeRunner, pythonPath, language string
 	var solutionFiles []string
 	var fastKill bool
 	command := &cobra.Command{
@@ -55,6 +56,7 @@ func newRowsCmd() *cobra.Command {
 			run, err := newRowsRun(cmd.OutOrStdout(), taskDir, sourceRoot, testCommand, probeRunner, solutionFiles)
 			if err == nil {
 				run.fastKill = fastKill
+				run.language = language
 			}
 			if err != nil {
 				return err
@@ -83,6 +85,7 @@ func newRowsCmd() *cobra.Command {
 	command.Flags().StringVar(&probeRunner, "probe-runner", "", "command template run per bridge probe; {probe} is the script path")
 	command.Flags().StringVar(&pythonPath, "python", "python3", "interpreter for the mutant generator")
 	command.Flags().BoolVar(&fastKill, "fast-kill", false, "stop each breaker's suite at the first failing test; same verdicts, fewer runs")
+	command.Flags().StringVar(&language, "language", "python", "task language: python, rust, or cpp")
 	return command
 }
 
@@ -98,6 +101,7 @@ type rowsRun struct {
 	sources     map[string]string
 	baseline    map[string]string
 	fastKill    bool
+	language    string
 	enforced    int
 	holes       int
 	untried     int
@@ -182,8 +186,8 @@ func (run *rowsRun) enforceRaiseRows() error {
 		// false holes, which is exactly what the first run of this command did.
 		breakers := []struct{ kind, broken string }{
 			{"wrong-message", strings.Replace(original, message, "ray broke this message", 1)},
-			{"wrong-type", swapRaiseType(original, exceptionType, message)},
-			{"no-raise", suppressRaise(original, exceptionType, message)},
+			{"wrong-type", enforce.SwapRaiseType(run.language, original, exceptionType, message)},
+			{"no-raise", enforce.SuppressRaise(run.language, original, exceptionType, message)},
 		}
 		ruleEnforced := true
 		var ruleKillers []string
@@ -225,9 +229,12 @@ func (run *rowsRun) runBrokenSolution(file, original, broken string) ([]string, 
 	}
 	command := run.testCommand
 	if run.fastKill {
-		command += " -x"
+		frameworkRunner, err := runner.New(run.language, "", "", command)
+		if err == nil {
+			command += frameworkRunner.FastKillSuffix()
+		}
 	}
-	killers := runSuiteFailures(command, run.sourceRoot)
+	killers := runSuiteFailures(run.language, command, run.sourceRoot)
 	if err := os.WriteFile(path, []byte(original), 0o644); err != nil {
 		return nil, fmt.Errorf("rows: RESTORE FAILED for %s: %w", file, err)
 	}
@@ -435,12 +442,16 @@ func findLiteral(sources map[string]string, message string) (string, int) {
 }
 
 // runSuiteFailures runs the verifier and returns failing test names via the
-// engine's shared parser.
-func runSuiteFailures(testCommand, dir string) []string {
-	sub := exec.Command("sh", "-c", testCommand+" -rf")
+// language's own report format.
+func runSuiteFailures(language, testCommand, dir string) []string {
+	frameworkRunner, err := runner.New(language, "", "", testCommand)
+	if err != nil {
+		return nil
+	}
+	sub := exec.Command("sh", "-c", frameworkRunner.SuiteCommand())
 	sub.Dir = dir
 	output, _ := sub.CombinedOutput()
-	return enforce.FailedTestNames(string(output))
+	return frameworkRunner.FailedNames(string(output))
 }
 
 type rowVerdict struct {
@@ -659,37 +670,4 @@ func dedupe(values []string) []string {
 		}
 	}
 	return out
-}
-
-// swapRaiseType turns `raise ValueError("msg")` into a different exception
-// type at the rule's own raise site: same control flow, wrong type.
-func swapRaiseType(original, exceptionType, message string) string {
-	site := "raise " + exceptionType + "("
-	index := strings.Index(original, message)
-	if index < 0 {
-		return ""
-	}
-	siteIndex := strings.LastIndex(original[:index], site)
-	if siteIndex < 0 {
-		return ""
-	}
-	return original[:siteIndex] + "raise RuntimeError(" + original[siteIndex+len(site):]
-}
-
-// suppressRaise removes the rule's raise entirely: the vanished-validation
-// variant, the wrongest of the three.
-func suppressRaise(original, exceptionType, message string) string {
-	index := strings.Index(original, message)
-	if index < 0 {
-		return ""
-	}
-	lineStart := strings.LastIndex(original[:index], "raise "+exceptionType+"(")
-	if lineStart < 0 {
-		return ""
-	}
-	relativeEnd := strings.Index(original[lineStart:], ")")
-	if relativeEnd < 0 {
-		return ""
-	}
-	return original[:lineStart] + "pass  # ray suppressed raise" + original[lineStart+relativeEnd+1:]
 }
