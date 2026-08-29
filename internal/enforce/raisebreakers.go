@@ -1,9 +1,6 @@
-// Language-aware raise breakers: a rule of the form `raise X containing
-// "msg"` is wrong three ways -- wrong message, wrong type, no raise -- and
-// each way has one derived source edit per language. Python edits `raise
-// X(...)`, Rust edits `panic!(...)`, C++ edits `throw X(...)`. A breaker
-// that cannot be derived for a site returns "" and the row stays honestly
-// not-derived rather than silently skipped.
+// Language-aware raise breakers: wrong message, wrong type, no raise --
+// one derived edit per language (raise/panic!/throw). An underivable site
+// returns "" so the row stays not-derived, never silently skipped.
 package enforce
 
 import "strings"

@@ -1,9 +1,6 @@
-// Package runner abstracts the task's test framework so the ladder's rungs
-// (fail-to-pass, hygiene, rows) work identically across languages. Each
-// language answers the same four questions: how to list every test, how to
-// run one test, how to run the given tests in a given order, and how to
-// read failing test names out of the runner's own output. The rungs never
-// contain framework syntax themselves.
+// Package runner abstracts the task's test framework: list tests, run one,
+// run in a given order, and parse failing names. The rungs never carry
+// framework syntax themselves.
 package runner
 
 import (

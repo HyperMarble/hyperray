@@ -1,12 +1,6 @@
-// Package proselint checks the task's problem statement the way the
-// submission platform and its reviewers do, before anything is uploaded:
-// plain ASCII only (the platform rejects the first non-ASCII byte), a word
-// budget the style guide asks for, and -- the deep check -- promise-word
-// coverage: a sentence containing a loaded word like "equals" or
-// "preserves" commits the task to behavior, so a statement line carrying
-// such a word with no spec row anchored to it is a promise nothing models.
-// The linter never interprets the English; it only demands that every
-// promise-bearing line is accounted for in the spec.
+// Package proselint checks the problem statement before upload: ASCII only,
+// a word budget, and promise-word coverage -- a line carrying a loaded word
+// like "equals" with no spec row anchored to it is a promise nothing models.
 package proselint
 
 import (

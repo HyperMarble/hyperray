@@ -1,15 +1,6 @@
-// Package repolint runs the host repository's own configured linters against
-// the solution files. A reference solution must satisfy the lint gates the
-// repository enforces on every contribution (for example Ruff's pydocstyle
-// rules): a solution that violates them is rejected in review even when
-// every test passes. Ray never invents style rules of its own -- when the
-// repository configures no linter there is no gate, and when a configured
-// tool is not installed the check is blocked, never silently passed.
-//
-// One detector per language ecosystem: Ruff for Python, cargo clippy for
-// Rust, clang-format and clang-tidy for C++. Each fires only when the
-// repository carries that tool's config and the solution touches that
-// language's files.
+// Package repolint runs the host repository's own configured linters on the
+// solution files: a gate exists only where the repo configures one, and a
+// missing tool blocks rather than silently passing.
 package repolint
 
 import (

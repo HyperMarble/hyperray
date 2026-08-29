@@ -1,15 +1,7 @@
-// Package bridges generates probe sources per language. A probe feeds one
-// rule's condition values to the author's entry and prints one observation
-// line; ray generates everything except the entry, because how to call the
-// system under test is the task's knowledge, not ray's.
-//
-// Python probes are one script per rule-group. Rust and C++ cannot afford a
-// compile per probe, so they get one generated harness (compiled once,
-// linked against the code under test) plus one tiny shell wrapper per
-// rule-group -- the wrapper is the stable file-per-probe interface the rest
-// of ray already speaks. Failures print in one shared shape, "TYPE: message",
-// whether they arrive as a Python exception, a Rust panic, or a C++
-// exception.
+// Package bridges generates probe sources per language: everything except
+// the author's entry, which is the one piece that knows how to call the
+// system under test. Compiled languages get one shared harness plus a shell
+// wrapper per rule-group; all failures print as "TYPE: message".
 package bridges
 
 import (

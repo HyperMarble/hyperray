@@ -1,9 +1,6 @@
-// Bundle completeness: the platform's container runs a canonical runner
-// (for example ./test.sh) that must be delivered by the test patch itself.
-// A regenerated patch that silently drops the runner passes every local
-// pytest check and then fails both container verifies with "no such file".
-// This check inspects the patch text alone -- no tree needed -- and demands
-// that every declared required file is created or modified by it.
+// Bundle completeness: the canonical runner (./test.sh) ships inside the
+// test patch; a regenerated patch that drops it passes locally and fails
+// every container verify. Checked from the patch text alone.
 package repolint
 
 import (
