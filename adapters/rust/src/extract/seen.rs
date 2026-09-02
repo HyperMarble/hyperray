@@ -1,8 +1,9 @@
 // Charon's output read back: every function and global it saw, each
 // with its file and line. No name is built here; the compiler wrote them.
 
-use super::span::ItemMeta;
-use super::ullbc::{Decl, GlobalDecl, Output};
+use super::global::{global, Global};
+use super::span::plain_path;
+use super::ullbc::{Decl, Output};
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -18,14 +19,8 @@ pub struct Seen {
     pub path: String,
     pub start_line: u32,
     pub end_line: u32,
+    pub item_path: Option<String>,
     pub body: Body,
-}
-
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-pub struct Global {
-    pub path: String,
-    pub start_line: u32,
-    pub source_text: Option<String>,
 }
 
 pub struct Read {
@@ -61,15 +56,7 @@ fn function(files: &HashMap<u32, String>, decl: Decl) -> Option<Seen> {
         path: files.get(&span.file_id)?.clone(),
         start_line: span.beg.line,
         end_line: span.end.line,
+        item_path: plain_path(&decl.item_meta.name),
         body: super::body::of(&decl.body),
-    })
-}
-
-fn global(files: &HashMap<u32, String>, decl: GlobalDecl) -> Option<Global> {
-    let ItemMeta { span, source_text } = decl.item_meta;
-    Some(Global {
-        path: files.get(&span.data.file_id)?.clone(),
-        start_line: span.data.beg.line,
-        source_text,
     })
 }

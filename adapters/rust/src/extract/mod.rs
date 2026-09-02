@@ -5,6 +5,7 @@
 mod body;
 mod charon;
 mod function;
+mod global;
 mod hunk;
 mod join;
 mod locate;
@@ -18,13 +19,14 @@ mod ullbc;
 mod workspace;
 
 pub use charon::{run, Run};
+pub use global::Global;
 pub use hunk::Hunk;
 pub use join::{join, Joined, Status};
 pub use locate::{manifest, Located, Manifest};
 pub use patch::FileChange;
 pub use reader::Opened;
 pub use refusal::{refusals_in, Refusal};
-pub use seen::{seen_in, Body, Global, Read, Seen};
+pub use seen::{seen_in, Body, Read, Seen};
 pub use workspace::crate_dir;
 
 use serde::Serialize;

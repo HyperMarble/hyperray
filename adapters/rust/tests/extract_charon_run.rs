@@ -1,7 +1,7 @@
 mod common;
 
 use hyperray_rust::extract::{
-    change, crate_dir, join, manifest, run, seen_in, Global, Read, Status,
+    change, crate_dir, join, manifest, run, seen_in, Global, Joined, Read, Status,
 };
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -13,7 +13,7 @@ struct Range {
 }
 
 struct Checked {
-    statuses: Vec<Status>,
+    joined: Vec<Joined>,
     globals: Vec<Global>,
     ranges: Vec<Range>,
 }
@@ -61,10 +61,7 @@ fn read_all(charon: &Path, root: &Path, patch: &str) -> Checked {
         read.globals.extend(part.globals);
     }
     Checked {
-        statuses: join(&built.functions, &read.functions)
-            .into_iter()
-            .map(|j| j.status)
-            .collect(),
+        joined: join(&built.functions, &read.functions),
         globals: read.globals,
         ranges,
     }
@@ -77,8 +74,9 @@ fn in_patch(ranges: &[Range], global: &Global) -> bool {
 }
 
 // The rule: every function the patch touches is extracted, or refused
-// with Charon's own reason, or reported missing; every global inside a
-// patched range carries its source text. No fixture is named here.
+// with Charon's own reason, or reported missing; an extracted function
+// with a plain name carries Charon's item path, ending in its own name;
+// every global inside a patched range carries its source text.
 #[test]
 fn every_patched_function_and_global_has_a_status_from_charon() {
     let (Some(charon), Some(sources)) = (
@@ -96,12 +94,15 @@ fn every_patched_function_and_global_has_a_status_from_charon() {
             continue;
         }
         let checked = read_all(&charon, &tree, &text);
-        assert!(!checked.statuses.is_empty(), "{name}");
-        for status in &checked.statuses {
-            match status {
+        assert!(!checked.joined.is_empty(), "{name}");
+        for function in &checked.joined {
+            match &function.status {
                 Status::Refused(reason) => assert!(!reason.is_empty()),
                 Status::FileNotSeen => panic!("{name}: a patched file never reached Charon"),
                 Status::Extracted | Status::Missing => {}
+            }
+            if let Some(item_path) = &function.item_path {
+                assert!(item_path.ends_with(&function.name), "{item_path}");
             }
         }
         for global in checked
