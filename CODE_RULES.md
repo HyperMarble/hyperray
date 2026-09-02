@@ -51,8 +51,8 @@ a comment: it's much better to write the code so that the working is
 obvious." And: "you want your comments to tell WHAT your code does, not
 HOW."
 
-- No comment inside a function body. If a body needs one, fix the name or
-  split the function.
+- A comment inside a function is permitted when it adds information that
+  the code cannot express clearly. It states WHAT or WHY, never HOW.
 - A head comment only when the name is not enough. It states purpose,
   inputs, and return. Never the steps.
 - A reason where the code cannot carry it: a number, an order that
