@@ -1,0 +1,41 @@
+Target: 64-bit little-endian aarch64-unknown-macos with esbmclibc
+Parsing f5_string.cpp
+Converting
+Generating GOTO Program
+GOTO program creation time: 0.213s
+GOTO program processing time: 0.003s
+Starting Bounded Model Checking
+Unwinding loop 25 iteration 1   file /private/tmp/esbmc-20260818-5095-yxczoo/esbmc-8.4/src/c2goto/library/string.c line 92 column 3 function strlen
+Unwinding loop 25 iteration 2   file /private/tmp/esbmc-20260818-5095-yxczoo/esbmc-8.4/src/c2goto/library/string.c line 92 column 3 function strlen
+Unwinding loop 25 iteration 3   file /private/tmp/esbmc-20260818-5095-yxczoo/esbmc-8.4/src/c2goto/library/string.c line 92 column 3 function strlen
+Unwinding loop 23 iteration 1   file /private/tmp/esbmc-20260818-5095-yxczoo/esbmc-8.4/src/c2goto/library/string.c line 33 column 3 function strcpy
+Unwinding loop 23 iteration 2   file /private/tmp/esbmc-20260818-5095-yxczoo/esbmc-8.4/src/c2goto/library/string.c line 33 column 3 function strcpy
+Unwinding loop 23 iteration 3   file /private/tmp/esbmc-20260818-5095-yxczoo/esbmc-8.4/src/c2goto/library/string.c line 33 column 3 function strcpy
+Symex completed in: 0.003s (148 assignments)
+Caching time: 0.000s (removed 0 assertions)
+Slicing time: 0.000s (removed 123 assignments)
+Generated 65 VCC(s), 13 remaining after simplification (25 assignments)
+No solver specified; defaulting to bitwuzla
+Encoding remaining VCC(s) using bit-vector/floating-point arithmetic
+Encoding to solver time: 0.001s
+Solving with solver Bitwuzla 0.9.1
+Runtime decision procedure: 0.003s
+Building error trace
+
+[Counterexample]
+
+
+State 11 file f5_string.cpp line 3 column 36 function main thread 0
+----------------------------------------------------
+  i = 3 (00000000 00000000 00000000 00000011)
+
+State 13 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-a3eb-099d-5900/string line 1438 column 3 function operator[] thread 0
+----------------------------------------------------
+Violated property:
+  file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-a3eb-099d-5900/string line 1438 column 3 function operator[]
+  Error! Invalid access memory area
+  pos::0 >= 0 && pos::0 < (unsigned long int)this->_size
+
+
+VERIFICATION FAILED
+ESBMC version 8.4.0 64-bit aarch64 macos

@@ -1,0 +1,15 @@
+Target: 64-bit little-endian aarch64-unknown-macos with esbmclibc
+Parsing f8_tmpl_recurse.cpp
+Converting
+Generating GOTO Program
+GOTO program creation time: 0.132s
+GOTO program processing time: 0.000s
+Starting Bounded Model Checking
+Symex completed in: 0.001s (32 assignments)
+Caching time: 0.000s (removed 0 assertions)
+Slicing time: 0.000s (removed 31 assignments)
+Generated 1 VCC(s), 0 remaining after simplification (1 assignments)
+BMC program time: 0.001s
+
+VERIFICATION SUCCESSFUL
+ESBMC version 8.4.0 64-bit aarch64 macos

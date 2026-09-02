@@ -1,0 +1,448 @@
+{
+ "file": "replay_reader.cpp",
+ "records": [
+  {
+   "name": "ReplayReader",
+   "line": 52,
+   "fields": [
+    {
+     "name": "prefix",
+     "type": "std::vector<uint8_t>"
+    },
+    {
+     "name": "position",
+     "type": "size_t"
+    }
+   ],
+   "methods": [
+    "ReplayReader",
+    "seek_current",
+    "at"
+   ]
+  }
+ ],
+ "enums": [
+  {
+   "name": "Format",
+   "line": 15,
+   "scoped": true,
+   "variants": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "Bam",
+     "value": 1
+    },
+    {
+     "name": "Cram",
+     "value": 2
+    },
+    {
+     "name": "Vcf",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "name": "SeekWhence",
+   "line": 17,
+   "scoped": true,
+   "variants": [
+    {
+     "name": "Start",
+     "value": 0
+    },
+    {
+     "name": "End",
+     "value": 1
+    },
+    {
+     "name": "Current",
+     "value": 2
+    }
+   ]
+  }
+ ],
+ "functions": [
+  {
+   "name": "read_at_least",
+   "mangled": "__ZN8hyperray13read_at_leastEmm",
+   "qualified": "size_t (size_t, size_t)",
+   "result": "size_t",
+   "params": [
+    {
+     "name": "want",
+     "type": "size_t"
+    },
+    {
+     "name": "cap",
+     "type": "size_t"
+    }
+   ],
+   "template_params": [],
+   "is_template": false,
+   "line": 21,
+   "body": {
+    "int_literals": [
+     "0"
+    ],
+    "branches": [
+     {
+      "kind": "if",
+      "line": 25,
+      "arms": 2
+     }
+    ],
+    "loops": [
+     {
+      "kind": "WHILE_STMT",
+      "line": 23
+     }
+    ],
+    "arith": [
+     {
+      "op": "+",
+      "line": 25,
+      "type": "bool"
+     },
+     {
+      "op": "+",
+      "line": 25,
+      "type": "size_t"
+     },
+     {
+      "op": "-",
+      "line": 26,
+      "type": "size_t"
+     },
+     {
+      "op": "-",
+      "line": 26,
+      "type": "size_t"
+     },
+     {
+      "op": "+",
+      "line": 28,
+      "type": "size_t"
+     },
+     {
+      "op": "+",
+      "line": 28,
+      "type": "size_t"
+     }
+    ],
+    "subscripts": 0,
+    "calls": []
+   }
+  },
+  {
+   "name": "detect_scan",
+   "mangled": "__ZN8hyperray11detect_scanEm",
+   "qualified": "size_t (size_t)",
+   "result": "size_t",
+   "params": [
+    {
+     "name": "n",
+     "type": "size_t"
+    }
+   ],
+   "template_params": [],
+   "is_template": false,
+   "line": 34,
+   "body": {
+    "int_literals": [
+     "0",
+     "0",
+     "1",
+     "2"
+    ],
+    "branches": [],
+    "loops": [
+     {
+      "kind": "WHILE_STMT",
+      "line": 37
+     }
+    ],
+    "arith": [
+     {
+      "op": "+",
+      "line": 38,
+      "type": "size_t"
+     },
+     {
+      "op": "+",
+      "line": 38,
+      "type": "size_t"
+     },
+     {
+      "op": "+",
+      "line": 39,
+      "type": "size_t"
+     },
+     {
+      "op": "+",
+      "line": 39,
+      "type": "size_t"
+     }
+    ],
+    "subscripts": 0,
+    "calls": []
+   }
+  },
+  {
+   "name": "scratch_len",
+   "mangled": "__ZN8hyperray11scratch_lenEm",
+   "qualified": "size_t (size_t)",
+   "result": "size_t",
+   "params": [
+    {
+     "name": "dst_len",
+     "type": "size_t"
+    }
+   ],
+   "template_params": [],
+   "is_template": false,
+   "line": 44,
+   "body": {
+    "int_literals": [
+     "0"
+    ],
+    "branches": [
+     {
+      "kind": "if",
+      "line": 45,
+      "arms": 2
+     },
+     {
+      "kind": "ternary",
+      "line": 49,
+      "arms": 2
+     }
+    ],
+    "loops": [],
+    "arith": [
+     {
+      "op": "-",
+      "line": 48,
+      "type": "size_t"
+     }
+    ],
+    "subscripts": 0,
+    "calls": []
+   }
+  },
+  {
+   "name": "ReplayReader",
+   "mangled": "__ZN8hyperray12ReplayReaderC1ENSt3__16vectorIhNS1_9allocatorIhEEEEm",
+   "qualified": "void (std::vector<uint8_t>, size_t)",
+   "result": "void",
+   "params": [
+    {
+     "name": "p",
+     "type": "std::vector<uint8_t>"
+    },
+    {
+     "name": "pos",
+     "type": "size_t"
+    }
+   ],
+   "template_params": [],
+   "is_template": false,
+   "line": 57,
+   "body": {
+    "int_literals": [],
+    "branches": [],
+    "loops": [],
+    "arith": [],
+    "subscripts": 0,
+    "calls": [
+     "vector"
+    ]
+   }
+  },
+  {
+   "name": "seek_current",
+   "mangled": "__ZN8hyperray12ReplayReader12seek_currentEx",
+   "qualified": "int64_t (int64_t)",
+   "result": "int64_t",
+   "params": [
+    {
+     "name": "offset",
+     "type": "int64_t"
+    }
+   ],
+   "template_params": [],
+   "is_template": false,
+   "line": 61,
+   "body": {
+    "int_literals": [],
+    "branches": [],
+    "loops": [],
+    "arith": [
+     {
+      "op": "-",
+      "line": 62,
+      "type": "unsigned long"
+     },
+     {
+      "op": "-",
+      "line": 63,
+      "type": "int64_t"
+     }
+    ],
+    "subscripts": 0,
+    "calls": [
+     "size"
+    ]
+   }
+  },
+  {
+   "name": "at",
+   "mangled": "__ZN8hyperray12ReplayReader2atEm",
+   "qualified": "uint8_t (size_t)",
+   "result": "uint8_t",
+   "params": [
+    {
+     "name": "idx",
+     "type": "size_t"
+    }
+   ],
+   "template_params": [],
+   "is_template": false,
+   "line": 66,
+   "body": {
+    "int_literals": [],
+    "branches": [],
+    "loops": [],
+    "arith": [],
+    "subscripts": 1,
+    "calls": []
+   }
+  },
+  {
+   "name": "detect_format",
+   "mangled": "__ZN8hyperray13detect_formatERKNSt3__16vectorIhNS0_9allocatorIhEEEE",
+   "qualified": "Format (const std::vector<uint8_t> &)",
+   "result": "Format",
+   "params": [
+    {
+     "name": "buf",
+     "type": "const std::vector<uint8_t> &"
+    }
+   ],
+   "template_params": [],
+   "is_template": false,
+   "line": 71,
+   "body": {
+    "int_literals": [
+     "4",
+     "0",
+     "1",
+     "2",
+     "0",
+     "1",
+     "2",
+     "3"
+    ],
+    "branches": [
+     {
+      "kind": "if",
+      "line": 72,
+      "arms": 2
+     },
+     {
+      "kind": "if",
+      "line": 75,
+      "arms": 2
+     },
+     {
+      "kind": "if",
+      "line": 78,
+      "arms": 2
+     }
+    ],
+    "loops": [],
+    "arith": [],
+    "subscripts": 7,
+    "calls": [
+     "size"
+    ]
+   }
+  },
+  {
+   "name": "clamp_add",
+   "mangled": "",
+   "qualified": "T (T, T, T)",
+   "result": "T",
+   "params": [
+    {
+     "name": "a",
+     "type": "T"
+    },
+    {
+     "name": "b",
+     "type": "T"
+    },
+    {
+     "name": "hi",
+     "type": "T"
+    }
+   ],
+   "template_params": [
+    "T"
+   ],
+   "is_template": true,
+   "line": 85,
+   "body": {
+    "int_literals": [],
+    "branches": [
+     {
+      "kind": "if",
+      "line": 87,
+      "arms": 2
+     }
+    ],
+    "loops": [],
+    "arith": [
+     {
+      "op": "+",
+      "line": 86,
+      "type": "<dependent type>"
+     }
+    ],
+    "subscripts": 0,
+    "calls": []
+   }
+  }
+ ],
+ "globals": [
+  {
+   "name": "MAX_DETECTION_PREFIX_LEN",
+   "type": "const size_t",
+   "tokens": [
+    "static",
+    "const",
+    "size_t",
+    "MAX_DETECTION_PREFIX_LEN",
+    "=",
+    "65536"
+   ],
+   "line": 12
+  },
+  {
+   "name": "SCRATCH_STEP",
+   "type": "const size_t",
+   "tokens": [
+    "static",
+    "const",
+    "size_t",
+    "SCRATCH_STEP",
+    "=",
+    "8192"
+   ],
+   "line": 13
+  }
+ ]
+}

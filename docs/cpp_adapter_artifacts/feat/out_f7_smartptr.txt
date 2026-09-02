@@ -1,0 +1,37 @@
+Target: 64-bit little-endian aarch64-unknown-macos with esbmclibc
+Parsing f7_smartptr.cpp
+Converting
+Generating GOTO Program
+GOTO program creation time: 0.237s
+GOTO program processing time: 0.002s
+Starting Bounded Model Checking
+WARNING: no body for function default_delete#
+WARNING: no body for function default_delete#
+Symex completed in: 0.001s (140 assignments)
+Caching time: 0.000s (removed 1 assertions)
+Slicing time: 0.001s (removed 121 assignments)
+Generated 24 VCC(s), 4 remaining after simplification (18 assignments)
+No solver specified; defaulting to bitwuzla
+Encoding remaining VCC(s) using bit-vector/floating-point arithmetic
+Encoding to solver time: 0.000s
+Solving with solver Bitwuzla 0.9.1
+Runtime decision procedure: 0.003s
+Building error trace
+
+[Counterexample]
+
+
+State 1 file f7_smartptr.cpp line 3 column 13 function main thread 0
+----------------------------------------------------
+  c = 0 (00000000 00000000 00000000 00000000)
+
+State 3 file f7_smartptr.cpp line 5 column 3 function main thread 0
+----------------------------------------------------
+Violated property:
+  file f7_smartptr.cpp line 5 column 3 function main
+  dereference failure: NULL pointer
+  CWE: CWE-476
+
+
+VERIFICATION FAILED
+ESBMC version 8.4.0 64-bit aarch64 macos

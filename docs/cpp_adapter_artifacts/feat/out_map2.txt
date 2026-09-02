@@ -1,0 +1,218 @@
+Target: 64-bit little-endian aarch64-unknown-macos with esbmclibc
+Parsing f6_map.cpp
+Converting
+Generating GOTO Program
+GOTO program creation time: 0.371s
+GOTO program processing time: 0.008s
+Checking base case, k = 1
+Starting Bounded Model Checking
+Not unwinding loop 68 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+WARNING: no body for function less#
+Not unwinding loop 69 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+Not unwinding loop 70 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Not unwinding loop 68 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+WARNING: no body for function less#
+Not unwinding loop 69 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+Not unwinding loop 70 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Symex completed in: 0.025s (643 assignments)
+Caching time: 0.000s (removed 6 assertions)
+Slicing time: 0.004s (removed 378 assignments)
+Generated 264 VCC(s), 87 remaining after simplification (259 assignments)
+No solver specified; defaulting to bitwuzla
+Encoding remaining VCC(s) using bit-vector/floating-point arithmetic
+Encoding to solver time: 0.005s
+Solving with solver Bitwuzla 0.9.1
+Runtime decision procedure: 0.006s
+BMC program time: 0.040s
+No bug has been found in the base case
+Checking forward condition, k = 1
+Starting Bounded Model Checking
+Not unwinding loop 68 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+WARNING: no body for function less#
+Not unwinding loop 69 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+Not unwinding loop 70 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Not unwinding loop 68 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+WARNING: no body for function less#
+Not unwinding loop 69 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+Not unwinding loop 70 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Symex completed in: 0.025s (633 assignments)
+Slicing time: 0.003s (removed 403 assignments)
+Generated 248 VCC(s), 89 remaining after simplification (230 assignments)
+No solver specified; defaulting to bitwuzla
+Encoding remaining VCC(s) using bit-vector/floating-point arithmetic
+Encoding to solver time: 0.004s
+Solving with solver Bitwuzla 0.9.1
+Runtime decision procedure: 0.002s
+The forward condition is unable to prove the property
+Checking base case, k = 2
+Starting Bounded Model Checking
+Unwinding loop 68 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+Not unwinding loop 68 iteration 2   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+WARNING: no body for function less#
+Unwinding loop 69 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+WARNING: no body for function less#
+Not unwinding loop 69 iteration 2   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+Unwinding loop 70 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Not unwinding loop 70 iteration 2   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Unwinding loop 68 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+Not unwinding loop 68 iteration 2   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 342 column 5 function operator[]
+WARNING: no body for function less#
+Unwinding loop 69 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+WARNING: no body for function less#
+Not unwinding loop 69 iteration 2   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 352 column 5 function operator[]
+Unwinding loop 70 iteration 1   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Not unwinding loop 70 iteration 2   file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 362 column 5 function operator[]
+Symex completed in: 0.040s (777 assignments)
+Caching time: 0.000s (removed 10 assertions)
+Slicing time: 0.008s (removed 418 assignments)
+Generated 346 VCC(s), 117 remaining after simplification (349 assignments)
+No solver specified; defaulting to bitwuzla
+Encoding remaining VCC(s) using bit-vector/floating-point arithmetic
+Encoding to solver time: 0.009s
+Solving with solver Bitwuzla 0.9.1
+Runtime decision procedure: 0.009s
+Building error trace
+
+[Counterexample]
+
+
+State 1 file f6_map.cpp line 3 column 13 function main thread 0
+----------------------------------------------------
+  m = { ._key = { 0 } }
+
+State 3 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 329 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_key[0] = { ._key=1, ._value={ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ._size=0 }
+
+State 4 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 330 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_value[0] = { ._key={ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ._value=0,
+    ._size=0 }
+
+State 5 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 331 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_size = { ._key={ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ._value={ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    ._size=1 }
+
+State 10 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 335 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 11 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 335 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 12 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 335 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 13 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 335 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 18 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 336 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 19 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 336 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 20 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 336 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 21 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 336 column 9 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 25 file f6_map.cpp line 3 column 34 function main thread 0
+----------------------------------------------------
+  *return_value$_operator[]$3 = { ._key={ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ._value={ 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    ._size=1 }
+
+State 26 file f6_map.cpp line 3 column 43 function main thread 0
+----------------------------------------------------
+  k = 2 (00000000 00000000 00000000 00000010)
+
+State 34 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 370 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_key[1] = 2 (00000000 00000000 00000000 00000010)
+
+State 35 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 370 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_key[1] = 2 (00000000 00000000 00000000 00000010)
+
+State 36 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 370 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_key[1] = 2 (00000000 00000000 00000000 00000010)
+
+State 37 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 370 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_key[1] = 2 (00000000 00000000 00000000 00000010)
+
+State 41 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 371 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_value[1] = 0 (00000000 00000000 00000000 00000000)
+
+State 42 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 371 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_value[1] = 0 (00000000 00000000 00000000 00000000)
+
+State 43 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 371 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_value[1] = 0 (00000000 00000000 00000000 00000000)
+
+State 44 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 371 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_value[1] = 0 (00000000 00000000 00000000 00000000)
+
+State 45 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 372 column 5 function operator[] thread 0
+----------------------------------------------------
+  this->_size = { ._key={ 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, ._value={ 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    ._size=2 }
+
+State 50 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 377 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 51 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 377 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 52 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 377 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 53 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 377 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_key[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 58 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 378 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 59 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 378 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 60 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 378 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 61 file /var/folders/rt/m54dlfh9037f8xkwc9lt3_vm0000gn/T/esbmc-cpp-headers-80f6-3f09-ada0/map line 378 column 7 function operator[] thread 0
+----------------------------------------------------
+  this->_value[(signed long int)(&m)->_size] = 0 (00000000 00000000 00000000 00000000)
+
+State 65 file f6_map.cpp line 4 column 3 function main thread 0
+----------------------------------------------------
+Violated property:
+  file f6_map.cpp line 4 column 3 function main
+  all keys map to 10
+  *return_value$_operator[]$5 == 10
+
+
+VERIFICATION FAILED
+
+Bug found (k = 2)
+ESBMC version 8.4.0 64-bit aarch64 macos
