@@ -1,5 +1,5 @@
-// One Charon run over a crate, scoped to the patch's functions. It never
-// edits the tree; the log is handed to `refusal` unchanged.
+// One Charon run over a crate, started from the modules the patch
+// touches. It never edits the tree and never builds an item name.
 
 use super::refusal::{refusals_in, Refusal};
 use serde::Serialize;
@@ -16,7 +16,7 @@ pub struct Run {
 
 pub struct Scope<'a> {
     pub crate_dir: &'a Path,
-    pub items: &'a [String],
+    pub modules: &'a [String],
     pub cargo_args: &'a [String],
 }
 
@@ -28,8 +28,8 @@ pub fn run(charon: &Path, scope: &Scope, output: &Path) -> Run {
         .args(["--sysroot", "default", "--no-dedup-serialized-ast"])
         .arg("--dest-file")
         .arg(output);
-    for item in scope.items {
-        command.arg("--start-from-if-exists").arg(item);
+    for module in scope.modules {
+        command.arg("--start-from-if-exists").arg(module);
     }
     command.arg("--").args(scope.cargo_args);
     let result = command.output();
@@ -45,9 +45,9 @@ pub fn run(charon: &Path, scope: &Scope, output: &Path) -> Run {
     }
 }
 
-// `src/a/b.rs` holding `fn c` is the item `crate::a::b::c`; a method of
-// `Type` is `crate::a::b::Type::c`. `mod.rs` and `lib.rs` add no segment.
-pub fn item_path(file_in_crate: &str, owner: Option<&str>, function: &str) -> String {
+// `src/a/b.rs` is the module `crate::a::b`; `src/a/mod.rs` is `crate::a`
+// and `src/lib.rs` is `crate`. This is rustc's file-to-module rule.
+pub fn module_of(file_in_crate: &str) -> String {
     let inner = file_in_crate
         .strip_prefix("src/")
         .unwrap_or(file_in_crate)
@@ -57,7 +57,8 @@ pub fn item_path(file_in_crate: &str, owner: Option<&str>, function: &str) -> St
     if matches!(segments.last(), Some(&"mod") | Some(&"lib")) {
         segments.pop();
     }
-    segments.extend(owner);
-    segments.push(function);
-    format!("crate::{}", segments.join("::"))
+    match segments.is_empty() {
+        true => "crate".to_string(),
+        false => format!("crate::{}", segments.join("::")),
+    }
 }

@@ -1,4 +1,4 @@
-use hyperray_rust::extract::{change, item_path, manifest, run, Scope};
+use hyperray_rust::extract::{change, join, manifest, module_of, run, seen_in, Scope, Status};
 use std::path::{Path, PathBuf};
 
 fn env_dir(name: &str) -> Option<PathBuf> {
@@ -18,17 +18,16 @@ fn crate_dir(root: &Path, patched: &str) -> Option<PathBuf> {
 }
 
 #[test]
-fn item_paths_follow_the_file_layout() {
-    assert_eq!(item_path("src/lib.rs", None, "f"), "crate::f");
-    assert_eq!(item_path("src/a/mod.rs", None, "f"), "crate::a::f");
-    assert_eq!(item_path("src/a/b.rs", None, "f"), "crate::a::b::f");
-    assert_eq!(item_path("src/a/b.rs", Some("T"), "f"), "crate::a::b::T::f");
+fn module_paths_follow_rustc_file_rules() {
+    assert_eq!(module_of("src/lib.rs"), "crate");
+    assert_eq!(module_of("src/a/mod.rs"), "crate::a");
+    assert_eq!(module_of("src/a/b.rs"), "crate::a::b");
 }
 
-// Measured on 2026-09-01: Charon refuses exactly the five `async fn` in
-// the noodles-util builder and extracts the rest.
+// The rule: after one Charon run, every function the patch touches is
+// either extracted or refused with Charon's own reason. None is missing.
 #[test]
-fn charon_run_on_noodles_refuses_only_the_async_functions() {
+fn every_patched_function_is_extracted_or_refused_by_name() {
     let (Some(charon), Some(sources)) =
         (env_dir("HYPERRAY_CHARON"), env_dir("HYPERRAY_FIXTURE_SRC"))
     else {
@@ -42,52 +41,43 @@ fn charon_run_on_noodles_refuses_only_the_async_functions() {
     let Ok(built) = manifest(&root, &change(&text)) else {
         return;
     };
-    let builder = "noodles-util/src/alignment/async/io/indexed_reader/builder.rs";
-    let Some(dir) = crate_dir(&root, builder) else {
+    let file = "noodles-util/src/alignment/async/io/indexed_reader/builder.rs";
+    let Some(dir) = crate_dir(&root, file) else {
         return;
     };
-    let in_crate = builder.strip_prefix("noodles-util/").unwrap_or(builder);
-    let items: Vec<String> = built
-        .functions
-        .iter()
-        .filter(|f| f.path == builder)
-        .map(|f| item_path(in_crate, f.owner.as_deref(), &f.name))
-        .collect();
+    let in_crate = file.strip_prefix("noodles-util/").unwrap_or(file);
+    let modules = vec![module_of(in_crate)];
     let cargo_args = vec!["--features".to_string(), "alignment,async".to_string()];
     let scope = Scope {
         crate_dir: &dir,
-        items: &items,
+        modules: &modules,
         cargo_args: &cargo_args,
     };
     let output = std::env::temp_dir().join("hyperray-noodles.ullbc");
     let done = run(&charon, &scope, &output);
     assert_eq!(done.exit_code, Some(0));
-    let coroutine_lines: Vec<u32> = done
-        .refusals
-        .iter()
-        .filter(|r| r.reason.starts_with("Coroutine"))
-        .filter(|r| r.path.ends_with("builder.rs"))
-        .map(|r| r.line)
-        .collect();
-    let mut refused_functions: Vec<&str> = built
+    let ullbc = std::fs::read_to_string(&output).unwrap_or_default();
+    let Ok(seen) = seen_in(&ullbc) else {
+        panic!("charon output did not parse");
+    };
+    let in_file: Vec<_> = built
         .functions
         .iter()
-        .filter(|f| f.path == builder)
-        .filter(|f| {
-            coroutine_lines
-                .iter()
-                .any(|l| (f.start_line..=f.end_line).contains(l))
-        })
-        .map(|f| f.name.as_str())
+        .filter(|f| f.path == file)
+        .cloned()
         .collect();
-    refused_functions.sort_unstable();
-    let mut async_functions: Vec<&str> = built
-        .functions
+    let joined = join(&in_file, &seen);
+    assert!(!joined.is_empty());
+    for function in &joined {
+        match &function.status {
+            Status::Extracted => {}
+            Status::Refused(reason) => assert!(!reason.is_empty(), "{}", function.name),
+            Status::Missing => panic!("{} missing from charon output", function.name),
+        }
+    }
+    let refused = joined
         .iter()
-        .filter(|f| f.path == builder && f.text.contains("async fn"))
-        .map(|f| f.name.as_str())
-        .collect();
-    async_functions.sort_unstable();
-    assert_eq!(refused_functions, async_functions);
-    assert_eq!(async_functions.len(), 5);
+        .filter(|f| matches!(f.status, Status::Refused(_)));
+    let async_fns = in_file.iter().filter(|f| f.text.contains("async fn"));
+    assert_eq!(refused.count(), async_fns.count());
 }

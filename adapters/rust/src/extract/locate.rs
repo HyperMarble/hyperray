@@ -3,16 +3,14 @@
 // only files the patch names; nothing here walks the tree.
 
 use super::function::{overlapping, Function};
-use super::owner::owner_at;
 use super::reader::{Opened, Reader};
 use super::Change;
 use serde::Serialize;
 use std::path::Path;
 
-#[derive(Debug, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Located {
     pub path: String,
-    pub owner: Option<String>,
     pub name: String,
     pub start_line: u32,
     pub end_line: u32,
@@ -55,15 +53,13 @@ fn locate(manifest: &mut Manifest, path: &str, text: &str, first: u32, last: u32
             .push((path.to_string(), first));
     }
     for function in found {
-        let owner = owner_at(text, function.start_line);
-        manifest.functions.push(located(path, owner, function));
+        manifest.functions.push(located(path, function));
     }
 }
 
-fn located(path: &str, owner: Option<String>, function: Function) -> Located {
+fn located(path: &str, function: Function) -> Located {
     Located {
         path: path.to_string(),
-        owner,
         name: function.name,
         start_line: function.start_line,
         end_line: function.end_line,
