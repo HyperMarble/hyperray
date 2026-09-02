@@ -1,57 +1,52 @@
-// Reads a unified diff and returns the added line ranges per file.
-// It never reads the repository. The diff alone decides what changed.
+// A unified diff split into files and hunks. Input is the patch text alone;
+// this file never opens the repository.
 
-use std::ops::RangeInclusive;
+use super::hunk::Hunk;
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ChangedFile {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FileChange {
     pub path: String,
-    pub added: Vec<RangeInclusive<usize>>,
+    pub hunks: Vec<Hunk>,
 }
 
-pub fn changed_files(diff: &str) -> Vec<ChangedFile> {
-    let mut files: Vec<ChangedFile> = Vec::new();
-    let mut new_line = 0usize;
-
-    for line in diff.lines() {
-        if let Some(path) = line.strip_prefix("+++ b/") {
-            files.push(ChangedFile {
-                path: path.to_string(),
-                added: Vec::new(),
-            });
-        } else if let Some(start) = hunk_new_start(line) {
-            new_line = start;
-        } else if let Some(file) = files.last_mut() {
-            new_line = advance(file, line, new_line);
-        }
+impl FileChange {
+    pub fn added_lines(&self) -> usize {
+        self.hunks.iter().map(|hunk| hunk.added.len()).sum()
     }
 
+    pub fn removed_lines(&self) -> usize {
+        self.hunks.iter().map(|hunk| hunk.removed.len()).sum()
+    }
+}
+
+pub fn parse(patch: &str) -> Vec<FileChange> {
+    let mut files: Vec<FileChange> = Vec::new();
+    let mut in_hunks = false;
+    for line in patch.lines() {
+        if line.starts_with("diff ") || line.starts_with("--- ") {
+            in_hunks = false;
+        } else if let Some(path) = line.strip_prefix("+++ ") {
+            files.push(FileChange {
+                path: strip_diff_prefix(path),
+                hunks: Vec::new(),
+            });
+            in_hunks = true;
+        } else if let Some(file) = files.last_mut().filter(|_| in_hunks) {
+            push_hunk_line(file, line);
+        }
+    }
     files
 }
 
-fn hunk_new_start(line: &str) -> Option<usize> {
-    let rest = line.strip_prefix("@@ ")?;
-    let new_part = rest.split(' ').nth(1)?.strip_prefix('+')?;
-    new_part.split(',').next()?.parse().ok()
-}
-
-fn advance(file: &mut ChangedFile, line: &str, new_line: usize) -> usize {
-    match line.chars().next() {
-        Some('+') => {
-            record_added(file, new_line);
-            new_line + 1
-        }
-        Some('-') => new_line,
-        Some('\\') => new_line,
-        _ => new_line + 1,
+fn push_hunk_line(file: &mut FileChange, line: &str) {
+    if let Some(hunk) = Hunk::from_header(line) {
+        file.hunks.push(hunk);
+    } else if let Some(hunk) = file.hunks.last_mut() {
+        hunk.push_line(line);
     }
 }
 
-fn record_added(file: &mut ChangedFile, line: usize) {
-    match file.added.last_mut() {
-        Some(range) if *range.end() + 1 == line => {
-            *range = *range.start()..=line;
-        }
-        _ => file.added.push(line..=line),
-    }
+// Git writes `b/src/lib.rs`; the `b/` is diff syntax, not a directory.
+fn strip_diff_prefix(path: &str) -> String {
+    path.strip_prefix("b/").unwrap_or(path).to_string()
 }

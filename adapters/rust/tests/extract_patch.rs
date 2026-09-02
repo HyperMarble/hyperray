@@ -1,44 +1,72 @@
-use hyperray_rust::extract::patch::changed_files;
-use std::path::Path;
+use hyperray_rust::extract::{change, Change};
+use std::path::PathBuf;
 
-fn fixture_patch() -> String {
-    let path =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/noodles-296/solution.patch");
-    std::fs::read_to_string(path).expect("fixture patch must exist")
+fn fixtures() -> Vec<(String, Vec<Change>)> {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
+    let mut dirs: Vec<PathBuf> = std::fs::read_dir(&root)
+        .expect("fixtures dir")
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .collect();
+    dirs.sort();
+    dirs.into_iter()
+        .map(|dir| {
+            let text = std::fs::read_to_string(dir.join("solution.patch")).expect("patch");
+            let name = dir.file_name().map(|n| n.to_string_lossy().to_string());
+            (name.unwrap_or_default(), change(&text))
+        })
+        .collect()
 }
 
-#[test]
-fn noodles_patch_touches_fourteen_files() {
-    let files = changed_files(&fixture_patch());
-    assert_eq!(files.len(), 14);
+fn totals(files: &[Change]) -> (usize, usize, usize, usize, usize) {
+    let hunks: Vec<_> = files.iter().flat_map(|f| &f.hunks).collect();
+    let added = hunks.iter().map(|h| h.added).sum();
+    let removed = hunks.iter().map(|h| h.removed).sum();
+    let defined = hunks.iter().map(|h| h.defines.len()).sum();
+    (files.len(), hunks.len(), added, removed, defined)
 }
 
+// Counts measured with an independent line count on 2026-09-02:
+// files, hunks, added lines, removed lines, `fn` definitions added.
 #[test]
-fn builder_file_is_wholly_new_and_detect_sits_in_its_range() {
-    let files = changed_files(&fixture_patch());
-    let builder = files
+fn every_fixture_yields_the_measured_counts() {
+    let expected = [
+        ("alloy-ws-batch", (8, 24, 311, 28, 17)),
+        ("noodles-296", (14, 16, 1052, 6, 71)),
+        ("serde-json-1156", (5, 10, 481, 26, 37)),
+        ("wasmtime-cfg", (2, 14, 212, 6, 6)),
+    ];
+    let seen: Vec<_> = fixtures()
         .iter()
-        .find(|f| f.path == "noodles-util/src/alignment/async/io/indexed_reader/builder.rs")
-        .expect("builder.rs must be in the patch");
-
-    assert_eq!(builder.added.len(), 1, "a new file is one range");
-    let range = &builder.added[0];
-    assert_eq!(*range.start(), 1);
-    assert!(range.contains(&201), "MAX_DETECTION_PREFIX_LEN at line 201");
-    assert!(range.contains(&322), "the seek subtraction at line 322");
+        .map(|(name, files)| (name.clone(), totals(files)))
+        .collect();
+    let expected: Vec<_> = expected
+        .iter()
+        .map(|(name, counts)| (name.to_string(), *counts))
+        .collect();
+    assert_eq!(seen, expected);
 }
 
 #[test]
-fn sync_builder_has_two_separate_hunks() {
-    let files = changed_files(&fixture_patch());
-    let sync = files
-        .iter()
-        .find(|f| f.path == "noodles-util/src/alignment/io/reader/builder.rs")
-        .expect("sync builder.rs must be in the patch");
+fn every_hunk_range_sits_inside_its_file_and_names_are_identifiers() {
+    for (_, files) in fixtures() {
+        for file in &files {
+            assert!(!file.path.starts_with("b/"), "{}", file.path);
+            for hunk in &file.hunks {
+                assert!(hunk.added_range.0 <= hunk.added_range.1 + 1);
+                for name in &hunk.defines {
+                    assert!(name.chars().all(|c| c.is_alphanumeric() || c == '_'));
+                }
+            }
+        }
+    }
+}
 
-    assert_eq!(
-        sync.added.len(),
-        2,
-        "the CRAM version arm and the helper fn"
-    );
+#[test]
+fn pass_one_reads_only_the_patch_text() {
+    let text = "+++ b/src/lib.rs\n@@ -1,2 +1,3 @@ mod x\n+pub fn added() {}\n-old\n";
+    let files = change(text);
+    assert_eq!(files[0].path, "src/lib.rs");
+    assert_eq!(files[0].hunks[0].defines, vec!["added".to_string()]);
+    assert_eq!(files[0].hunks[0].context, "mod x");
 }
