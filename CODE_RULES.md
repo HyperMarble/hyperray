@@ -2,9 +2,8 @@
 
 Status: ACCEPTED 2026-09-02. Applies to every language in the repo.
 
-The reasoning rules are Linus Torvalds's kernel coding style. The full
-text with notes is in the workspace `AGENTS.md`. This file holds only what
-is specific to Hyperray. Where the two disagree, `AGENTS.md` wins.
+The full reasoning rules are in the workspace `AGENTS.md`. This file holds
+only what is specific to Hyperray. Where the two disagree, `AGENTS.md` wins.
 
 ## 1. Shape
 
@@ -46,10 +45,8 @@ is specific to Hyperray. Where the two disagree, `AGENTS.md` wins.
 
 ## 5. Comments
 
-Linus's rule, word for word: "NEVER try to explain HOW your code works in
-a comment: it's much better to write the code so that the working is
-obvious." And: "you want your comments to tell WHAT your code does, not
-HOW."
+Comments state WHAT or WHY when the code cannot express that information
+clearly. Comments never narrate HOW the implementation works.
 
 - A comment inside a function is permitted when it adds information that
   the code cannot express clearly. It states WHAT or WHY, never HOW.
