@@ -1,5 +1,5 @@
-// Command hyperray verifies that a coding task's spec, tests, and solution are
-// internally consistent, using formal methods layered with testing.
+// Command hyperray proves that the logic of a finite bounded task is correct.
+// It starts one native adapter per language and reports the result.
 package main
 
 import (
@@ -19,23 +19,10 @@ func main() {
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "hyperray",
-		Short:         "Prove statement, solution, and tests agree over a bounded scope",
+		Short:         "Prove that the logic of a bounded task is correct",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
-	root.AddCommand(newCheckCmd())
-	root.AddCommand(newEnforceCmd())
-	root.AddCommand(newSpecInitCmd())
-	root.AddCommand(newOneshotCmd())
-	root.AddCommand(newDepHarvestCmd())
-	root.AddCommand(newRowsCmd())
-	root.AddCommand(newBridgesGenCmd())
-	root.AddCommand(newHygieneCmd())
-	root.AddCommand(newRepoLintCmd())
-	root.AddCommand(newProseLintCmd())
-	root.AddCommand(newStartCmd())
-	root.AddCommand(newStrictSpecLintCmd())
 	root.AddCommand(newVersionCmd())
-	root.AddCommand(newUpdateCmd())
 	return root
 }
