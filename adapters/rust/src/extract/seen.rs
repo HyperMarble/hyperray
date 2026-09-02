@@ -2,7 +2,7 @@
 // line span, and whether the body came out or was refused and why. No
 // name is built here; the compiler already wrote every one.
 
-use super::ullbc::{Decl, Output};
+use super::ullbc::{BodyTag, Decl, Output};
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -21,8 +21,9 @@ pub struct Seen {
     pub body: Body,
 }
 
-pub fn seen_in(ullbc_json: &str) -> Result<Vec<Seen>, serde_json::Error> {
-    let output: Output = serde_json::from_str(ullbc_json)?;
+pub fn seen_in(ullbc: std::fs::File) -> Result<Vec<Seen>, serde_json::Error> {
+    let reader = std::io::BufReader::new(ullbc);
+    let output: Output = serde_json::from_reader(reader)?;
     let files: HashMap<u32, String> = output
         .translated
         .files
@@ -48,16 +49,16 @@ fn seen(files: &HashMap<u32, String>, decl: Decl) -> Option<Seen> {
     })
 }
 
-// A refused body is `{"Error": {"msg": …}}`; an unrequested one is the
-// bare string `"Opaque"`; anything else carries the extracted body.
-fn body_of(body: &serde_json::Value) -> Body {
-    let refusal = body
-        .get("Error")
-        .and_then(|e| e.get("msg"))
-        .and_then(|m| m.as_str());
-    match refusal {
-        Some(reason) => Body::Refused(reason.to_string()),
-        None if body.is_string() => Body::NotRequested,
-        None => Body::Extracted,
+// Charon's own tags, read back. `Missing` is Charon's word for a std
+// body it never had; `Opaque` is one it was told to skip.
+fn body_of(body: &BodyTag) -> Body {
+    match body {
+        BodyTag::Error(error) => Body::Refused(error.msg.clone()),
+        BodyTag::Opaque | BodyTag::Missing => Body::NotRequested,
+        BodyTag::Unstructured(_)
+        | BodyTag::Structured(_)
+        | BodyTag::TargetDispatch(_)
+        | BodyTag::Extern(_)
+        | BodyTag::Intrinsic(_) => Body::Extracted,
     }
 }

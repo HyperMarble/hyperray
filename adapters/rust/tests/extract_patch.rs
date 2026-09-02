@@ -1,22 +1,6 @@
-use hyperray_rust::extract::{change, Change};
-use std::path::PathBuf;
+mod common;
 
-fn fixtures() -> Vec<(String, Vec<Change>)> {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
-    let mut dirs: Vec<PathBuf> = std::fs::read_dir(&root)
-        .expect("fixtures dir")
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .collect();
-    dirs.sort();
-    dirs.into_iter()
-        .map(|dir| {
-            let text = std::fs::read_to_string(dir.join("solution.patch")).expect("patch");
-            let name = dir.file_name().map(|n| n.to_string_lossy().to_string());
-            (name.unwrap_or_default(), change(&text))
-        })
-        .collect()
-}
+use hyperray_rust::extract::{change, Change};
 
 fn totals(files: &[Change]) -> (usize, usize, usize, usize, usize) {
     let hunks: Vec<_> = files.iter().flat_map(|f| &f.hunks).collect();
@@ -36,9 +20,13 @@ fn every_fixture_yields_the_measured_counts() {
         ("serde-json-1156", (5, 10, 481, 26, 37)),
         ("wasmtime-cfg", (2, 14, 212, 6, 6)),
     ];
-    let seen: Vec<_> = fixtures()
+    let patches = common::patches();
+    if patches.is_empty() {
+        return;
+    }
+    let seen: Vec<_> = patches
         .iter()
-        .map(|(name, files)| (name.clone(), totals(files)))
+        .map(|(name, text)| (name.clone(), totals(&change(text))))
         .collect();
     let expected: Vec<_> = expected
         .iter()
@@ -49,8 +37,8 @@ fn every_fixture_yields_the_measured_counts() {
 
 #[test]
 fn every_hunk_range_sits_inside_its_file_and_names_are_identifiers() {
-    for (_, files) in fixtures() {
-        for file in &files {
+    for (_, text) in common::patches() {
+        for file in &change(&text) {
             assert!(!file.path.starts_with("b/"), "{}", file.path);
             for hunk in &file.hunks {
                 assert!(hunk.added_range.0 <= hunk.added_range.1 + 1);

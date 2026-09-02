@@ -1,6 +1,6 @@
 // The router's input: each manifest function joined to what Charon said
 // about it, by file and line. A function Charon never mentioned is
-// `Missing`, and that is reported, never dropped.
+// `Missing`; a file Charon never saw is `FileNotSeen`. Both are reported.
 
 use super::locate::Located;
 use super::seen::{Body, Seen};
@@ -11,6 +11,7 @@ pub enum Status {
     Extracted,
     Refused(String),
     Missing,
+    FileNotSeen,
 }
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
@@ -35,12 +36,15 @@ pub fn join(functions: &[Located], seen: &[Seen]) -> Vec<Joined> {
 
 // Charon's span starts at the first attribute or the `fn` line and the
 // manifest's at the `fn` line, so containment is the match, not equality.
+// Paths are both relative to the tree root and must match exactly.
 fn status_of(function: &Located, seen: &[Seen]) -> Status {
-    let hit = seen.iter().find(|s| {
-        s.path.ends_with(&function.path)
-            && s.start_line <= function.start_line
-            && s.end_line >= function.end_line
-    });
+    let in_file: Vec<&Seen> = seen.iter().filter(|s| s.path == function.path).collect();
+    if in_file.is_empty() {
+        return Status::FileNotSeen;
+    }
+    let hit = in_file
+        .iter()
+        .find(|s| s.start_line <= function.start_line && s.end_line >= function.end_line);
     match hit.map(|s| &s.body) {
         Some(Body::Extracted) => Status::Extracted,
         Some(Body::Refused(reason)) => Status::Refused(reason.clone()),

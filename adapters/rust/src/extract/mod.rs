@@ -13,8 +13,9 @@ mod reader;
 mod refusal;
 mod seen;
 mod ullbc;
+mod workspace;
 
-pub use charon::{module_of, run, Run, Scope};
+pub use charon::{run, Run};
 pub use hunk::Hunk;
 pub use join::{join, Joined, Status};
 pub use locate::{manifest, Located, Manifest};
@@ -22,6 +23,7 @@ pub use patch::FileChange;
 pub use reader::Opened;
 pub use refusal::{refusals_in, Refusal};
 pub use seen::{seen_in, Body, Seen};
+pub use workspace::crate_dir;
 
 use serde::Serialize;
 

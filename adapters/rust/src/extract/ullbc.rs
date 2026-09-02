@@ -1,6 +1,7 @@
 // The parts of Charon's ULLBC JSON this stage reads. Fields not listed
 // are ignored on purpose; nothing here interprets them.
 
+use serde::de::IgnoredAny;
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -24,7 +25,27 @@ pub struct File {
 #[derive(Deserialize)]
 pub struct Decl {
     pub item_meta: ItemMeta,
-    pub body: serde_json::Value,
+    pub body: BodyTag,
+}
+
+// Every variant of Charon's `Body` (charon/src/ast/bodies.rs). Only the
+// tag is kept; body contents are discarded while reading, so a whole
+// crate file does not become a whole-crate tree in memory.
+#[derive(Deserialize)]
+pub enum BodyTag {
+    Unstructured(IgnoredAny),
+    Structured(IgnoredAny),
+    TargetDispatch(IgnoredAny),
+    Extern(IgnoredAny),
+    Intrinsic(IgnoredAny),
+    Opaque,
+    Missing,
+    Error(ErrorBody),
+}
+
+#[derive(Deserialize)]
+pub struct ErrorBody {
+    pub msg: String,
 }
 
 #[derive(Deserialize)]
