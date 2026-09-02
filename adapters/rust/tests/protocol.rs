@@ -9,7 +9,8 @@ fn version_request_returns_rust_adapter_identity() {
     });
 
     let response = handle_request(&request.to_string()).expect("version request must succeed");
-    let response: serde_json::Value = serde_json::from_str(&response).expect("response must be JSON");
+    let response: serde_json::Value =
+        serde_json::from_str(&response).expect("response must be JSON");
 
     assert_eq!(response["status"], "ok");
     assert_eq!(response["protocol_version"], 1);
