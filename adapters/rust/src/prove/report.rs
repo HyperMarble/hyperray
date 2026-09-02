@@ -22,7 +22,10 @@ pub fn results_in(log: &str) -> Vec<HarnessResult> {
             current = Some(blank(name));
         }
         if let Some(result) = current.as_mut() {
-            fill(result, line);
+            let closed = fill(result, line);
+            if closed {
+                found.extend(current.take());
+            }
         }
     }
     found.extend(current);
@@ -45,8 +48,9 @@ fn harness_name(line: &str) -> Option<&str> {
 }
 
 // ` ** 0 of 33 failed` / `Failed Checks: attempt to subtract with overflow`
-// / `VERIFICATION:- SUCCESSFUL` / `Verification Time: 0.0247s`
-fn fill(result: &mut HarnessResult, line: &str) {
+// / `VERIFICATION:- SUCCESSFUL` / `Verification Time: 0.0247s`. Every
+// block ends with the time line, so that line closes the result.
+fn fill(result: &mut HarnessResult, line: &str) -> bool {
     let text = line.trim();
     if let Some(rest) = text.strip_prefix("** ") {
         result.checks = checks_total(rest).unwrap_or(0);
@@ -56,7 +60,9 @@ fn fill(result: &mut HarnessResult, line: &str) {
         result.passed = true;
     } else if let Some(time) = text.strip_prefix("Verification Time: ") {
         result.time_s = time.trim_end_matches('s').to_string();
+        return true;
     }
+    false
 }
 
 // `1 of 33 failed` -> 33

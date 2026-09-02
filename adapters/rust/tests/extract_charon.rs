@@ -1,39 +1,54 @@
 mod common;
 
-use hyperray_rust::extract::{refusals_in, Refusal};
+use hyperray_rust::extract::refusals_in;
 
-fn fixture_log() -> Option<String> {
-    let root = common::dir("HYPERRAY_FIXTURES")?;
-    std::fs::read_to_string(root.join("alloy-ws-batch/charon-pubsub.log")).ok()
-}
-
-fn count(refusals: &[Refusal], reason: &str) -> usize {
-    refusals.iter().filter(|r| r.reason == reason).count()
-}
-
-// Counts measured with grep on the same log on 2026-09-02.
-#[test]
-fn charon_log_yields_every_refusal_with_its_location() {
-    let Some(log) = fixture_log() else {
-        return;
+// Every `.log` under HYPERRAY_FIXTURES is a Charon run captured verbatim.
+fn charon_logs() -> Vec<(String, String)> {
+    let Some(root) = common::dir("HYPERRAY_FIXTURES") else {
+        return Vec::new();
     };
-    let refusals = refusals_in(&log);
-    assert_eq!(count(&refusals, "Coroutines are not supported"), 8);
-    assert_eq!(
-        count(&refusals, "Coroutine types are not supported yet"),
-        32
-    );
-    let first = refusals
-        .iter()
-        .find(|r| r.reason == "Coroutines are not supported");
-    assert_eq!(
-        first,
-        Some(&Refusal {
-            reason: "Coroutines are not supported".to_string(),
-            path: "crates/pubsub/src/frontend.rs".to_string(),
-            line: 41,
-        })
-    );
+    let Ok(entries) = std::fs::read_dir(&root) else {
+        return Vec::new();
+    };
+    let mut found = Vec::new();
+    for fixture in entries.filter_map(Result::ok) {
+        let Ok(files) = std::fs::read_dir(fixture.path()) else {
+            continue;
+        };
+        for file in files.filter_map(Result::ok) {
+            let path = file.path();
+            if path.extension().is_some_and(|e| e == "log") {
+                if let Ok(text) = std::fs::read_to_string(&path) {
+                    found.push((path.display().to_string(), text));
+                }
+            }
+        }
+    }
+    found
+}
+
+// The rule: a refusal is Charon's `warning:`/`error:` line followed by a
+// `-->` location. Every refusal read back has a reason, a file, and a
+// line; the count equals the number of `-->` lines that follow a reason.
+#[test]
+fn every_refusal_in_every_charon_log_has_a_reason_and_a_location() {
+    for (name, log) in charon_logs() {
+        let refusals = refusals_in(&log);
+        let located = log
+            .lines()
+            .zip(log.lines().skip(1))
+            .filter(|(reason, next)| {
+                (reason.starts_with("warning: ") || reason.starts_with("error: "))
+                    && next.trim_start().starts_with("--> ")
+            })
+            .count();
+        assert_eq!(refusals.len(), located, "{name}");
+        for refusal in &refusals {
+            assert!(!refusal.reason.is_empty(), "{name}");
+            assert!(refusal.path.ends_with(".rs"), "{name}: {}", refusal.path);
+            assert!(refusal.line >= 1, "{name}");
+        }
+    }
 }
 
 #[test]

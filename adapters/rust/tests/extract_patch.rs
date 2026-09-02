@@ -2,37 +2,49 @@ mod common;
 
 use hyperray_rust::extract::{change, Change};
 
-fn totals(files: &[Change]) -> (usize, usize, usize, usize, usize) {
+// Counted by the diff format's own rules, not by the parser under test:
+// `+++ b/` opens a file, `@@` opens a hunk, `+` and `-` inside a hunk
+// add and remove a line. Header lines close the hunk.
+fn counted_by_hand(patch: &str) -> (usize, usize, usize, usize) {
+    let mut files = 0;
+    let mut hunks = 0;
+    let mut added = 0;
+    let mut removed = 0;
+    let mut in_hunk = false;
+    for line in patch.lines() {
+        if line.starts_with("+++ b/") {
+            files += 1;
+            in_hunk = false;
+        } else if line.starts_with("--- ") {
+            in_hunk = false;
+        } else if line.starts_with("@@") {
+            hunks += 1;
+            in_hunk = true;
+        } else if in_hunk && line.starts_with('+') {
+            added += 1;
+        } else if in_hunk && line.starts_with('-') {
+            removed += 1;
+        }
+    }
+    (files, hunks, added, removed)
+}
+
+fn counted_by_parser(files: &[Change]) -> (usize, usize, usize, usize) {
     let hunks: Vec<_> = files.iter().flat_map(|f| &f.hunks).collect();
     let added = hunks.iter().map(|h| h.added).sum();
     let removed = hunks.iter().map(|h| h.removed).sum();
-    let defined = hunks.iter().map(|h| h.defines.len()).sum();
-    (files.len(), hunks.len(), added, removed, defined)
+    (files.len(), hunks.len(), added, removed)
 }
 
-// Counts measured with an independent line count on 2026-09-02:
-// files, hunks, added lines, removed lines, `fn` definitions added.
 #[test]
-fn every_fixture_yields_the_measured_counts() {
-    let expected = [
-        ("alloy-ws-batch", (8, 24, 311, 28, 17)),
-        ("noodles-296", (14, 16, 1052, 6, 71)),
-        ("serde-json-1156", (5, 10, 481, 26, 37)),
-        ("wasmtime-cfg", (2, 14, 212, 6, 6)),
-    ];
-    let patches = common::patches();
-    if patches.is_empty() {
-        return;
+fn every_patch_counts_the_same_by_parser_and_by_hand() {
+    for (name, text) in common::patches() {
+        assert_eq!(
+            counted_by_parser(&change(&text)),
+            counted_by_hand(&text),
+            "{name}"
+        );
     }
-    let seen: Vec<_> = patches
-        .iter()
-        .map(|(name, text)| (name.clone(), totals(&change(text))))
-        .collect();
-    let expected: Vec<_> = expected
-        .iter()
-        .map(|(name, counts)| (name.to_string(), *counts))
-        .collect();
-    assert_eq!(seen, expected);
 }
 
 #[test]

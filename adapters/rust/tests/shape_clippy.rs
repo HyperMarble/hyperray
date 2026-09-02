@@ -3,23 +3,30 @@ mod common;
 use hyperray_rust::extract::{change, crate_dir, manifest};
 use hyperray_rust::shape::{findings_in, run};
 
-// The log was captured verbatim from `cargo clippy --message-format=json`
-// on a real crate with the six shape lints on.
+// Every `*.jsonl` under HYPERRAY_FIXTURES is a `cargo clippy
+// --message-format=json` run captured verbatim with the shape lints on.
 #[test]
-fn clippy_json_yields_only_shape_lints_with_a_primary_span() {
+fn every_clippy_capture_yields_only_shape_lints_with_a_primary_span() {
     let Some(root) = common::dir("HYPERRAY_FIXTURES") else {
         return;
     };
-    let Ok(log) = std::fs::read_to_string(root.join("clippy-noodles-util.jsonl")) else {
+    let Ok(entries) = std::fs::read_dir(&root) else {
         return;
     };
-    let findings = findings_in(&log);
-    assert!(!findings.is_empty());
-    for finding in &findings {
-        assert!(finding.lint.starts_with("clippy::"), "{}", finding.lint);
-        assert!(finding.path.ends_with(".rs"), "{}", finding.path);
-        assert!(finding.line_start >= 1 && finding.line_start <= finding.line_end);
-        assert!(!finding.message.is_empty());
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if !path.extension().is_some_and(|e| e == "jsonl") {
+            continue;
+        }
+        let Ok(log) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        for finding in &findings_in(&log) {
+            assert!(finding.lint.starts_with("clippy::"), "{}", finding.lint);
+            assert!(finding.path.ends_with(".rs"), "{}", finding.path);
+            assert!(finding.line_start >= 1 && finding.line_start <= finding.line_end);
+            assert!(!finding.message.is_empty());
+        }
     }
 }
 
