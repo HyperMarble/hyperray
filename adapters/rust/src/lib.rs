@@ -4,5 +4,6 @@
 pub mod extract;
 mod protocol;
 pub mod prove;
+pub mod shape;
 
 pub use protocol::handle_request;
