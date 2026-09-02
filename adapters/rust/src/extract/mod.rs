@@ -1,12 +1,17 @@
-// EXTRACT pass 1: everything the patch text says, and nothing the
-// repository says. `change` is the only public entry.
+// EXTRACT: pass 1 reads the patch text alone; pass 2 reads only the files
+// the patch names. `change` and `manifest` are the two public entries.
 
+mod function;
 mod hunk;
+mod locate;
 mod names;
 mod patch;
+mod reader;
 
 pub use hunk::Hunk;
+pub use locate::{manifest, Located, Manifest};
 pub use patch::FileChange;
+pub use reader::Opened;
 
 use serde::Serialize;
 
