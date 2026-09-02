@@ -1,0 +1,560 @@
+diff --git a/crates/json-rpc/src/notification.rs b/crates/json-rpc/src/notification.rs
+index 550e3250..42406913 100644
+--- a/crates/json-rpc/src/notification.rs
++++ b/crates/json-rpc/src/notification.rs
+@@ -1,7 +1,7 @@
+ use crate::{Response, ResponsePayload};
+ use alloy_primitives::U256;
+ use serde::{
+-    de::{MapAccess, Visitor},
++    de::{MapAccess, SeqAccess, Visitor},
+     Deserialize, Serialize,
+ };
+ 
+@@ -47,6 +47,8 @@ pub enum PubSubItem {
+     Response(Response),
+     /// An Ethereum-style notification.
+     Notification(EthNotification),
++    /// A JSON-RPC batch response.
++    Batch(Vec<Response>),
+ }
+ 
+ impl From<Response> for PubSubItem {
+@@ -142,6 +144,17 @@ impl<'de> Deserialize<'de> for PubSubItem {
+                         .ok_or_else(|| serde::de::Error::missing_field("params"))
+                 }
+             }
++
++            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
++            where
++                A: SeqAccess<'de>,
++            {
++                let mut responses = Vec::new();
++                while let Some(response) = seq.next_element()? {
++                    responses.push(response);
++                }
++                Ok(PubSubItem::Batch(responses))
++            }
+         }
+ 
+         deserializer.deserialize_any(PubSubItemVisitor)
+diff --git a/crates/json-rpc/src/request.rs b/crates/json-rpc/src/request.rs
+index cb10422b..3e9d70ba 100644
+--- a/crates/json-rpc/src/request.rs
++++ b/crates/json-rpc/src/request.rs
+@@ -381,6 +381,18 @@ impl SerializedRequest {
+         &self.meta.id
+     }
+ 
++    /// Replace the request ID in both the preserved metadata and serialized
++    /// JSON-RPC object.
++    pub fn set_id(&mut self, id: Id) -> serde_json::Result<()> {
++        let mut request =
++            serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(self.request.get())?;
++        request.insert("id".to_owned(), serde_json::to_value(&id)?);
++        let request = serde_json::value::to_raw_value(&request)?;
++        self.meta.id = id;
++        self.request = request;
++        Ok(())
++    }
++
+     /// Returns the request method.
+     pub fn method(&self) -> &str {
+         &self.meta.method
+diff --git a/crates/pubsub/src/frontend.rs b/crates/pubsub/src/frontend.rs
+index c7e8bcdf..058be612 100644
+--- a/crates/pubsub/src/frontend.rs
++++ b/crates/pubsub/src/frontend.rs
+@@ -2,7 +2,7 @@ use crate::{ix::PubSubInstruction, managers::InFlight, RawSubscription};
+ use alloy_json_rpc::{RequestPacket, Response, ResponsePacket, SerializedRequest};
+ use alloy_primitives::B256;
+ use alloy_transport::{TransportError, TransportErrorKind, TransportFut, TransportResult};
+-use futures::{future::try_join_all, FutureExt, TryFutureExt};
++use futures::{future::join_all, FutureExt, TryFutureExt};
+ use std::{
+     future::Future,
+     sync::{
+@@ -81,15 +81,76 @@ impl PubSubFrontend {
+         .instrument(debug_span!("request", %method_name))
+     }
+ 
+-    /// Send a packet of requests, by breaking it up into individual requests.
+-    ///
+-    /// Once all responses are received, we return a single response packet.
++    /// Send a packet of requests while preserving its wire-level batch boundary.
+     pub fn send_packet(&self, req: RequestPacket) -> TransportFut<'static> {
++        self.send_packet_inner(req, false)
++    }
++
++    /// Send a packet for the generic RPC client's `BatchFuture`.
++    ///
++    /// That future owns the per-member response channels, so it must receive
++    /// completed members before it can fail omissions without discarding valid
++    /// results. Direct callers instead get an error from [`Self::send_packet`]
++    /// as soon as any member fails.
++    fn send_packet_for_batch_future(&self, req: RequestPacket) -> TransportFut<'static> {
++        self.send_packet_inner(req, true)
++    }
++
++    fn send_packet_inner(
++        &self,
++        req: RequestPacket,
++        preserve_partial_responses: bool,
++    ) -> TransportFut<'static> {
+         match req {
+             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+-            RequestPacket::Batch(reqs) => try_join_all(reqs.into_iter().map(|req| self.send(req)))
+-                .map_ok(ResponsePacket::Batch)
+-                .boxed(),
++            RequestPacket::Batch(reqs) => {
++                if reqs.is_empty() {
++                    return futures::future::ready(Err(TransportErrorKind::custom_str(
++                        "empty JSON-RPC batch",
++                    )))
++                    .boxed();
++                }
++
++                let channel_size = self.channel_size.load(Ordering::Relaxed);
++                let mut in_flights = Vec::with_capacity(reqs.len());
++                let mut receivers = Vec::with_capacity(reqs.len());
++                for req in reqs {
++                    let (in_flight, rx) = InFlight::new(req, channel_size);
++                    in_flights.push(in_flight);
++                    receivers.push(async move {
++                        rx.await.map_err(|_| TransportErrorKind::backend_gone())?
++                    });
++                }
++
++                let tx = self.tx.clone();
++                async move {
++                    tx.send(PubSubInstruction::Batch(in_flights))
++                        .map_err(|_| TransportErrorKind::backend_gone())?;
++                    let results = join_all(receivers).await;
++                    let mut responses = Vec::with_capacity(results.len());
++                    let mut first_error = None;
++                    for result in results {
++                        match result {
++                            Ok(response) => responses.push(response),
++                            Err(error) if first_error.is_none() => first_error = Some(error),
++                            Err(_) => {}
++                        }
++                    }
++
++                    // Preserve responses that arrived before another member of
++                    // the same packet failed. The outer batch future knows the
++                    // submitted ID set and will report the omitted members while
++                    // still delivering these completed responses to their waiters.
++                    if let Some(error) = first_error {
++                        if !preserve_partial_responses || responses.is_empty() {
++                            return Err(error);
++                        }
++                    }
++                    Ok(ResponsePacket::Batch(responses))
++                }
++                .instrument(debug_span!("batch_request"))
++                .boxed()
++            }
+         }
+     }
+ 
+@@ -125,6 +186,6 @@ impl tower::Service<RequestPacket> for PubSubFrontend {
+ 
+     #[inline]
+     fn call(&mut self, req: RequestPacket) -> Self::Future {
+-        self.send_packet(req)
++        self.send_packet_for_batch_future(req)
+     }
+ }
+diff --git a/crates/pubsub/src/ix.rs b/crates/pubsub/src/ix.rs
+index c3db5f6a..e93cbc1e 100644
+--- a/crates/pubsub/src/ix.rs
++++ b/crates/pubsub/src/ix.rs
+@@ -7,6 +7,8 @@ use tokio::sync::oneshot;
+ pub enum PubSubInstruction {
+     /// Send a request.
+     Request(InFlight),
++    /// Send several requests as one JSON-RPC batch packet.
++    Batch(Vec<InFlight>),
+     /// Get the subscription ID for a local ID.
+     GetSub(B256, oneshot::Sender<Option<RawSubscription>>),
+     /// Unsubscribe from a subscription.
+@@ -17,6 +19,7 @@ impl fmt::Debug for PubSubInstruction {
+     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+         match self {
+             Self::Request(arg0) => f.debug_tuple("Request").field(arg0).finish(),
++            Self::Batch(arg0) => f.debug_tuple("Batch").field(arg0).finish(),
+             Self::GetSub(arg0, _) => f.debug_tuple("GetSub").field(arg0).finish(),
+             Self::Unsubscribe(arg0) => f.debug_tuple("Unsubscribe").field(arg0).finish(),
+         }
+diff --git a/crates/pubsub/src/managers/in_flight.rs b/crates/pubsub/src/managers/in_flight.rs
+index a18ac67c..f90d0b5f 100644
+--- a/crates/pubsub/src/managers/in_flight.rs
++++ b/crates/pubsub/src/managers/in_flight.rs
+@@ -1,5 +1,5 @@
+ use alloy_json_rpc::{Response, ResponsePayload, SerializedRequest, SubId};
+-use alloy_transport::{TransportError, TransportResult};
++use alloy_transport::{TransportError, TransportErrorKind, TransportResult};
+ use std::fmt;
+ use tokio::sync::oneshot;
+ 
+@@ -54,14 +54,28 @@ impl InFlight {
+     /// Fulfill the request with a response. This consumes the in-flight
+     /// request. If the request is a subscription and the response is not an
+     /// error, the subscription ID and the in-flight request are returned.
+-    pub fn fulfill(self, resp: Response) -> Option<(SubId, Self)> {
++    pub fn fulfill(
++        self,
++        resp: Response,
++        preserve_malformed_subscription_response: bool,
++    ) -> Option<(SubId, Self)> {
+         if self.is_subscription() {
+             if let ResponsePayload::Success(val) = resp.payload {
+                 let sub_id: serde_json::Result<SubId> = serde_json::from_str(val.get());
+                 return match sub_id {
+                     Ok(alias) => Some((alias, self)),
+-                    Err(e) => {
+-                        let _ = self.tx.send(Err(TransportError::deser_err(e, val.get())));
++                    Err(error) => {
++                        if preserve_malformed_subscription_response {
++                            // A batch caller must see that this member responded so it is
++                            // not mislabeled as omitted. Typed deserialization still fails.
++                            let _ = self.tx.send(Ok(Response {
++                                id: resp.id,
++                                payload: ResponsePayload::Success(val),
++                            }));
++                        } else {
++                            // Preserve the established standalone subscription behavior.
++                            let _ = self.tx.send(Err(TransportError::deser_err(error, val.get())));
++                        }
+                         None
+                     }
+                 };
+@@ -71,4 +85,9 @@ impl InFlight {
+         let _ = self.tx.send(Ok(resp));
+         None
+     }
++
++    /// Fail the request before it is registered with the request manager.
++    pub fn fail(self, message: &str) {
++        let _ = self.tx.send(Err(TransportErrorKind::custom_str(message)));
++    }
+ }
+diff --git a/crates/pubsub/src/managers/req.rs b/crates/pubsub/src/managers/req.rs
+index 2acb9c43..18ce40c0 100644
+--- a/crates/pubsub/src/managers/req.rs
++++ b/crates/pubsub/src/managers/req.rs
+@@ -1,11 +1,17 @@
+ use crate::managers::InFlight;
+-use alloy_json_rpc::{Id, Response, SubId};
+-use alloy_primitives::map::HashMap;
++use alloy_json_rpc::{Id, RequestPacket, Response, SubId};
++use alloy_primitives::map::{HashMap, HashSet};
++use alloy_transport::TransportErrorKind;
++
++type BatchId = u64;
+ 
+ /// Manages in-flight requests.
+ #[derive(Debug, Default)]
+ pub(crate) struct RequestManager {
+     reqs: HashMap<Id, InFlight>,
++    batches: HashMap<BatchId, Vec<Id>>,
++    request_batches: HashMap<Id, BatchId>,
++    next_batch_id: BatchId,
+ }
+ 
+ impl RequestManager {
+@@ -14,9 +20,47 @@ impl RequestManager {
+         self.reqs.len()
+     }
+ 
+-    /// Get an iterator over the in-flight requests.
+-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&Id, &InFlight)> {
+-        self.reqs.iter()
++    /// Whether a standalone request can reserve its ID without replacing
++    /// pending work.
++    pub(crate) fn can_insert(&self, in_flight: &InFlight) -> bool {
++        !self.reqs.contains_key(in_flight.request.id())
++    }
++
++    /// Whether an ID is currently reserved by any pending request.
++    pub(crate) fn contains_id(&self, id: &Id) -> bool {
++        self.reqs.contains_key(id)
++    }
++
++    /// Whether all IDs in a batch are unique and currently available.
++    pub(crate) fn can_insert_batch(&self, in_flights: &[InFlight]) -> bool {
++        let mut ids = HashSet::with_capacity(in_flights.len());
++        in_flights.iter().all(|in_flight| {
++            let id = in_flight.request.id();
++            !self.reqs.contains_key(id) && ids.insert(id.clone())
++        })
++    }
++
++    /// Return packets for reissuing all pending work without losing batch boundaries.
++    pub(crate) fn pending_packets(&self) -> Vec<RequestPacket> {
++        let mut packets = Vec::with_capacity(self.reqs.len());
++
++        for ids in self.batches.values() {
++            let requests = ids
++                .iter()
++                .filter_map(|id| self.reqs.get(id))
++                .map(|in_flight| in_flight.request.clone())
++                .collect::<Vec<_>>();
++            if !requests.is_empty() {
++                packets.push(RequestPacket::Batch(requests));
++            }
++        }
++
++        for (id, in_flight) in &self.reqs {
++            if !self.request_batches.contains_key(id) {
++                packets.push(RequestPacket::Single(in_flight.request.clone()));
++            }
++        }
++        packets
+     }
+ 
+     /// Insert a new in-flight request.
+@@ -24,14 +68,71 @@ impl RequestManager {
+         self.reqs.insert(in_flight.request.id().clone(), in_flight);
+     }
+ 
++    /// Insert requests that were dispatched in one JSON-RPC batch.
++    pub(crate) fn insert_batch(&mut self, in_flights: Vec<InFlight>) {
++        let batch_id = self.next_batch_id;
++        self.next_batch_id = self.next_batch_id.wrapping_add(1);
++
++        let mut ids = Vec::with_capacity(in_flights.len());
++        for in_flight in in_flights {
++            let id = in_flight.request.id().clone();
++            ids.push(id.clone());
++            self.request_batches.insert(id.clone(), batch_id);
++            self.reqs.insert(id, in_flight);
++        }
++        if !ids.is_empty() {
++            self.batches.insert(batch_id, ids);
++        }
++    }
++
++    /// Return the batch containing a request, if it was sent in one.
++    pub(crate) fn batch_for(&self, id: &Id) -> Option<BatchId> {
++        self.request_batches.get(id).copied()
++    }
++
++    fn remove_from_batch(&mut self, id: &Id) {
++        let Some(batch_id) = self.request_batches.remove(id) else { return };
++        let Some(ids) = self.batches.get_mut(&batch_id) else { return };
++        ids.retain(|candidate| candidate != id);
++        if ids.is_empty() {
++            self.batches.remove(&batch_id);
++        }
++    }
++
++    /// Fail requests omitted from a completed JSON-RPC batch response packet.
++    pub(crate) fn fail_missing_batch_responses(&mut self, batch_id: BatchId) {
++        let Some(ids) = self.batches.remove(&batch_id) else { return };
++        for id in ids {
++            self.request_batches.remove(&id);
++            if let Some(in_flight) = self.reqs.remove(&id) {
++                let _ = in_flight.tx.send(Err(TransportErrorKind::missing_batch_response(id)));
++            }
++        }
++    }
++
++    /// Fail every request that is still waiting in a batch.
++    ///
++    /// A response array with no recognized request ID cannot be associated with
++    /// one particular outstanding batch. Leaving those batches registered would
++    /// strand their callers forever, so treat the packet as a protocol failure
++    /// for all currently pending batches while leaving standalone requests alone.
++    pub(crate) fn fail_unidentified_batch_response(&mut self) {
++        let batch_ids = self.batches.keys().copied().collect::<Vec<_>>();
++        for batch_id in batch_ids {
++            self.fail_missing_batch_responses(batch_id);
++        }
++    }
++
+     /// Handle a response by sending the payload to the waiter.
+     ///
+     /// If the request created a new subscription, this function returns the
+     /// subscription ID and the in-flight request for conversion to an
+     /// `ActiveSubscription`.
+     pub(crate) fn handle_response(&mut self, resp: Response) -> Option<(SubId, InFlight)> {
++        let was_batch_member = self.request_batches.contains_key(&resp.id);
++        self.remove_from_batch(&resp.id);
+         if let Some(in_flight) = self.reqs.remove(&resp.id) {
+-            return in_flight.fulfill(resp);
++            return in_flight.fulfill(resp, was_batch_member);
+         }
+         None
+     }
+diff --git a/crates/pubsub/src/service.rs b/crates/pubsub/src/service.rs
+index e28046e4..d2987242 100644
+--- a/crates/pubsub/src/service.rs
++++ b/crates/pubsub/src/service.rs
+@@ -4,7 +4,10 @@ use crate::{
+     managers::{InFlight, RequestManager, SubscriptionManager},
+     PubSubConnect, PubSubFrontend, RawSubscription,
+ };
+-use alloy_json_rpc::{Id, PubSubItem, Request, Response, ResponsePayload, RpcError, SubId};
++use alloy_json_rpc::{
++    Id, PubSubItem, Request, RequestPacket, Response, ResponsePayload, RpcError, SubId,
++};
++use alloy_primitives::map::HashSet;
+ use alloy_primitives::B256;
+ use alloy_transport::{
+     utils::{to_json_raw_value, Spawnable},
+@@ -84,9 +87,8 @@ impl<T: PubSubConnect> PubSubService<T> {
+ 
+         // Re-issue pending requests.
+         debug!(count = self.in_flights.len(), "Reissuing pending requests");
+-        for (_, in_flight) in self.in_flights.iter() {
+-            let msg = in_flight.request.serialized().to_owned();
+-            self.dispatch_request(msg)?;
++        for packet in self.in_flights.pending_packets() {
++            self.dispatch_packet(packet)?;
+         }
+ 
+         // Re-subscribe to all active subscriptions
+@@ -96,8 +98,17 @@ impl<T: PubSubConnect> PubSubService<T> {
+         self.subs.drop_server_ids();
+ 
+         // Dispatch all subscription requests.
++        let mut replay_id = 0u64;
+         for (_, sub) in self.subs.iter() {
+-            let req = sub.request().to_owned();
++            let mut req = sub.request().to_owned();
++            while self.in_flights.contains_id(req.id()) {
++                let id = Id::String(format!("alloy-reconnect-{replay_id}"));
++                replay_id = replay_id.wrapping_add(1);
++                if self.in_flights.contains_id(&id) {
++                    continue;
++                }
++                req.set_id(id).map_err(RpcError::ser_err)?;
++            }
+             let (in_flight, _) = InFlight::new(req.clone(), sub.tx.receiver_count());
+             self.in_flights.insert(in_flight);
+ 
+@@ -113,8 +124,18 @@ impl<T: PubSubConnect> PubSubService<T> {
+         self.handle.to_socket.send(brv).map(drop).map_err(|_| TransportErrorKind::backend_gone())
+     }
+ 
++    /// Serialize and dispatch a complete JSON-RPC request packet.
++    fn dispatch_packet(&self, packet: RequestPacket) -> TransportResult<()> {
++        let serialized = packet.serialize().map_err(TransportErrorKind::custom)?;
++        self.dispatch_request(serialized)
++    }
++
+     /// Service a request.
+     fn service_request(&mut self, in_flight: InFlight) -> TransportResult<()> {
++        if !self.in_flights.can_insert(&in_flight) {
++            in_flight.fail("request ID is already pending");
++            return Ok(());
++        }
+         let brv = in_flight.request();
+ 
+         self.dispatch_request(brv.serialized().to_owned())?;
+@@ -123,6 +144,20 @@ impl<T: PubSubConnect> PubSubService<T> {
+         Ok(())
+     }
+ 
++    /// Dispatch a group of requests in one wire packet and retain that grouping for reconnects.
++    fn service_batch(&mut self, in_flights: Vec<InFlight>) -> TransportResult<()> {
++        if !self.in_flights.can_insert_batch(&in_flights) {
++            for in_flight in in_flights {
++                in_flight.fail("batch contains an ambiguous request ID");
++            }
++            return Ok(());
++        }
++        let requests = in_flights.iter().map(|in_flight| in_flight.request.clone()).collect();
++        self.dispatch_packet(RequestPacket::Batch(requests))?;
++        self.in_flights.insert_batch(in_flights);
++        Ok(())
++    }
++
+     /// Service a GetSub instruction.
+     ///
+     /// If the subscription exists, the waiter is sent `Some` broadcast receiver. If
+@@ -149,6 +184,7 @@ impl<T: PubSubConnect> PubSubService<T> {
+         trace!(?ix, "servicing instruction");
+         match ix {
+             PubSubInstruction::Request(in_flight) => self.service_request(in_flight),
++            PubSubInstruction::Batch(in_flights) => self.service_batch(in_flights),
+             PubSubInstruction::GetSub(alias, tx) => {
+                 self.service_get_sub(alias, tx);
+                 Ok(())
+@@ -168,6 +204,30 @@ impl<T: PubSubConnect> PubSubService<T> {
+                 self.subs.notify(notification);
+                 Ok(())
+             }
++            PubSubItem::Batch(responses) => {
++                let batch_ids = responses
++                    .iter()
++                    .filter_map(|response| self.in_flights.batch_for(&response.id))
++                    .collect::<HashSet<_>>();
++                let unattributed = batch_ids.is_empty();
++                if unattributed {
++                    self.in_flights.fail_unidentified_batch_response();
++                }
++                for response in responses {
++                    if let Some((server_id, in_flight)) = self.in_flights.handle_response(response)
++                    {
++                        self.handle_sub_response(in_flight, server_id)?;
++                    }
++                }
++                for batch_id in batch_ids {
++                    self.in_flights.fail_missing_batch_responses(batch_id);
++                }
++                if unattributed {
++                    Err(TransportErrorKind::backend_gone())
++                } else {
++                    Ok(())
++                }
++            }
+         }
+     }
+ 
+@@ -240,7 +300,16 @@ impl<T: PubSubConnect> PubSubService<T> {
+                     item_opt = self.handle.from_socket.recv() => {
+                         if let Some(item) = item_opt {
+                             if let Err(e) = self.handle_item(item) {
+-                                break Err(e)
++                                if e
++                                    .as_transport_err()
++                                    .is_some_and(TransportErrorKind::is_backend_gone)
++                                {
++                                    if let Err(e) = self.reconnect_with_retries().await {
++                                        break Err(e)
++                                    }
++                                } else {
++                                    break Err(e)
++                                }
+                             }
+                         } else {
+                             // The backend dropped its `to_frontend` sender.
+diff --git a/crates/rpc-client/src/batch.rs b/crates/rpc-client/src/batch.rs
+index a9a6a76e..028142c8 100644
+--- a/crates/rpc-client/src/batch.rs
++++ b/crates/rpc-client/src/batch.rs
+@@ -234,14 +234,19 @@ impl BatchFuture {
+             }
+         }
+ 
+-        // Any channels remaining in the map are missing responses.
+-        // To avoid hanging futures, we send an error.
++        // Any channels remaining in the map are missing responses. Preserve
++        // responses already delivered above, fail only the omitted waiters,
++        // and report the malformed packet to the batch sender.
++        let missing_id = channels.keys().next().cloned();
+         for (id, tx) in channels.drain() {
+             let _ = tx.send(Err(TransportErrorKind::missing_batch_response(id)));
+         }
+ 
+         self.set(Self::Complete);
+-        Poll::Ready(Ok(()))
++        match missing_id {
++            Some(id) => Poll::Ready(Err(TransportErrorKind::missing_batch_response(id))),
++            None => Poll::Ready(Ok(())),
++        }
+     }
+ }
+ 

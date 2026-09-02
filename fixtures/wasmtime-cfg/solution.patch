@@ -1,0 +1,337 @@
+diff --git a/cranelift/codegen/src/egraph/elaborate.rs b/cranelift/codegen/src/egraph/elaborate.rs
+index 86443e5cb..f7889ee4e 100644
+--- a/cranelift/codegen/src/egraph/elaborate.rs
++++ b/cranelift/codegen/src/egraph/elaborate.rs
+@@ -5,6 +5,7 @@ use super::Stats;
+ use super::cost::Cost;
+ use crate::ctxhash::NullCtx;
+ use crate::dominator_tree::DominatorTree;
++use crate::flowgraph::ControlFlowGraph;
+ use crate::hash_map::Entry as HashEntry;
+ use crate::inst_predicates::is_pure_for_egraph;
+ use crate::ir::{Block, Function, Inst, Value, ValueDef};
+@@ -20,7 +21,10 @@ use smallvec::{SmallVec, smallvec};
+ pub(crate) struct Elaborator<'a> {
+     func: &'a mut Function,
+     domtree: &'a DominatorTree,
++    cfg: &'a ControlFlowGraph,
+     loop_analysis: &'a LoopAnalysis,
++    /// Earliest block where each egraph value's operands are available.
++    available_block: &'a SecondaryMap<Value, Block>,
+     /// Map from Value that is produced by a pure Inst (and was thus
+     /// not in the side-effecting skeleton) to the value produced by
+     /// an elaborated inst (placed in the layout) to whose results we
+@@ -47,6 +51,9 @@ pub(crate) struct Elaborator<'a> {
+     /// Map from Value to the best (lowest-cost) Value in its eclass
+     /// (tree of union value-nodes).
+     value_to_best_value: SecondaryMap<Value, BestEntry>,
++    /// Pure values that are fully anticipated on every outgoing path from a
++    /// fork and should therefore be elaborated once in the fork block.
++    eagerly_elaborated_values: SecondaryMap<Block, EntitySet<Value>>,
+     /// Stack of blocks and loops in current elaboration path.
+     loop_stack: SmallVec<[LoopStackEntry; 8]>,
+     /// The current block into which we are elaborating.
+@@ -141,7 +148,9 @@ impl<'a> Elaborator<'a> {
+     pub(crate) fn new(
+         func: &'a mut Function,
+         domtree: &'a DominatorTree,
++        cfg: &'a ControlFlowGraph,
+         loop_analysis: &'a LoopAnalysis,
++        available_block: &'a SecondaryMap<Value, Block>,
+         remat_values: &'a FxHashSet<Value>,
+         stats: &'a mut Stats,
+         ctrl_plane: &'a mut ControlPlane,
+@@ -150,12 +159,17 @@ impl<'a> Elaborator<'a> {
+         let mut value_to_best_value =
+             SecondaryMap::with_default(BestEntry(Cost::infinity(), Value::reserved_value()));
+         value_to_best_value.resize(num_values);
++        let mut eagerly_elaborated_values = SecondaryMap::new();
++        eagerly_elaborated_values.resize(func.dfg.num_blocks());
+         Self {
+             func,
+             domtree,
++            cfg,
+             loop_analysis,
++            available_block,
+             value_to_elaborated_value: ScopedHashMap::with_capacity(num_values),
+             value_to_best_value,
++            eagerly_elaborated_values,
+             loop_stack: smallvec![],
+             cur_block: Block::reserved_value(),
+             remat_values,
+@@ -390,6 +404,176 @@ impl<'a> Elaborator<'a> {
+         }
+     }
+ 
++    /// Add every unplaced pure value needed to elaborate `root` to `values`.
++    /// Values are canonicalized through extraction first so aliases and union
++    /// nodes do not make the demand analysis count the same expression twice.
++    fn collect_pure_dependencies(&self, root: Value, values: &mut EntitySet<Value>) {
++        let mut stack = vec![root];
++        while let Some(value) = stack.pop() {
++            let best_value = self.value_to_best_value[value].1;
++            debug_assert_ne!(best_value, Value::reserved_value());
++
++            match self.func.dfg.value_def(best_value) {
++                ValueDef::Result(inst, _) if self.func.layout.inst_block(inst).is_none() => {
++                    if values.insert(best_value) {
++                        debug_assert!(is_pure_for_egraph(self.func, inst));
++                        stack.extend(self.func.dfg.inst_values(inst));
++                    }
++                }
++                ValueDef::Result(..) | ValueDef::Param(..) => {}
++                ValueDef::Union(..) => {
++                    unreachable!("extraction must not select a union value")
++                }
++            }
++        }
++    }
++
++    /// Whether an instruction in the side-effecting skeleton can prevent
++    /// execution from reaching later instructions or makes moving a memory
++    /// computation across it undesirable. Keeping these as barriers makes the
++    /// full-redundancy analysis deliberately conservative.
++    fn is_anticipation_barrier(&self, inst: Inst) -> bool {
++        let opcode = self.func.dfg.insts[inst].opcode();
++        opcode.can_trap()
++            || opcode.is_call()
++            || opcode.can_load()
++            || opcode.can_store()
++            || opcode.other_side_effects()
++    }
++
++    fn intersect_values(values: &mut EntitySet<Value>, other: &EntitySet<Value>) {
++        let remove = values
++            .iter()
++            .filter(|&value| !other.contains(value))
++            .collect::<Vec<_>>();
++        for value in remove {
++            values.remove(value);
++        }
++    }
++
++    /// Compute pure expressions that are guaranteed to be demanded on every
++    /// outgoing path from a CFG fork. Elaborating those expressions in the
++    /// fork avoids cloning them in sibling dominator-tree scopes without
++    /// introducing computation on a path that did not previously need it.
++    ///
++    /// This is a backward must analysis. Its least fixed point is intentional:
++    /// a cycle does not make an expression anticipated unless a real use on
++    /// every path seeds that fact. Demands do not flow backwards through calls,
++    /// traps, or memory operations, and a value only flows above the block where
++    /// all of its operands first become available.
++    fn compute_eager_elaborations(&mut self) {
++        let num_blocks = self.func.dfg.num_blocks();
++        let num_values = self.func.dfg.num_values();
++        let mut local_demands = SecondaryMap::<Block, EntitySet<Value>>::new();
++        let mut guaranteed_demands = SecondaryMap::<Block, EntitySet<Value>>::new();
++        local_demands.resize(num_blocks);
++        guaranteed_demands.resize(num_blocks);
++        let mut reaches_successors = EntitySet::<Block>::with_capacity(num_blocks);
++
++        // First collect expression-DAG closures for operands of skeleton
++        // instructions. Only demands before the first barrier are guaranteed
++        // from block entry. All local demands are retained so existing local
++        // elaboration and loop-placement behavior takes precedence.
++        for &block in self.domtree.cfg_rpo() {
++            let mut before_barrier = true;
++            let mut inst_demands = EntitySet::with_capacity(num_values);
++            for inst in self.func.layout.block_insts(block) {
++                inst_demands.clear();
++                for value in self.func.dfg.inst_values(inst) {
++                    self.collect_pure_dependencies(value, &mut inst_demands);
++                }
++                local_demands[block].extend(inst_demands.iter());
++                if before_barrier {
++                    guaranteed_demands[block].extend(inst_demands.iter());
++                }
++                before_barrier &= !self.is_anticipation_barrier(inst);
++            }
++            if before_barrier {
++                reaches_successors.insert(block);
++            }
++        }
++
++        // Propagate only facts common to every successor. Sets grow
++        // monotonically, so iteration reaches a deterministic least fixed
++        // point even in the presence of backedges.
++        let mut anticipated = guaranteed_demands;
++        loop {
++            let mut changed = false;
++            for &block in self.domtree.cfg_postorder() {
++                if !reaches_successors.contains(block) {
++                    continue;
++                }
++                let mut successors = self.cfg.succ_iter(block);
++                let Some(first) = successors.next() else {
++                    continue;
++                };
++                let mut common = anticipated[first].clone();
++                for successor in successors {
++                    Self::intersect_values(&mut common, &anticipated[successor]);
++                }
++                for value in common.iter() {
++                    let available = self.available_block[value];
++                    if !available.is_reserved_value()
++                        && self.domtree.block_dominates(available, block)
++                    {
++                        changed |= anticipated[block].insert(value);
++                    }
++                }
++            }
++            if !changed {
++                break;
++            }
++        }
++
++        let mut canonical_remat = EntitySet::with_capacity(num_values);
++        for &value in self.remat_values {
++            let best_value = self.value_to_best_value[value].1;
++            if !best_value.is_reserved_value() {
++                canonical_remat.insert(best_value);
++            }
++        }
++
++        // A single-successor block cannot be the source of cross-scope
++        // duplication. At a real fork, select the intersection again and
++        // exclude values already demanded locally or intentionally
++        // rematerialized.
++        for &block in self.domtree.cfg_rpo() {
++            let successors = self.cfg.succ_iter(block).collect::<SmallVec<[Block; 4]>>();
++            if successors.len() < 2 {
++                continue;
++            }
++            // Eager elaboration is inserted immediately before the first
++            // branch. Usually that remains after any earlier call, trap, or
++            // memory barrier in the block. Some terminators, notably
++            // try_call and try_call_indirect, are themselves both the first
++            // branch and a barrier; they have no legal post-barrier insertion
++            // point in this block.
++            let first_branch = self
++                .func
++                .layout
++                .block_insts(block)
++                .find(|&inst| self.func.dfg.insts[inst].opcode().is_branch())
++                .expect("a block with multiple CFG successors must branch");
++            if self.is_anticipation_barrier(first_branch) {
++                continue;
++            }
++            let mut common = anticipated[successors[0]].clone();
++            for &successor in &successors[1..] {
++                Self::intersect_values(&mut common, &anticipated[successor]);
++            }
++            for value in common.iter() {
++                let available = self.available_block[value];
++                if !local_demands[block].contains(value)
++                    && !canonical_remat.contains(value)
++                    && !available.is_reserved_value()
++                    && self.domtree.block_dominates(available, block)
++                {
++                    self.eagerly_elaborated_values[block].insert(value);
++                }
++            }
++        }
++    }
++
+     /// Elaborate use of an eclass, inserting any needed new
+     /// instructions before the given inst `before`. Should only be
+     /// given values corresponding to results of instructions or
+@@ -766,8 +950,26 @@ impl<'a> Elaborator<'a> {
+             // elaboration for args of *any* branch must be inserted
+             // before the *first* branch, because the branch group
+             // must remain contiguous at the end of the block.
+-            if self.func.dfg.insts[inst].opcode().is_branch() && first_branch == None {
++            if self.func.dfg.insts[inst].opcode().is_branch() && first_branch.is_none() {
+                 first_branch = Some(inst);
++
++                // Values anticipated in every successor are elaborated once
++                // before the branch group. Do this only after processing the
++                // preceding skeleton so that call and load results produced in
++                // this block are registered and available as operands.
++                let values = self.eagerly_elaborated_values[block]
++                    .iter()
++                    .collect::<Vec<_>>();
++                for value in values {
++                    if self
++                        .value_to_elaborated_value
++                        .get(&NullCtx, &value)
++                        .is_none()
++                    {
++                        self.stats.elaborate_full_redundancy_hoist += 1;
++                    }
++                    let _ = self.elaborate_eclass_use(value, inst);
++                }
+             }
+ 
+             // Determine where elaboration inserts insts.
+@@ -861,6 +1063,7 @@ impl<'a> Elaborator<'a> {
+         self.stats.elaborate_func += 1;
+         self.stats.elaborate_func_pre_insts += self.func.dfg.num_insts() as u64;
+         self.compute_best_values();
++        self.compute_eager_elaborations();
+         self.elaborate_domtree(&self.domtree);
+         self.stats.elaborate_func_post_insts += self.func.dfg.num_insts() as u64;
+     }
+diff --git a/cranelift/codegen/src/egraph/mod.rs b/cranelift/codegen/src/egraph/mod.rs
+index 460c9d8df..5eebc48c7 100644
+--- a/cranelift/codegen/src/egraph/mod.rs
++++ b/cranelift/codegen/src/egraph/mod.rs
+@@ -785,7 +785,7 @@ impl<'a> EgraphPass<'a> {
+ 
+     /// Run the process.
+     pub fn run(&mut self) {
+-        let cfg_maybe_changed = self.remove_pure_and_optimize();
++        let (cfg_maybe_changed, available_block) = self.remove_pure_and_optimize();
+ 
+         trace!("egraph built:\n{}\n", self.func.display());
+         if cfg!(feature = "trace-log") {
+@@ -812,7 +812,7 @@ impl<'a> EgraphPass<'a> {
+             });
+         }
+ 
+-        self.elaborate();
++        self.elaborate(&available_block);
+ 
+         log::trace!("stats: {:#?}", self.stats);
+     }
+@@ -839,7 +839,7 @@ impl<'a> EgraphPass<'a> {
+     ///
+     /// Returns whether we may have modified the CFG (i.e. rewrote a
+     /// terminator).
+-    fn remove_pure_and_optimize(&mut self) -> bool {
++    fn remove_pure_and_optimize(&mut self) -> (bool, SecondaryMap<Value, Block>) {
+         let mut cursor = FuncCursor::new(self.func);
+ 
+         // Set to `true` if any skeleton simplification rewrites a terminator and
+@@ -1007,7 +1007,7 @@ impl<'a> EgraphPass<'a> {
+                 }
+             }
+         }
+-        cfg_maybe_changed
++        (cfg_maybe_changed, available_block)
+     }
+ 
+     /// Find the set of blocks reachable from the entry block by
+@@ -1216,11 +1216,13 @@ impl<'a> EgraphPass<'a> {
+     /// thus computed "as late as possible", but then memoized into
+     /// the Id-to-Value map and available to all dominated blocks and
+     /// for the rest of this block. (This subsumes GVN.)
+-    fn elaborate(&mut self) {
++    fn elaborate(&mut self, available_block: &SecondaryMap<Value, Block>) {
+         let mut elaborator = Elaborator::new(
+             self.func,
+             &self.domtree,
++            &self.cfg,
+             self.loop_analysis,
++            available_block,
+             &self.remat_values,
+             &mut self.stats,
+             self.ctrl_plane,
+@@ -1310,6 +1312,7 @@ pub(crate) struct Stats {
+     pub(crate) elaborate_memoize_miss: u64,
+     pub(crate) elaborate_remat: u64,
+     pub(crate) elaborate_licm_hoist: u64,
++    pub(crate) elaborate_full_redundancy_hoist: u64,
+     pub(crate) elaborate_func: u64,
+     pub(crate) elaborate_func_pre_insts: u64,
+     pub(crate) elaborate_func_post_insts: u64,

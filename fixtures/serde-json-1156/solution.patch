@@ -1,0 +1,614 @@
+diff --git a/src/de.rs b/src/de.rs
+index fda22f8..78e0350 100644
+--- a/src/de.rs
++++ b/src/de.rs
+@@ -21,6 +21,9 @@ use crate::number::NumberDeserializer;
+ 
+ pub use crate::read::{Read, SliceRead, StrRead};
+ 
++mod in_place;
++pub use self::in_place::InPlaceStreamDeserializer;
++
+ #[cfg(feature = "std")]
+ #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+ pub use crate::read::IoRead;
+@@ -2439,38 +2442,24 @@ where
+             }
+         }
+     }
+-}
+-
+-impl<'de, R, T> Iterator for StreamDeserializer<'de, R, T>
+-where
+-    R: Read<'de>,
+-    T: de::Deserialize<'de>,
+-{
+-    type Item = Result<T>;
+ 
+-    fn next(&mut self) -> Option<Result<T>> {
++    fn next_seed<S>(&mut self, seed: S) -> Option<Result<S::Value>>
++    where
++        S: de::DeserializeSeed<'de>,
++    {
+         if R::should_early_return_if_failed && self.failed {
+             return None;
+         }
+ 
+-        // skip whitespaces, if any
+-        // this helps with trailing whitespaces, since whitespaces between
+-        // values are handled for us.
+         match self.de.parse_whitespace() {
+             Ok(None) => {
+                 self.offset = self.de.read.byte_offset();
+                 None
+             }
+             Ok(Some(b)) => {
+-                // If the value does not have a clear way to show the end of the value
+-                // (like numbers, null, true etc.) we have to look for whitespace or
+-                // the beginning of a self-delineated value.
+-                let self_delineated_value = match b {
+-                    b'[' | b'"' | b'{' => true,
+-                    _ => false,
+-                };
++                let self_delineated_value = matches!(b, b'[' | b'"' | b'{');
+                 self.offset = self.de.read.byte_offset();
+-                let result = de::Deserialize::deserialize(&mut self.de);
++                let result = seed.deserialize(&mut self.de);
+ 
+                 Some(match result {
+                     Ok(value) => {
+@@ -2481,20 +2470,32 @@ where
+                             self.peek_end_of_value().map(|()| value)
+                         }
+                     }
+-                    Err(e) => {
++                    Err(error) => {
+                         self.de.read.set_failed(&mut self.failed);
+-                        Err(e)
++                        Err(error)
+                     }
+                 })
+             }
+-            Err(e) => {
++            Err(error) => {
+                 self.de.read.set_failed(&mut self.failed);
+-                Some(Err(e))
++                Some(Err(error))
+             }
+         }
+     }
+ }
+ 
++impl<'de, R, T> Iterator for StreamDeserializer<'de, R, T>
++where
++    R: Read<'de>,
++    T: de::Deserialize<'de>,
++{
++    type Item = Result<T>;
++
++    fn next(&mut self) -> Option<Result<T>> {
++        self.next_seed(PhantomData)
++    }
++}
++
+ impl<'de, R, T> FusedIterator for StreamDeserializer<'de, R, T>
+ where
+     R: Read<'de> + Fused,
+diff --git a/src/de/in_place.rs b/src/de/in_place.rs
+new file mode 100644
+index 0000000..4cf9eaa
+--- /dev/null
++++ b/src/de/in_place.rs
+@@ -0,0 +1,171 @@
++use super::{Deserializer, Read, Result, StreamDeserializer};
++use core::result;
++use serde::de::{self, DeserializeSeed};
++
++/// A JSON stream deserializer that reuses one value across successive inputs.
++///
++/// Unlike [`StreamDeserializer`], this type owns the value being deserialized.
++/// Its [`next`](Self::next) method returns a mutable reference tied to the
++/// borrow of the stream, so the value can be processed before advancing again.
++///
++/// This type does not implement [`Iterator`] because an iterator cannot return
++/// references borrowed from itself. Use [`next`](Self::next) directly.
++pub struct InPlaceStreamDeserializer<'de, R, T> {
++    stream: StreamDeserializer<'de, R, T>,
++    value: T,
++}
++
++struct InPlaceSeed<'a, T>(&'a mut T);
++
++impl<'a, 'de, T> DeserializeSeed<'de> for InPlaceSeed<'a, T>
++where
++    T: de::Deserialize<'de>,
++{
++    type Value = ();
++
++    fn deserialize<D>(self, deserializer: D) -> result::Result<Self::Value, D::Error>
++    where
++        D: de::Deserializer<'de>,
++    {
++        T::deserialize_in_place(deserializer, self.0)
++    }
++}
++
++impl<'de, R> Deserializer<R>
++where
++    R: Read<'de>,
++{
++    /// Turn a JSON deserializer into a stream that reuses one value of type `T`.
++    ///
++    /// Each successful call to [`InPlaceStreamDeserializer::next`] updates
++    /// `value` through [`Deserialize::deserialize_in_place`] and returns a
++    /// mutable reference to it.
++    ///
++    /// ```
++    /// use serde::Deserialize;
++    /// use serde_json::Deserializer;
++    ///
++    /// #[derive(Deserialize)]
++    /// struct Record {
++    ///     name: String,
++    /// }
++    ///
++    /// let data = r#"{"name":"first"} {"name":"second"}"#;
++    /// let mut stream = Deserializer::from_str(data).into_iter_in_place(Record {
++    ///     name: String::new(),
++    /// });
++    ///
++    /// assert_eq!(stream.next().unwrap().unwrap().name, "first");
++    /// assert_eq!(stream.next().unwrap().unwrap().name, "second");
++    /// assert!(stream.next().is_none());
++    /// ```
++    ///
++    /// [`Deserialize::deserialize_in_place`]: serde::Deserialize::deserialize_in_place
++    pub fn into_iter_in_place<T>(self, value: T) -> InPlaceStreamDeserializer<'de, R, T>
++    where
++        T: de::Deserialize<'de>,
++    {
++        self.into_iter().with_value(value)
++    }
++}
++
++impl<'de, R, T> StreamDeserializer<'de, R, T>
++where
++    R: Read<'de>,
++    T: de::Deserialize<'de>,
++{
++    /// Converts this stream into one that reuses `value` for every input.
++    ///
++    /// The new stream begins at the current byte offset and preserves any
++    /// failure state already recorded by this stream.
++    pub fn with_value(self, value: T) -> InPlaceStreamDeserializer<'de, R, T> {
++        InPlaceStreamDeserializer {
++            stream: self,
++            value,
++        }
++    }
++
++    /// Deserializes the next JSON value into an existing `T`.
++    ///
++    /// This calls [`Deserialize::deserialize_in_place`], allowing implementations
++    /// to reuse allocations owned by `place`. On success, the returned reference
++    /// is the same reference that was passed in. If the stream is at EOF, this
++    /// returns `None` without modifying `place`.
++    ///
++    /// If deserialization returns an error, `place` may have been partially
++    /// overwritten, as specified by `Deserialize::deserialize_in_place`.
++    ///
++    /// [`Deserialize::deserialize_in_place`]: serde::Deserialize::deserialize_in_place
++    pub fn next_in_place<'a>(&mut self, place: &'a mut T) -> Option<Result<&'a mut T>> {
++        match self.next_seed(InPlaceSeed(place)) {
++            Some(Ok(())) => Some(Ok(place)),
++            Some(Err(error)) => Some(Err(error)),
++            None => None,
++        }
++    }
++}
++
++impl<'de, R, T> InPlaceStreamDeserializer<'de, R, T>
++where
++    R: Read<'de>,
++    T: de::Deserialize<'de>,
++{
++    /// Creates an in-place stream deserializer from a JSON input source and an
++    /// initial value.
++    ///
++    /// Usually it is more convenient to call
++    /// [`Deserializer::into_iter_in_place`]. This constructor is useful when a
++    /// custom implementation of [`Read`] is already available.
++    pub fn new(read: R, value: T) -> Self {
++        StreamDeserializer::new(read).with_value(value)
++    }
++
++    /// Returns the number of bytes consumed by successful deserializations.
++    ///
++    /// This has the same offset semantics as
++    /// [`StreamDeserializer::byte_offset`]. In particular, when the stream
++    /// reaches clean EOF, the offset includes trailing whitespace.
++    pub fn byte_offset(&self) -> usize {
++        self.stream.byte_offset()
++    }
++
++    /// Returns a shared reference to the reusable value.
++    ///
++    /// Before the first successful call to [`next`](Self::next), this is the
++    /// initial value passed to the constructor. Afterward it contains the most
++    /// recently deserialized value.
++    pub fn get_ref(&self) -> &T {
++        &self.value
++    }
++
++    /// Returns a mutable reference to the reusable value.
++    ///
++    /// Changes made through this reference become the starting state for the
++    /// next in-place deserialization.
++    pub fn get_mut(&mut self) -> &mut T {
++        &mut self.value
++    }
++
++    /// Deserializes the next JSON value into the stored value.
++    ///
++    /// On success this returns a mutable reference to the stored value. At
++    /// clean EOF it returns `None` without modifying the value. If
++    /// deserialization fails, the value may have been partially overwritten,
++    /// as specified by [`Deserialize::deserialize_in_place`].
++    ///
++    /// The stream's delimiter validation, failure handling, and byte offsets
++    /// are identical to [`StreamDeserializer::next`].
++    ///
++    /// [`Deserialize::deserialize_in_place`]: serde::Deserialize::deserialize_in_place
++    pub fn next(&mut self) -> Option<Result<&mut T>> {
++        self.stream.next_in_place(&mut self.value)
++    }
++
++    /// Consumes this wrapper and returns the underlying stream and stored value.
++    ///
++    /// The returned stream retains its current byte offset and failure state,
++    /// and can be used for ordinary or in-place deserialization.
++    pub fn into_parts(self) -> (StreamDeserializer<'de, R, T>, T) {
++        (self.stream, self.value)
++    }
++}
+diff --git a/src/lib.rs b/src/lib.rs
+index ad2820b..46e9f43 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -393,7 +393,9 @@ pub mod __private {
+ #[doc(inline)]
+ pub use crate::de::from_reader;
+ #[doc(inline)]
+-pub use crate::de::{from_slice, from_str, Deserializer, StreamDeserializer};
++pub use crate::de::{
++    from_slice, from_str, Deserializer, InPlaceStreamDeserializer, StreamDeserializer,
++};
+ #[doc(inline)]
+ pub use crate::error::{Error, Result};
+ #[doc(inline)]
+diff --git a/src/map.rs b/src/map.rs
+index f91e70b..613404c 100644
+--- a/src/map.rs
++++ b/src/map.rs
+@@ -15,7 +15,6 @@ use core::borrow::Borrow;
+ use core::fmt::{self, Debug};
+ use core::hash::{Hash, Hasher};
+ use core::iter::FusedIterator;
+-#[cfg(feature = "preserve_order")]
+ use core::mem;
+ use core::ops;
+ use serde::de;
+@@ -35,6 +34,19 @@ type MapImpl<K, V> = BTreeMap<K, V>;
+ #[cfg(feature = "preserve_order")]
+ type MapImpl<K, V> = IndexMap<K, V>;
+ 
++struct ValueInPlaceSeed<'a>(&'a mut Value);
++
++impl<'a, 'de> de::DeserializeSeed<'de> for ValueInPlaceSeed<'a> {
++    type Value = ();
++
++    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
++    where
++        D: de::Deserializer<'de>,
++    {
++        de::Deserialize::deserialize_in_place(deserializer, self.0)
++    }
++}
++
+ impl Map<String, Value> {
+     /// Makes a new empty Map.
+     #[inline]
+@@ -65,6 +77,42 @@ impl Map<String, Value> {
+         self.map.clear();
+     }
+ 
++    pub(crate) fn deserialize_in_place_from_map<'de, A>(
++        &mut self,
++        mut access: A,
++        first_key: Option<String>,
++    ) -> Result<(), A::Error>
++    where
++        A: de::MapAccess<'de>,
++    {
++        let mut previous = mem::take(self);
++        let mut values = Map::with_capacity(access.size_hint().unwrap_or(0));
++        let mut key = match first_key {
++            Some(key) => Some(key),
++            None => tri!(access.next_key()),
++        };
++
++        while let Some(next_key) = key {
++            if let Some(value) = values.get_mut(&next_key) {
++                tri!(access.next_value_seed(ValueInPlaceSeed(value)));
++            } else {
++                let value = match previous.remove(&next_key) {
++                    Some(mut value) => {
++                        tri!(access.next_value_seed(ValueInPlaceSeed(&mut value)));
++                        value
++                    }
++                    None => tri!(access.next_value()),
++                };
++                values.insert(next_key, value);
++            }
++
++            key = tri!(access.next_key());
++        }
++
++        *self = values;
++        Ok(())
++    }
++
+     /// Returns a reference to the value corresponding to the key.
+     ///
+     /// The key may be any borrowed form of the map's key type, but the ordering
+@@ -544,6 +592,38 @@ impl<'de> de::Deserialize<'de> for Map<String, Value> {
+ 
+         deserializer.deserialize_map(Visitor)
+     }
++
++    fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
++    where
++        D: de::Deserializer<'de>,
++    {
++        struct InPlaceVisitor<'a>(&'a mut Map<String, Value>);
++
++        impl<'a, 'de> de::Visitor<'de> for InPlaceVisitor<'a> {
++            type Value = ();
++
++            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
++                formatter.write_str("a map")
++            }
++
++            fn visit_unit<E>(self) -> Result<Self::Value, E>
++            where
++                E: de::Error,
++            {
++                self.0.clear();
++                Ok(())
++            }
++
++            fn visit_map<A>(self, access: A) -> Result<Self::Value, A::Error>
++            where
++                A: de::MapAccess<'de>,
++            {
++                self.0.deserialize_in_place_from_map(access, None)
++            }
++        }
++
++        deserializer.deserialize_map(InPlaceVisitor(place))
++    }
+ }
+ 
+ impl FromIterator<(String, Value)> for Map<String, Value> {
+diff --git a/src/value/de.rs b/src/value/de.rs
+index 9c3b35b..705b456 100644
+--- a/src/value/de.rs
++++ b/src/value/de.rs
+@@ -150,6 +150,207 @@ impl<'de> Deserialize<'de> for Value {
+ 
+         deserializer.deserialize_any(ValueVisitor)
+     }
++
++    fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
++    where
++        D: serde::Deserializer<'de>,
++    {
++        struct InPlaceSeed<'a>(&'a mut Value);
++
++        impl<'a, 'de> DeserializeSeed<'de> for InPlaceSeed<'a> {
++            type Value = ();
++
++            fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
++            where
++                D: serde::Deserializer<'de>,
++            {
++                Value::deserialize_in_place(deserializer, self.0)
++            }
++        }
++
++        struct ValueInPlaceVisitor<'a>(&'a mut Value);
++
++        impl<'a> ValueInPlaceVisitor<'a> {
++            fn visit_str_value<E>(self, value: &str) -> Result<(), E> {
++                match self.0 {
++                    Value::String(place) => {
++                        place.clear();
++                        place.push_str(value);
++                    }
++                    place => *place = Value::String(value.to_owned()),
++                }
++                Ok(())
++            }
++
++            fn visit_string_value<E>(self, value: String) -> Result<(), E> {
++                match self.0 {
++                    Value::String(place) if place.capacity() >= value.len() => {
++                        place.clear();
++                        place.push_str(&value);
++                    }
++                    place => *place = Value::String(value),
++                }
++                Ok(())
++            }
++        }
++
++        impl<'a, 'de> Visitor<'de> for ValueInPlaceVisitor<'a> {
++            type Value = ();
++
++            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
++                formatter.write_str("any valid JSON value")
++            }
++
++            fn visit_bool<E>(self, value: bool) -> Result<Self::Value, E> {
++                *self.0 = Value::Bool(value);
++                Ok(())
++            }
++
++            fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
++                *self.0 = Value::Number(value.into());
++                Ok(())
++            }
++
++            fn visit_i128<E>(self, value: i128) -> Result<Self::Value, E>
++            where
++                E: de::Error,
++            {
++                let de = serde::de::value::I128Deserializer::new(value);
++                *self.0 = Value::Number(tri!(Number::deserialize(de)));
++                Ok(())
++            }
++
++            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E> {
++                *self.0 = Value::Number(value.into());
++                Ok(())
++            }
++
++            fn visit_u128<E>(self, value: u128) -> Result<Self::Value, E>
++            where
++                E: de::Error,
++            {
++                let de = serde::de::value::U128Deserializer::new(value);
++                *self.0 = Value::Number(tri!(Number::deserialize(de)));
++                Ok(())
++            }
++
++            fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E> {
++                *self.0 = Number::from_f64(value).map_or(Value::Null, Value::Number);
++                Ok(())
++            }
++
++            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
++            where
++                E: de::Error,
++            {
++                self.visit_str_value(value)
++            }
++
++            fn visit_borrowed_str<E>(self, value: &'de str) -> Result<Self::Value, E>
++            where
++                E: de::Error,
++            {
++                self.visit_str_value(value)
++            }
++
++            fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
++            where
++                E: de::Error,
++            {
++                self.visit_string_value(value)
++            }
++
++            fn visit_none<E>(self) -> Result<Self::Value, E> {
++                *self.0 = Value::Null;
++                Ok(())
++            }
++
++            fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
++            where
++                D: serde::Deserializer<'de>,
++            {
++                Value::deserialize_in_place(deserializer, self.0)
++            }
++
++            fn visit_unit<E>(self) -> Result<Self::Value, E> {
++                *self.0 = Value::Null;
++                Ok(())
++            }
++
++            fn visit_seq<A>(self, mut visitor: A) -> Result<Self::Value, A::Error>
++            where
++                A: SeqAccess<'de>,
++            {
++                let values = match self.0 {
++                    Value::Array(values) => values,
++                    place => {
++                        *place = Value::Array(Vec::new());
++                        match place {
++                            Value::Array(values) => values,
++                            _ => unreachable!(),
++                        }
++                    }
++                };
++
++                let mut index = 0;
++                while index < values.len() {
++                    if tri!(visitor.next_element_seed(InPlaceSeed(&mut values[index]))).is_none() {
++                        values.truncate(index);
++                        return Ok(());
++                    }
++                    index += 1;
++                }
++
++                while let Some(value) = tri!(visitor.next_element()) {
++                    values.push(value);
++                }
++
++                Ok(())
++            }
++
++            fn visit_map<A>(self, mut visitor: A) -> Result<Self::Value, A::Error>
++            where
++                A: MapAccess<'de>,
++            {
++                match tri!(visitor.next_key_seed(KeyClassifier)) {
++                    #[cfg(feature = "arbitrary_precision")]
++                    Some(KeyClass::Number) => {
++                        let number: NumberFromString = tri!(visitor.next_value());
++                        *self.0 = Value::Number(number.value);
++                        Ok(())
++                    }
++                    #[cfg(feature = "raw_value")]
++                    Some(KeyClass::RawValue) => {
++                        let value = tri!(visitor.next_value_seed(crate::raw::BoxedFromString));
++                        *self.0 = crate::from_str(value.get()).map_err(de::Error::custom)?;
++                        Ok(())
++                    }
++                    Some(KeyClass::Map(first_key)) => {
++                        let values = match self.0 {
++                            Value::Object(values) => values,
++                            place => {
++                                *place = Value::Object(Map::new());
++                                match place {
++                                    Value::Object(values) => values,
++                                    _ => unreachable!(),
++                                }
++                            }
++                        };
++                        values.deserialize_in_place_from_map(visitor, Some(first_key))
++                    }
++                    None => {
++                        match self.0 {
++                            Value::Object(values) => values.clear(),
++                            place => *place = Value::Object(Map::new()),
++                        }
++                        Ok(())
++                    }
++                }
++            }
++        }
++
++        deserializer.deserialize_any(ValueInPlaceVisitor(place))
++    }
+ }
+ 
+ impl FromStr for Value {
