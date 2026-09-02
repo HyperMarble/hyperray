@@ -1,0 +1,960 @@
+warning: Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: workspace (manifest) generated 11 warnings
+warning: crates/rpc-types/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types` (manifest) generated 11 warnings
+warning: crates/provider/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/provider/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-provider` (manifest) generated 11 warnings
+warning: crates/transport-ws/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/transport-ws/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-transport-ws` (manifest) generated 11 warnings
+warning: crates/transport-http/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/transport-http/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-transport-http` (manifest) generated 11 warnings
+warning: crates/tx-macros/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/tx-macros/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-tx-macros` (manifest) generated 11 warnings
+warning: crates/rpc-types-mev/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-mev/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-mev` (manifest) generated 11 warnings
+warning: crates/rpc-client/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-client/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-client` (manifest) generated 11 warnings
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-tenderly/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-tenderly` (manifest) generated 11 warnings
+warning: crates/signer-turnkey/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer-turnkey/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer-turnkey` (manifest) generated 11 warnings
+warning: crates/ens/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/ens/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-ens` (manifest) generated 11 warnings
+warning: crates/serde/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/serde/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-serde` (manifest) generated 11 warnings
+warning: crates/signer-tempo/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer-tempo/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer-tempo` (manifest) generated 11 warnings
+warning: crates/genesis/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/genesis/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-genesis` (manifest) generated 11 warnings
+warning: crates/rpc-types-eth/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-eth/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-eth` (manifest) generated 11 warnings
+warning: crates/pubsub/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/pubsub/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-pubsub` (manifest) generated 11 warnings
+warning: crates/rpc-types-engine/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-engine/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-engine` (manifest) generated 11 warnings
+warning: crates/rpc-types-any/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-any/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-any` (manifest) generated 11 warnings
+warning: crates/rpc-types-trace/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-trace/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-trace` (manifest) generated 11 warnings
+warning: crates/alloy/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/alloy/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy` (manifest) generated 11 warnings
+warning: crates/eip7547/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/eip7547/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-eip7547` (manifest) generated 11 warnings
+warning: crates/signer/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer` (manifest) generated 11 warnings
+warning: crates/rpc-types-debug/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-debug/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-debug` (manifest) generated 11 warnings
+warning: crates/signer-trezor/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer-trezor/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer-trezor` (manifest) generated 11 warnings
+warning: crates/node-bindings/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/node-bindings/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-node-bindings` (manifest) generated 11 warnings
+warning: crates/rpc-types-admin/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-admin/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-admin` (manifest) generated 11 warnings
+warning: crates/consensus/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/consensus/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-consensus` (manifest) generated 11 warnings
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-anvil/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-anvil` (manifest) generated 11 warnings
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-beacon/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-beacon` (manifest) generated 11 warnings
+warning: crates/eips/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/eips/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-eips` (manifest) generated 11 warnings
+warning: crates/network-primitives/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/network-primitives/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-network-primitives` (manifest) generated 11 warnings
+warning: crates/signer-local/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer-local/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer-local` (manifest) generated 11 warnings
+warning: crates/contract/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/contract/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-contract` (manifest) generated 11 warnings
+warning: crates/signer-aws/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer-aws/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer-aws` (manifest) generated 11 warnings
+warning: crates/transport-ipc/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/transport-ipc/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-transport-ipc` (manifest) generated 11 warnings
+warning: crates/signer-gcp/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer-gcp/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer-gcp` (manifest) generated 11 warnings
+warning: crates/signer-ledger/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/signer-ledger/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-signer-ledger` (manifest) generated 11 warnings
+warning: crates/eip5792/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/eip5792/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-eip5792` (manifest) generated 11 warnings
+warning: crates/transport/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/transport/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-transport` (manifest) generated 11 warnings
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/rpc-types-txpool/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-rpc-types-txpool` (manifest) generated 11 warnings
+warning: crates/network/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/network/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-network` (manifest) generated 11 warnings
+warning: crates/json-rpc/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/json-rpc/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-json-rpc` (manifest) generated 11 warnings
+warning: crates/consensus-any/Cargo.toml: `lints.clippy.large-enum-variant` is deprecated in favor of `lints.clippy.large_enum_variant` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.clippy.missing-const-for-fn` is deprecated in favor of `lints.clippy.missing_const_for_fn` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.clippy.redundant-clone` is deprecated in favor of `lints.clippy.redundant_clone` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.clippy.result-large-err` is deprecated in favor of `lints.clippy.result_large_err` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.clippy.use-self` is deprecated in favor of `lints.clippy.use_self` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.rust.missing-debug-implementations` is deprecated in favor of `lints.rust.missing_debug_implementations` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.rust.missing-docs` is deprecated in favor of `lints.rust.missing_docs` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.rust.rust-2018-idioms` is deprecated in favor of `lints.rust.rust_2018_idioms` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.rust.unnameable-types` is deprecated in favor of `lints.rust.unnameable_types` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.rust.unreachable-pub` is deprecated in favor of `lints.rust.unreachable_pub` and will not work in a future edition
+warning: crates/consensus-any/Cargo.toml: `lints.rust.unused-must-use` is deprecated in favor of `lints.rust.unused_must_use` and will not work in a future edition
+warning: `alloy-consensus-any` (manifest) generated 11 warnings
+ Downloading crates ...
+  Downloaded futures-executor v0.3.34
+  Downloaded tokio-stream v0.1.19
+  Downloaded bimap v0.6.3
+  Downloaded futures-utils-wasm v0.1.0
+  Downloaded tokio-macros v2.5.0
+  Downloaded tokio v1.47.1
+   Compiling stable_deref_trait v1.2.1
+   Compiling libc v0.2.189
+   Compiling writeable v0.6.4
+   Compiling syn v2.0.119
+   Compiling syn v3.0.4
+   Compiling litemap v0.8.3
+   Compiling futures-core v0.3.34
+   Compiling futures-sink v0.3.34
+   Compiling memchr v2.8.3
+   Compiling icu_properties_data v2.3.0
+   Compiling smallvec v1.16.0
+   Compiling icu_normalizer_data v2.3.0
+   Compiling utf8_iter v1.0.4
+   Compiling futures-channel v0.3.34
+   Compiling slab v0.4.12
+   Compiling futures-io v0.3.34
+   Compiling futures-task v0.3.34
+   Compiling parking_lot_core v0.9.12
+   Compiling scopeguard v1.2.0
+   Compiling percent-encoding v2.3.2
+   Compiling serde_json v1.0.151
+   Compiling lock_api v0.4.14
+   Compiling form_urlencoded v1.2.2
+   Compiling tower-layer v0.3.3
+   Compiling tower-service v0.3.3
+   Compiling sync_wrapper v1.0.2
+   Compiling futures-utils-wasm v0.1.0
+   Compiling base64 v0.22.1
+   Compiling bimap v0.6.3
+   Compiling cpufeatures v0.3.1
+   Compiling keccak v0.2.2
+   Compiling parking_lot v0.12.5
+   Compiling sha3 v0.11.0
+   Compiling synstructure v0.13.2
+   Compiling syn-solidity v1.7.1
+   Compiling macro-string v0.2.0
+   Compiling proc-macro-error3 v3.0.1
+   Compiling alloy-sol-macro-input v1.7.1
+   Compiling zerovec-derive v0.11.6
+   Compiling displaydoc v0.2.7
+   Compiling serde_derive v1.0.229
+   Compiling futures-macro v0.3.34
+   Compiling thiserror-impl v2.0.20
+   Compiling futures-util v0.3.34
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling derive_more-impl v2.1.1
+   Compiling tokio-macros v2.5.0
+   Compiling tracing-attributes v0.1.31
+   Compiling thiserror v2.0.20
+   Compiling alloy-sol-macro-expander v1.7.1
+   Compiling tokio v1.47.1
+   Compiling auto_impl v1.3.0
+   Compiling serde v1.0.229
+   Compiling tracing v0.1.44
+   Compiling zerofrom v0.1.8
+   Compiling futures-executor v0.3.34
+   Compiling tower v0.5.3
+   Compiling yoke v0.8.3
+   Compiling futures v0.3.34
+   Compiling bytes v1.12.1
+   Compiling zerovec v0.11.8
+   Compiling zerotrie v0.2.5
+   Compiling http v1.5.0
+   Compiling tokio-util v0.7.19
+   Compiling tokio-stream v0.1.19
+   Compiling tinystr v0.8.4
+   Compiling potential_utf v0.1.6
+   Compiling icu_locale_core v2.3.0
+   Compiling icu_collections v2.3.0
+   Compiling icu_provider v2.3.1
+   Compiling icu_properties v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling derive_more v2.1.1
+   Compiling idna_adapter v1.2.2
+   Compiling idna v1.1.0
+   Compiling url v2.5.8
+   Compiling alloy-primitives v1.7.1
+   Compiling alloy-sol-macro v1.7.1
+   Compiling alloy-sol-types v1.7.1
+   Compiling alloy-json-rpc v2.1.1 (/Volumes/Hak_SSD/hyperray-fixture-src/alloy/crates/json-rpc)
+   Compiling alloy-transport v2.1.1 (/Volumes/Hak_SSD/hyperray-fixture-src/alloy/crates/transport)
+   Compiling alloy-pubsub v2.1.1 (/Volumes/Hak_SSD/hyperray-fixture-src/alloy/crates/pubsub)
+
+thread 'rustc' (10577892) panicked at rustc_trait_elaboration/src/elaboration.rs:224:13:
+a dyn trait proof should have a dyn Self type
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+warning: Hax panicked when translating `alloy_pubsub::frontend::{impl#1}`.
+   --> crates/pubsub/src/frontend.rs:175:1
+    |
+175 | impl tower::Service<RequestPacket> for PubSubFrontend {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+thread 'rustc' (10577892) panicked at rustc_trait_elaboration/src/elaboration.rs:224:13:
+a dyn trait proof should have a dyn Self type
+warning: Hax panicked when translating `alloy_pubsub::frontend::{impl#1}`.
+   --> crates/pubsub/src/frontend.rs:175:1
+    |
+175 | impl tower::Service<RequestPacket> for PubSubFrontend {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Item `alloy_pubsub::frontend::{impl#1}` caused errors; ignoring.
+   --> crates/pubsub/src/frontend.rs:175:1
+    |
+175 | impl tower::Service<RequestPacket> for PubSubFrontend {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+  --> crates/pubsub/src/frontend.rs:36:5
+   |
+36 | /     pub fn get_subscription(
+37 | |         &self,
+38 | |         id: B256,
+39 | |     ) -> impl Future<Output = TransportResult<RawSubscription>> + Send + 'static {
+...  |
+50 | |     }
+   | |_____^
+
+warning: Coroutines are not supported
+  --> crates/pubsub/src/frontend.rs:41:9
+   |
+41 | /         async move {
+42 | |             let (tx, rx) = oneshot::channel();
+43 | |             backend_tx
+44 | |                 .send(PubSubInstruction::GetSub(id, tx))
+...  |
+48 | |                 .map_or_else(|| Err(TransportErrorKind::custom_str("subscription not found")), Ok)
+49 | |         }
+   | |_________^
+
+warning: Coroutine types are not supported yet
+  --> crates/pubsub/src/frontend.rs:60:5
+   |
+60 | /     pub fn send(
+61 | |         &self,
+62 | |         req: SerializedRequest,
+63 | |     ) -> impl Future<Output = TransportResult<Response>> + Send + 'static {
+...  |
+81 | |         .instrument(debug_span!("request", %method_name))
+82 | |     }
+   | |_____^
+
+warning: Coroutines are not supported
+  --> crates/pubsub/src/frontend.rs:68:9
+   |
+68 | /         async move {
+69 | |             debug!("sending request to backend");
+70 | |             let (in_flight, rx) = InFlight::new(req, channel_size);
+71 | |             tx.send(PubSubInstruction::Request(in_flight))
+...  |
+79 | |             resp
+80 | |         }
+   | |_________^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:116:21
+    |
+116 |                 let mut receivers = Vec::with_capacity(reqs.len());
+    |                     ^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:126:17
+    |
+126 | /                 async move {
+127 | |                     tx.send(PubSubInstruction::Batch(in_flights))
+128 | |                         .map_err(|_| TransportErrorKind::backend_gone())?;
+129 | |                     let results = join_all(receivers).await;
+...   |
+151 | |                 .instrument(debug_span!("batch_request"))
+    | |_________________________________________________________^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:87
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                                                                       ^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:43
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:105:95
+    |
+105 |             RequestPacket::Single(req) => self.send(req).map_ok(ResponsePacket::Single).boxed(),
+    |                                                                                               ^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:116:37
+    |
+116 |                 let mut receivers = Vec::with_capacity(reqs.len());
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/frontend.rs:153:13
+    |
+153 |             }
+    |             ^
+
+warning: Coroutines are not supported
+   --> crates/pubsub/src/frontend.rs:120:36
+    |
+120 |                       receivers.push(async move {
+    |  ____________________________________^
+121 | |                         rx.await.map_err(|_| TransportErrorKind::backend_gone())?
+122 | |                     });
+    | |_____________________^
+
+warning: Coroutine types are not supported yet
+  --> crates/pubsub/src/connect.rs:9:1
+   |
+ 9 | / pub trait PubSubConnect: Sized + Send + Sync + 'static {
+10 | |     /// Returns `true` if the transport connects to a local resource.
+11 | |     fn is_local(&self) -> bool;
+...  |
+34 | | }
+   | |_^
+
+warning: Coroutine types are not supported yet
+ --> crates/pubsub/src/lib.rs:1:1
+  |
+1 | #![doc = include_str!("../README.md")]
+  | ^
+
+warning: Coroutine types are not supported yet
+  --> crates/pubsub/src/service.rs:50:5
+   |
+50 | /     pub(crate) async fn connect(connector: T) -> TransportResult<PubSubFrontend> {
+51 | |         let handle = connector.connect().await?;
+52 | |
+53 | |         let (tx, reqs) = mpsc::unbounded_channel();
+...  |
+62 | |         Ok(PubSubFrontend::new(tx))
+63 | |     }
+   | |_____^
+
+warning: Coroutines are not supported
+  --> crates/pubsub/src/service.rs:50:82
+   |
+50 |       pub(crate) async fn connect(connector: T) -> TransportResult<PubSubFrontend> {
+   |  __________________________________________________________________________________^
+51 | |         let handle = connector.connect().await?;
+52 | |
+53 | |         let (tx, reqs) = mpsc::unbounded_channel();
+...  |
+62 | |         Ok(PubSubFrontend::new(tx))
+63 | |     }
+   | |_____^
+
+warning: Coroutine types are not supported yet
+  --> crates/pubsub/src/service.rs:66:5
+   |
+66 | /     async fn get_new_backend(&mut self) -> TransportResult<ConnectionHandle> {
+67 | |         let mut handle = self.connector.try_reconnect().await?;
+68 | |         std::mem::swap(&mut self.handle, &mut handle);
+69 | |         Ok(handle)
+70 | |     }
+   | |_____^
+
+warning: Coroutines are not supported
+  --> crates/pubsub/src/service.rs:66:78
+   |
+66 |       async fn get_new_backend(&mut self) -> TransportResult<ConnectionHandle> {
+   |  ______________________________________________________________________________^
+67 | |         let mut handle = self.connector.try_reconnect().await?;
+68 | |         std::mem::swap(&mut self.handle, &mut handle);
+69 | |         Ok(handle)
+70 | |     }
+   | |_____^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/service.rs:74:5
+    |
+ 74 | /     async fn reconnect(&mut self) -> TransportResult<()> {
+ 75 | |         debug!("Reconnecting pubsub service backend");
+ 76 | |
+ 77 | |         let mut old_handle = self.get_new_backend().await?;
+...   |
+119 | |         Ok(())
+120 | |     }
+    | |_____^
+
+warning: Coroutines are not supported
+   --> crates/pubsub/src/service.rs:74:58
+    |
+ 74 |       async fn reconnect(&mut self) -> TransportResult<()> {
+    |  __________________________________________________________^
+ 75 | |         debug!("Reconnecting pubsub service backend");
+ 76 | |
+ 77 | |         let mut old_handle = self.get_new_backend().await?;
+...   |
+119 | |         Ok(())
+120 | |     }
+    | |_____^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/service.rs:262:5
+    |
+262 | /     async fn reconnect_with_retries(&mut self) -> TransportResult<()> {
+263 | |         let mut retry_count = 0;
+264 | |         let max_retries = self.handle.max_retries;
+265 | |         let interval = self.handle.retry_interval;
+...   |
+288 | |     }
+    | |_____^
+
+warning: Coroutines are not supported
+   --> crates/pubsub/src/service.rs:262:71
+    |
+262 |       async fn reconnect_with_retries(&mut self) -> TransportResult<()> {
+    |  _______________________________________________________________________^
+263 | |         let mut retry_count = 0;
+264 | |         let max_retries = self.handle.max_retries;
+265 | |         let interval = self.handle.retry_interval;
+...   |
+288 | |     }
+    | |_____^
+
+warning: Coroutine types are not supported yet
+   --> crates/pubsub/src/service.rs:292:13
+    |
+292 |         let fut = async move {
+    |             ^^^
+
+warning: Coroutines are not supported
+   --> crates/pubsub/src/service.rs:292:19
+    |
+292 |           let fut = async move {
+    |  ___________________^
+293 | |             let result: TransportResult<()> = loop {
+...   |
+373 | |         };
+    | |_________^
+
+warning: Coroutine types are not supported yet
+  --> crates/pubsub/src/connect.rs:31:5
+   |
+31 | /     fn into_service(self) -> impl_future!(<Output = TransportResult<PubSubFrontend>>) {
+32 | |         PubSubService::connect(self)
+33 | |     }
+   | |_____^
+
+warning: The extraction generated 43 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 20.31s

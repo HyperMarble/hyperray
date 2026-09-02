@@ -1,17 +1,22 @@
 // EXTRACT: pass 1 reads the patch text alone; pass 2 reads only the files
 // the patch names. `change` and `manifest` are the two public entries.
 
+mod charon;
 mod function;
 mod hunk;
 mod locate;
 mod names;
+mod owner;
 mod patch;
 mod reader;
+mod refusal;
 
+pub use charon::{item_path, run, Run, Scope};
 pub use hunk::Hunk;
 pub use locate::{manifest, Located, Manifest};
 pub use patch::FileChange;
 pub use reader::Opened;
+pub use refusal::{refusals_in, Refusal};
 
 use serde::Serialize;
 
