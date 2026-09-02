@@ -1,6 +1,7 @@
 // The parts of Charon's ULLBC JSON this stage reads. Fields not listed
 // are ignored on purpose; nothing here interprets them.
 
+use super::span::ItemMeta;
 use serde::de::IgnoredAny;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -14,6 +15,7 @@ pub struct Output {
 pub struct Translated {
     pub files: Vec<File>,
     pub fun_decls: Vec<Option<Decl>>,
+    pub global_decls: Vec<Option<GlobalDecl>>,
 }
 
 #[derive(Deserialize)]
@@ -26,6 +28,13 @@ pub struct File {
 pub struct Decl {
     pub item_meta: ItemMeta,
     pub body: BodyTag,
+}
+
+// A global (`const`/`static`) has a value, never a body. Only the
+// metadata is read; the value expression is left to the prover.
+#[derive(Deserialize)]
+pub struct GlobalDecl {
+    pub item_meta: ItemMeta,
 }
 
 // Every variant of Charon's `Body` (charon/src/ast/bodies.rs). Only the
@@ -46,26 +55,4 @@ pub enum BodyTag {
 #[derive(Deserialize)]
 pub struct ErrorBody {
     pub msg: String,
-}
-
-#[derive(Deserialize)]
-pub struct ItemMeta {
-    pub span: Span,
-}
-
-#[derive(Deserialize)]
-pub struct Span {
-    pub data: SpanData,
-}
-
-#[derive(Deserialize)]
-pub struct SpanData {
-    pub file_id: u32,
-    pub beg: Position,
-    pub end: Position,
-}
-
-#[derive(Deserialize)]
-pub struct Position {
-    pub line: u32,
 }
