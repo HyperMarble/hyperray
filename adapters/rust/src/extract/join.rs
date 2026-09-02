@@ -1,7 +1,7 @@
-// The router's input: each manifest function joined to what Charon said
-// about it, by file and line. A function Charon never mentioned is
-// `Missing`; a file Charon never saw is `FileNotSeen`. Both are reported.
-// The item path is Charon's own, carried through for the prover's report.
+// Each manifest function joined to what Charon said about it, by file and
+// line. A function Charon never mentioned is `Missing`; a file it never
+// saw is `FileNotSeen`. Both are reported. The item path is Charon's own,
+// kept when every element is a plain identifier.
 
 use super::locate::Located;
 use super::seen::{Body, Seen};

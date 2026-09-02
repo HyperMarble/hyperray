@@ -84,22 +84,26 @@ opened file is a patched file.
 
 ## 4. Stage 2 — SHAPE
 
-Split every changed function under the ten rules (nesting 3, function 40
-lines, file 75, no `unwrap`/`panic`, decisions return values). Then prove
-old = new for each split function with the stage-4 tool, before anything
-else runs on the new shape.
+Measure every changed function against the ten rules (nesting 3,
+function 40 lines, no `unwrap`/`expect`/`panic`/`unreachable`) and
+report every break with its file and line. Nothing is split or rewritten:
+code that breaks the rules is the author's fault and is reported as such.
 
-Measured once by hand (noodles, 2026-09-02): nesting 6 -> 2, Kani 9 min ->
-3 s, one hidden subtraction became one named 5-line function, same 628
-tests both ways, and the old line fails the same harness.
+The compiler measures. Clippy's `too_many_lines`, `excessive_nesting`,
+`unwrap_used`, `expect_used`, `panic`, `unreachable` lints carry the rules;
+thresholds go in a `clippy.toml` the stage writes (Clippy book,
+lint_configuration). Findings are read from cargo's JSON lines (Cargo book,
+external-tools; rustc book, json.html). The adapter judges no source text.
 
-Output `shaped.patch` plus `equivalence.json`: per function
-`{old, new, proved_equal: bool, tool, time_s}`. A function that cannot be
-proved equal is not shaped; it goes forward as written and is marked.
+Decided 2026-09-03: no splitting, by anyone. A split was measured once by
+hand (noodles: nesting 6 -> 2, Kani 9 min -> 3 s) and made the proof
+faster, not more correct; Kani found the bug in the unsplit function too.
 
-**Test:** on every fixture, every function in `shaped.patch` has
-`proved_equal: true` or is unchanged from the manifest; the shaped tree
-passes the crate's own tests.
+Output: the manifest with a `findings` column, each entry
+`{lint, path, line_start, line_end, message}` verbatim from the tool.
+
+**Test:** on every fixture, every finding inside a changed function sits
+within that function's span, and every finding names a shape lint.
 
 ## 5. Stage 3 — BOUND
 
@@ -218,7 +222,7 @@ The Go CLI runs the five per-language stages in order, then stages 6-7.
 | stage | Rust | C++ | Go | Python |
 |---|---|---|---|---|
 | 1 EXTRACT | done | not started | not started | not started |
-| 2 SHAPE | not started | | | |
+| 2 SHAPE | done | not started | not started | not started |
 | 3 BOUND | not started | | | |
 | 4 PROVE | not started | | | |
 | 5 ADEQUACY | not started | | | |

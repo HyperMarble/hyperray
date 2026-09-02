@@ -11,7 +11,7 @@ pub struct Refusal {
 }
 
 // Rust's own lints share the `warning:` shape and are kept too; the
-// router tells them apart by the reason text.
+// reason text is what tells them apart.
 pub fn refusals_in(log: &str) -> Vec<Refusal> {
     let mut found = Vec::new();
     let mut lines = log.lines();
