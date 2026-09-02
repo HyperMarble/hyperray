@@ -1,6 +1,3 @@
-// A fixture test: the real noodles-296 patch must yield the ranges we
-// measured by hand on 2026-09-02. No invented diff.
-
 use hyperray_rust::extract::patch::changed_files;
 use std::path::Path;
 
