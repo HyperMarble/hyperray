@@ -21,6 +21,7 @@ pub fn run(charon: &Path, crate_dir: &Path, output: &Path) -> Run {
         .current_dir(crate_dir)
         .args(["cargo", "--ullbc", "--preset", "fast"])
         .args(["--sysroot", "default", "--no-dedup-serialized-ast"])
+        .args(["--consts", "values"])
         .arg("--dest-file")
         .arg(output)
         .args(["--", "--all-features"])

@@ -4,6 +4,7 @@
 // charon/src/ast/bodies.rs, as in extract/ullbc.rs.
 
 use super::block::Unstructured;
+use super::constant::ConstantExpr;
 use super::decl::TypeDecl;
 use super::ty::Signature;
 use crate::extract::span::ItemMeta;
@@ -21,6 +22,15 @@ pub struct Translated {
     pub files: Vec<File>,
     pub fun_decls: Vec<Option<Decl>>,
     pub type_decls: Vec<Option<TypeDecl>>,
+    pub global_decls: Vec<Option<GlobalDecl>>,
+}
+
+// charon/src/ast/items/global_decl.rs:8. With `--consts values` the
+// `value` is the evaluated literal; otherwise a call to the initializer.
+#[derive(Deserialize)]
+pub struct GlobalDecl {
+    pub item_meta: ItemMeta,
+    pub value: ConstantExpr,
 }
 
 #[derive(Deserialize)]

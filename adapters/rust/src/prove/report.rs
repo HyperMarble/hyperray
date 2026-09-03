@@ -21,11 +21,9 @@ pub fn results_in(log: &str) -> Vec<HarnessResult> {
             found.extend(current.take());
             current = Some(blank(name));
         }
-        if let Some(result) = current.as_mut() {
-            let closed = fill(result, line);
-            if closed {
-                found.extend(current.take());
-            }
+        let closed = current.as_mut().is_some_and(|result| fill(result, line));
+        if closed {
+            found.extend(current.take());
         }
     }
     found.extend(current);

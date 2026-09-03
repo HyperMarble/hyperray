@@ -2,6 +2,7 @@
 // charon/src/ast/bodies/unstructured.rs:108; every one is named so a
 // new variant fails to parse instead of hiding a jump.
 
+use super::stmt::Statement;
 use serde::de::IgnoredAny;
 use serde::Deserialize;
 
@@ -12,6 +13,7 @@ pub struct Unstructured {
 
 #[derive(Deserialize)]
 pub struct Block {
+    pub statements: Vec<Statement>,
     pub terminator: Terminator,
 }
 
