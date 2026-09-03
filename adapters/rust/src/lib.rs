@@ -1,6 +1,7 @@
 // The library exposes the JSON boundary used by the Go CLI and the stages
 // behind it. Nothing here runs the solution under test.
 
+pub mod bound;
 pub mod extract;
 mod protocol;
 pub mod prove;

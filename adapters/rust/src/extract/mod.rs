@@ -14,7 +14,7 @@ mod patch;
 mod reader;
 mod refusal;
 mod seen;
-mod span;
+pub(crate) mod span;
 mod ullbc;
 mod workspace;
 
