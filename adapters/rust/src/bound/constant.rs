@@ -6,7 +6,8 @@
 use serde::de::IgnoredAny;
 use serde::Deserialize;
 
-// `{"Untagged": [kind, ty]}`, measured in the noodles ULLBC.
+// `{"Untagged": [kind, ty]}` — a `ConstantExpr` is `{kind, ty}` and
+// Charon's serializer wraps it as an untagged pair.
 #[derive(Deserialize)]
 pub struct ConstantExpr {
     #[serde(rename = "Untagged")]
@@ -51,7 +52,7 @@ pub enum Literal {
     Str(String),
 }
 
-// `{"Unsigned": ["Usize", "65536"]}`; Charon writes the number as a
+// `{"Unsigned": [<UIntTy>, "<digits>"]}`; Charon writes the number as a
 // string (`scalar_value_ser_de`, values.rs:186).
 #[derive(Deserialize)]
 pub enum Scalar {

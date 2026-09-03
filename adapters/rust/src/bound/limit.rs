@@ -37,11 +37,8 @@ fn compared_globals(kind: &StatementKind) -> Option<(BinOp, Vec<u32>)> {
     let StatementKind::Assign(_, Rvalue::BinaryOp(op, lhs, rhs)) = kind else {
         return None;
     };
-    if !op.is_comparison() {
-        return None;
-    }
     let ids = [global_id(lhs), global_id(rhs)].into_iter().flatten();
-    Some((*op, ids.collect()))
+    op.is_comparison().then(|| (*op, ids.collect()))
 }
 
 fn global_id(operand: &Operand) -> Option<u32> {

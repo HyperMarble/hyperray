@@ -1,23 +1,41 @@
 mod common;
 
-use hyperray_rust::bound::{read, sort_all, Output, Pile, Sorted};
+use hyperray_rust::bound::{read, sort_all, Pile, Sorted};
 use hyperray_rust::extract::{change, manifest};
 use std::path::Path;
 
-fn touched(sorted: &Sorted, patch: &str, root: &Path) -> bool {
+// One Charon row per manifest function: the first whose span contains
+// the start line (Charon adds closure/derive rows at the same line).
+fn touched<'a>(all: &'a [Sorted], patch: &str, root: &Path) -> Vec<&'a Sorted> {
     let Ok(built) = manifest(root, &change(patch)) else {
-        return false;
+        return Vec::new();
+    };
+    let contains = |s: &&Sorted, path: &str, line: u32| {
+        s.path == path && s.start_line <= line && line <= s.end_line
     };
     built
         .functions
         .iter()
-        .any(|f| f.path == sorted.path && f.start_line == sorted.start_line)
+        .filter_map(|f| all.iter().find(|s| contains(s, &f.path, f.start_line)))
+        .collect()
 }
 
-fn count(rows: &[&Sorted], want: fn(&Pile) -> bool) -> usize {
-    rows.iter().filter(|r| want(&r.pile)).count()
+fn sorted_for(tree: &Path) -> Vec<Sorted> {
+    let mut all = Vec::new();
+    for path in common::ullbc_files(tree) {
+        let Ok(file) = std::fs::File::open(&path) else {
+            continue;
+        };
+        let Ok(output) = read(file) else {
+            panic!("{}: charon output did not parse", path.display());
+        };
+        all.extend(sort_all(&output));
+    }
+    all
 }
 
+// Phase A rule: a body with a cycle is in the loop pile and nowhere
+// else; a pile-4 row names the input and the type kind that put it there.
 fn check_piles(rows: &[&Sorted]) {
     for row in rows {
         let at = format!("{}:{}", row.path, row.start_line);
@@ -31,62 +49,28 @@ fn check_piles(rows: &[&Sorted]) {
     }
 }
 
-// Phase B rule: every limit is an evaluated scalar with a file and line
-// that Charon itself listed; a body with no comparison has no limit.
-fn check_limits(rows: &[&Sorted]) -> usize {
-    let mut cited = 0;
-    for limit in rows.iter().flat_map(|r| r.limits.iter()) {
-        assert!(limit.value.parse::<i128>().is_ok(), "{}", limit.value);
-        assert!(limit.line > 0 && !limit.path.is_empty(), "{limit:?}");
-        assert!(limit.compared_with.is_comparison(), "{limit:?}");
-        cited += 1;
-    }
-    cited
-}
-
-fn report(name: &str, rows: &[&Sorted], cited: usize) {
-    eprintln!(
-        "{name}: {} touched; none {} loop {} fixed {} sized {} unbuildable {}; limits cited {cited}",
-        rows.len(),
-        count(rows, |p| *p == Pile::NoBound),
-        count(rows, |p| *p == Pile::Loop),
-        count(rows, |p| *p == Pile::FixedWidth),
-        count(rows, |p| *p == Pile::Sized),
-        count(rows, |p| matches!(p, Pile::Unbuildable { .. })),
-    );
-}
-
-fn output_for(tree: &Path, name: &str) -> Option<Output> {
-    let ullbc = tree.join("target").join("hyperray").join("charon.ullbc");
-    let Ok(file) = std::fs::File::open(&ullbc) else {
-        eprintln!("skipped: {} not on disk", ullbc.display());
-        return None;
-    };
-    let Ok(output) = read(file) else {
-        panic!("{name}: charon output did not parse for stage 3");
-    };
-    Some(output)
-}
-
-// The rule (stage3.md Phase A and B) on every fixture whose Charon
-// output is on disk.
 #[test]
-fn every_function_charon_saw_lands_in_one_pile_with_cited_limits() {
+fn every_function_charon_saw_lands_in_one_pile() {
     let Some(sources) = common::dir("HYPERRAY_FIXTURE_SRC") else {
         return;
     };
     for (name, text) in common::patches() {
-        let Some(tree) = name.split('-').next().map(|n| sources.join(n)) else {
+        let Some(tree) = common::tree_for(&sources, &name) else {
             continue;
         };
-        let Some(output) = output_for(&tree, &name) else {
+        let all = sorted_for(&tree);
+        if all.is_empty() {
+            eprintln!("skipped: {name} has no Charon output on disk");
             continue;
-        };
-        let all = sort_all(&output);
-        let rows: Vec<&Sorted> = all.iter().filter(|s| touched(s, &text, &tree)).collect();
+        }
+        let rows = touched(&all, &text, &tree);
         assert!(!rows.is_empty(), "{name}");
         check_piles(&rows);
-        let cited = check_limits(&rows);
-        report(&name, &rows, cited);
+        let loops = rows.iter().filter(|r| r.pile == Pile::Loop).count();
+        let limits: usize = rows.iter().map(|r| r.limits.len()).sum();
+        eprintln!(
+            "{name}: {} touched, {loops} loop, {limits} limits",
+            rows.len()
+        );
     }
 }

@@ -13,7 +13,29 @@ pub fn dir(name: &str) -> Option<PathBuf> {
     Some(path)
 }
 
-// Every `<fixture>/solution.patch` under HYPERRAY_FIXTURES, sorted.
+// Every Charon output under HYPERRAY_FIXTURE_SRC/<tree>/target/hyperray/,
+// one per crate, written by the stage-1 live test.
+#[allow(dead_code)]
+pub fn ullbc_files(tree: &std::path::Path) -> Vec<PathBuf> {
+    let dir = tree.join("target").join("hyperray");
+    let Ok(entries) = std::fs::read_dir(&dir) else {
+        return Vec::new();
+    };
+    let mut found: Vec<PathBuf> = entries
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|x| x == "ullbc"))
+        .collect();
+    found.sort();
+    found
+}
+
+// The source tree for a fixture: HYPERRAY_FIXTURE_SRC/<first word of name>.
+#[allow(dead_code)]
+pub fn tree_for(sources: &std::path::Path, fixture: &str) -> Option<PathBuf> {
+    fixture.split('-').next().map(|n| sources.join(n))
+}
+
 #[allow(dead_code)]
 pub fn patches() -> Vec<(String, String)> {
     let Some(root) = dir("HYPERRAY_FIXTURES") else {

@@ -48,7 +48,10 @@ fn read_all(charon: &Path, root: &Path, patch: &str) -> Checked {
         globals: Vec::new(),
     };
     for dir in &crates {
-        let output = work.join("charon.ullbc");
+        let Some(crate_name) = dir.file_name().and_then(|n| n.to_str()) else {
+            panic!("{}", dir.display());
+        };
+        let output = work.join(format!("{crate_name}.ullbc"));
         let done = run(charon, dir, &output);
         assert_eq!(done.exit_code, Some(0), "{}\n{}", dir.display(), done.log);
         let Ok(file) = std::fs::File::open(&output) else {
