@@ -56,12 +56,11 @@ fn bound_of(s: &Sorted) -> Bound {
 }
 
 // Stage 1's words, verbatim. `Extracted` with no Phase-A row cannot
-// happen (Phase A reads every fun_decl); it is still named, not hidden.
+// happen (Phase A reads every item), and is still named, not hidden.
 fn reason_of(status: &Status) -> String {
     match status {
-        Status::Refused(reason) => reason.clone(),
-        Status::Missing => "Charon has no declaration for this function".to_string(),
-        Status::FileNotSeen => "Charon never saw this file".to_string(),
-        Status::Extracted => "Charon extracted the body but no signature row matched".to_string(),
+        Status::Missing => "the compiler built no item for this function".to_string(),
+        Status::FileNotSeen => "the compiler never saw this file".to_string(),
+        Status::Extracted => "the body was read but no signature row matched".to_string(),
     }
 }

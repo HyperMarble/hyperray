@@ -1,17 +1,18 @@
-// Charon's output read back: every function and global it saw, each
-// with its file and line. No name is built here; the compiler wrote them.
+// What the compiler saw: every function and global it built, each with its
+// file and line. No name is built here; the compiler wrote them.
+//
+// `Body` has two states, not three. A row the compiler did not answer for
+// is not written at all, so a later stage cannot mistake our gap for the
+// code's (design.md §2).
 
-use super::global::{global, Global};
-use super::span::plain_path;
-use super::ullbc::{Decl, Output};
+use super::global::Global;
+use super::mir::{Kind, Row};
 use serde::Serialize;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub enum Body {
     Extracted,
-    Refused(String),
-    NotRequested,
+    NoBody,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -28,35 +29,37 @@ pub struct Read {
     pub globals: Vec<Global>,
 }
 
-pub fn seen_in(ullbc: std::fs::File) -> Result<Read, serde_json::Error> {
-    let reader = std::io::BufReader::new(ullbc);
-    let output: Output = serde_json::from_reader(reader)?;
-    let files = local_files(&output);
-    let translated = output.translated;
-    let functions = translated.fun_decls.into_iter().flatten();
-    let globals = translated.global_decls.into_iter().flatten();
+pub fn seen_in(dump: std::fs::File) -> Result<Read, serde_json::Error> {
+    let reader = std::io::BufReader::new(dump);
+    let rows: Vec<Row> = serde_json::from_reader(reader)?;
+    let (functions, globals): (Vec<Row>, Vec<Row>) = rows.into_iter().partition(is_function);
     Ok(Read {
-        functions: functions.filter_map(|d| function(&files, d)).collect(),
-        globals: globals.filter_map(|d| global(&files, d)).collect(),
+        functions: functions.into_iter().map(seen).collect(),
+        globals: globals.into_iter().map(global).collect(),
     })
 }
 
-fn local_files(output: &Output) -> HashMap<u32, String> {
-    output
-        .translated
-        .files
-        .iter()
-        .filter_map(|file| Some((file.id, file.name.get("Local")?.clone())))
-        .collect()
+fn is_function(row: &Row) -> bool {
+    row.kind == Kind::Fn || row.kind == Kind::Ctor
 }
 
-fn function(files: &HashMap<u32, String>, decl: Decl) -> Option<Seen> {
-    let span = decl.item_meta.span.data;
-    Some(Seen {
-        path: files.get(&span.file_id)?.clone(),
-        start_line: span.beg.line,
-        end_line: span.end.line,
-        item_path: plain_path(&decl.item_meta.name),
-        body: super::body::of(&decl.body),
-    })
+fn seen(row: Row) -> Seen {
+    Seen {
+        path: row.file,
+        start_line: row.start_line,
+        end_line: row.end_line,
+        item_path: Some(row.name),
+        body: match row.has_body {
+            true => Body::Extracted,
+            false => Body::NoBody,
+        },
+    }
+}
+
+fn global(row: Row) -> Global {
+    Global {
+        path: row.file,
+        start_line: row.start_line,
+        value: row.value,
+    }
 }

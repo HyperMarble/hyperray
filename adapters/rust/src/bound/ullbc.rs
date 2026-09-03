@@ -6,8 +6,8 @@
 use super::block::Unstructured;
 use super::constant::ConstantExpr;
 use super::decl::TypeDecl;
+use super::meta::ItemMeta;
 use super::ty::Signature;
-use crate::extract::span::ItemMeta;
 use serde::de::IgnoredAny;
 use serde::Deserialize;
 use std::collections::HashMap;

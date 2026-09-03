@@ -39,8 +39,13 @@ solution.patch + base + task text
   naming rules failed on the second crate.)
 - **Every number cites its line.** A bound, a domain, a constant carries
   `declared_by: file:line`. An invented number is refused.
-- **`blocked` is an answer. Silence is a bug.** When a tool refuses, the
-  stage reports the tool's own line, exactly.
+- **A stage answers every row. `blocked` is not an answer.** When a tool
+  refuses, that is Hyperray's job to route, not a result to print: hand the
+  tool what it lacks, or send the row to a tool that can read it, and record
+  which one answered. A refusal reaching the output is a Hyperray bug.
+- **`fail` means the code under test is wrong, and nothing else.** A tool
+  that cannot build an input, read a body, or finish in time is our gap, not
+  the patch's. The two are never mixed in one field.
 - **Compiling is not verifying.** Both are reported, separately.
 - **A `false` invariant is a translation bug, never a result.**
 - **Evidence rule.** A row derived only by running the reference is

@@ -10,6 +10,7 @@ mod decl;
 mod edge;
 mod kind;
 mod limit;
+mod meta;
 mod pile;
 mod row;
 mod size;

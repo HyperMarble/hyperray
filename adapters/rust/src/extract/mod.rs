@@ -1,31 +1,27 @@
-// EXTRACT: pass 1 reads the patch text alone; pass 2 reads only the files
-// the patch names and what Charon says about them. No item name is ever
-// built here; the compiler wrote them and `seen` reads them back.
+// EXTRACT: pass 1 reads the patch text alone; pass 2 compiles the crate and
+// reads what the compiler says about every item it built. No item name is
+// ever built here; the compiler wrote them and `seen` reads them back.
 
-mod body;
-mod charon;
+mod driver;
 mod function;
 mod global;
 mod hunk;
 mod join;
 mod locate;
+mod mir;
 mod names;
 mod patch;
 mod reader;
-mod refusal;
 mod seen;
-pub(crate) mod span;
-mod ullbc;
 mod workspace;
 
-pub use charon::{run, Run};
+pub use driver::{run, Run};
 pub use global::Global;
 pub use hunk::Hunk;
 pub use join::{join, Joined, Status};
 pub use locate::{manifest, Located, Manifest};
 pub use patch::FileChange;
 pub use reader::Opened;
-pub use refusal::{refusals_in, Refusal};
 pub use seen::{seen_in, Body, Read, Seen};
 pub use workspace::crate_dir;
 
