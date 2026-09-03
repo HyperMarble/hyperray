@@ -8,39 +8,34 @@
 
 use super::block::{TerminatorKind, Unstructured};
 
-pub fn has_back_edge(body: &Unstructured) -> bool {
-    let n = body.body.len();
-    let mut state = vec![Mark::New; n];
-    let mut stack: Vec<(usize, Vec<u32>)> = vec![(0, vec![])];
-    if n == 0 {
-        return false;
-    }
-    state[0] = Mark::OnPath;
-    stack[0].1 = targets(&body.body[0].terminator.kind);
-    while let Some((block, pending)) = stack.last_mut() {
-        let Some(next) = pending.pop() else {
-            state[*block] = Mark::Done;
-            stack.pop();
-            continue;
-        };
-        let next = next as usize;
-        match state.get(next) {
-            Some(Mark::OnPath) => return true,
-            Some(Mark::New) => {
-                state[next] = Mark::OnPath;
-                stack.push((next, targets(&body.body[next].terminator.kind)));
-            }
-            Some(Mark::Done) | None => {}
-        }
-    }
-    false
-}
-
 #[derive(Clone, Copy, PartialEq)]
 enum Mark {
     New,
     OnPath,
     Done,
+}
+
+pub fn has_back_edge(body: &Unstructured) -> bool {
+    let mut state = vec![Mark::New; body.body.len()];
+    !body.body.is_empty() && cycle_from(body, 0, &mut state)
+}
+
+// `block` is always a valid index: 0 is checked by the caller, and every
+// later one came back `Some` from `state.get`.
+fn cycle_from(body: &Unstructured, block: usize, state: &mut [Mark]) -> bool {
+    state[block] = Mark::OnPath;
+    for next in targets(&body.body[block].terminator.kind) {
+        let next = next as usize;
+        let mark = state.get(next).copied();
+        if mark == Some(Mark::OnPath) {
+            return true;
+        }
+        if mark == Some(Mark::New) && cycle_from(body, next, state) {
+            return true;
+        }
+    }
+    state[block] = Mark::Done;
+    false
 }
 
 fn targets(kind: &TerminatorKind) -> Vec<u32> {
