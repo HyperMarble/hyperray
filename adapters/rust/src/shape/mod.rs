@@ -1,6 +1,6 @@
-// SHAPE: the compiler measures every function against the rules, and any
-// reshaped function is accepted only with a proof that it equals the
-// original. Nothing here reads source text to judge it.
+// SHAPE: the compiler measures every changed function against the rules and
+// reports each break with its file and line. Nothing here reads source text
+// to judge it, and nothing is ever split or rewritten (design.md §4).
 
 mod clippy;
 mod diagnostic;
