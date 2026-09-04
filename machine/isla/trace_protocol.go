@@ -1,31 +1,49 @@
-// Trace protocol parsing accepts complete top-level trace blocks only.
-// It rejects empty and truncated output before coverage receives evidence.
+// Trace protocol parsing accepts complete top-level trace expressions only.
+// It ignores delimiters inside comments, strings, and quoted identifiers.
 package isla
 
-import "strings"
-
 func countTraceBlocks(output string) (uint64, error) {
-	remaining := strings.TrimSpace(output)
-	if remaining == "" {
-		return 0, engineError(ProtocolError, "footprint output", "empty")
-	}
-	var count uint64
-	for remaining != "" {
-		if !strings.HasPrefix(remaining, "(trace\n") {
-			return 0, engineError(ProtocolError, "footprint output", "expected trace block")
-		}
-		end := strings.Index(remaining, "\n)\n")
-		if end >= 0 {
-			count++
-			remaining = strings.TrimSpace(remaining[end+3:])
+	scanner := traceScanner{}
+	for index := 0; index < len(output); index++ {
+		character := output[index]
+		if scanner.consumeQuoted(character) {
 			continue
 		}
-		if strings.HasSuffix(remaining, "\n)") {
-			count++
-			remaining = ""
+		if character == '(' {
+			if scanner.depth == 0 && !traceStart(output[index:]) {
+				return 0, traceProtocolError("expected trace expression")
+			}
+			if scanner.depth == 0 {
+				scanner.count++
+			}
+			scanner.depth++
 			continue
 		}
-		return 0, engineError(ProtocolError, "footprint output", "truncated trace block")
+		if character == ')' {
+			if scanner.depth == 0 {
+				return 0, traceProtocolError("unexpected closing delimiter")
+			}
+			scanner.depth--
+			continue
+		}
+		if scanner.depth == 0 && !asciiSpace(character) {
+			return 0, traceProtocolError("text outside trace expression")
+		}
 	}
-	return count, nil
+	if scanner.incomplete() || scanner.count == 0 {
+		return 0, traceProtocolError("empty or truncated trace expression")
+	}
+	return scanner.count, nil
+}
+
+func traceStart(value string) bool {
+	return len(value) > 6 && value[:6] == "(trace" && asciiSpace(value[6])
+}
+
+func asciiSpace(character byte) bool {
+	return character == ' ' || character == '\n' || character == '\r' || character == '\t'
+}
+
+func traceProtocolError(detail string) error {
+	return engineError(ProtocolError, "footprint output", detail)
 }

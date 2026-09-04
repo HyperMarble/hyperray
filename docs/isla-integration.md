@@ -105,3 +105,7 @@ A forced timeout returned an error status. These measurements establish route fe
 The matching Isla `7f6882b` engine and `rv64d.ir` snapshot produced ADDI semantics in 0.75 seconds.
 
 The trace wrote `x5 = 3`. The instruction-footprint report named `x5` as the written register.
+
+The public Hyperray operation traced legal and illegal encodings in 1.31 seconds. It returned one distinct trace digest for each encoding.
+
+The measured run also emitted unavailable-primitive diagnostics. Coverage remains incomplete until each diagnostic has a proved disposition.

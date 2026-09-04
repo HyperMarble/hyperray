@@ -10,8 +10,27 @@ func TestCountTraceBlocks(t *testing.T) {
 	}
 }
 
+func TestCountTraceBlocksIgnoresQuotedDelimiters(t *testing.T) {
+	output := `(trace
+  (event "left \" ( right")
+  ; ignored )
+  (read |register(with)parentheses|))`
+	count, err := countTraceBlocks(output)
+	if err != nil || count != 1 {
+		t.Errorf("countTraceBlocks() = %d, %v", count, err)
+	}
+}
+
 func TestCountTraceBlocksRejectsMalformedOutput(t *testing.T) {
-	values := []string{"message", "(trace\n  (event)"}
+	values := []string{
+		"message",
+		"(other)",
+		")",
+		"(trace\n) trailing",
+		"(trace\n  (event)",
+		"\"unterminated",
+		"|unterminated",
+	}
 	for index := range values {
 		count, err := countTraceBlocks(values[index])
 		if err == nil {
