@@ -1,0 +1,87 @@
+# Sail and Isla Integration
+
+Status: ACCEPTED ROUTE. The measured proof slice works. The Hyperray integration is in progress.
+
+## Purpose
+
+Hyperray uses Sail as the source of machine instruction semantics. It uses Isla to translate these semantics into solver formulas.
+
+Hyperray does not contain a rule for each instruction. A new input program does not require a Hyperray source change.
+
+## Route
+
+```text
+bounded program
+  -> compiler and linker
+  -> executable instructions
+  -> pinned Sail machine model
+  -> Isla symbolic execution
+  -> SMT constraints and machine events
+  -> solver result
+  -> Hyperray evidence and coverage gate
+```
+
+Sail supplies the instruction behavior. Isla supplies path exploration, machine events, and SMT constraints.
+
+Hyperray supplies the finite boundary, the property, artifact identity, coverage evidence, and the final result.
+
+## Public operation
+
+The machine integration accepts one request with these inputs:
+
+- The Isla executable.
+- The Sail model snapshot.
+- The Isla configuration.
+- The memory model.
+- The bounded program.
+- The program-counter visit limit.
+- The time limit.
+
+Each file has an expected SHA-256 digest. A changed or missing file causes an engine error.
+
+The request contains the negation of the required property. An allowed execution is a counterexample.
+
+A forbidden execution means that Isla found no counterexample in the accepted bounded model. This result remains a proposal until coverage accepts it.
+
+## Result
+
+The integration returns one of these values:
+
+- `counterexample_found` with the solver state.
+- `no_counterexample_found` with the candidate counts.
+- An engine error with the exact cause.
+
+The result records the tool version, tool digest, input digests, bounds, raw-output digest, and elapsed time.
+
+The integration never changes an engine error into a proof result. A timeout, process error, parse error, or visit-limit error stops the operation.
+
+## Coverage
+
+The Isla result does not establish semantic coverage by itself. Hyperray accepts it only after the coverage certificate accepts these sets:
+
+```text
+program instructions
+= decoded Sail cases
+= executed Isla semantic regions
+= solver regions
+```
+
+The comparison works in both directions. A missing, extra, duplicate, or stale member causes an engine error.
+
+An unavailable primitive is permitted only with a proof that the bounded program cannot reach it. Otherwise, it causes an engine error.
+
+## Program independence
+
+Production code must not contain fixture names, function names, instruction bytes, addresses, or property values.
+
+Tests use different programs with the same public operation. A program change changes input artifacts, not Hyperray source.
+
+## Measured proof slice
+
+The local proof built the official Sail-to-Isla plug-in and the Isla engine. Sail generated a 15,663,211-byte RISC-V IR file.
+
+For `addi x5,x0,3`, Isla and Z3 rejected the counterexample `x5 != 3`.
+
+For the false claim `x5 = 4`, Isla and Z3 found the counterexample `x5 = 3`.
+
+A forced timeout returned an error status. These measurements establish route feasibility, not full machine coverage.
