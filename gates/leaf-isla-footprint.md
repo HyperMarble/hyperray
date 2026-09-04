@@ -52,6 +52,9 @@ Scope: Bind every loaded instruction to semantics from one pinned Sail and Isla 
   EXPECT: ok
   EVIDENCE: The public validator rejects missing, extra, changed, duplicate, unproved, and invalid trace records.
 
-- [ ] G11: Every Isla diagnostic has a proved unreachable disposition or stops coverage acceptance.
+- [x] G11: Every Isla diagnostic has a proved unreachable disposition or stops coverage acceptance.
+  CHECK: go test -count=1 ./machine/isla -run 'TestFootprintRecordsUnreachedPrimitive|TestFootprintCoverageRejectsDiagnostic|TestFootprintOperationRejectsToolResults'
+  EXPECT: ok
+  EVIDENCE: Missing primitives bind to completed traces. Unknown, missing, changed, extra, or stale dispositions stop acceptance.
 
 - [ ] G12: One real loaded ELF passes from `machine.Load` through every instruction trace.

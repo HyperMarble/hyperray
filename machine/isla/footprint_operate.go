@@ -43,10 +43,15 @@ func (engine FootprintEngine) traceInstruction(ctx context.Context, request Foot
 	if err != nil {
 		return InstructionTrace{}, err
 	}
+	dispositions, err := classifyDiagnostics(output)
+	if err != nil {
+		return InstructionTrace{}, err
+	}
 	return InstructionTrace{
 		Address: instruction.Address, Encoding: hex.EncodeToString(instruction.Bytes),
 		TraceCount: traceCount, OutputDigest: rawOutputDigest(output),
 		ElapsedMilliseconds: output.elapsed.Milliseconds(), Diagnostics: output.diagnostics,
+		Dispositions: dispositions,
 	}, nil
 }
 

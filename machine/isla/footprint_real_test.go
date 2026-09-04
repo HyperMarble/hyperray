@@ -22,7 +22,7 @@ func TestRealFootprintTracesLegalAndIllegalEncodings(t *testing.T) {
 		{Address: 0x1004, Bytes: []byte{0xff, 0xff, 0xff, 0xff}},
 	}
 	architecture := realArtifact(t, "HYPERRAY_SAIL_IR")
-	configuration := realArtifact(t, "HYPERRAY_ISLA_CONFIG")
+	configuration := realFootprintConfiguration(t)
 	release := footprintRelease(t, engine, architecture, configuration)
 	request, err := isla.NewFootprintRequest(release, instructions, 2, 30, 2*1024*1024)
 	if err != nil {
@@ -37,7 +37,7 @@ func TestRealFootprintTracesLegalAndIllegalEncodings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ValidateFootprintInventory() error = %v", err)
 	}
-	fmt.Printf("complete=%t traces=%d legal=%s illegal=%s\n", coverage.Complete, len(report.Instructions), report.Instructions[0].OutputDigest, report.Instructions[1].OutputDigest)
+	fmt.Printf("complete=%t traces=%d dispositions=%d/%d legal=%s illegal=%s\n", coverage.Complete, len(report.Instructions), len(report.Instructions[0].Dispositions), len(report.Instructions[1].Dispositions), report.Instructions[0].OutputDigest, report.Instructions[1].OutputDigest)
 }
 
 func assertRealFootprints(t *testing.T, report isla.FootprintReport) {
@@ -52,5 +52,8 @@ func assertRealFootprints(t *testing.T, report isla.FootprintReport) {
 	}
 	if legal.OutputDigest == illegal.OutputDigest {
 		t.Error("legal and illegal semantics have one digest")
+	}
+	if len(legal.Dispositions) == 0 || len(illegal.Dispositions) == 0 {
+		t.Error("real missing-primitive diagnostics lack dispositions")
 	}
 }

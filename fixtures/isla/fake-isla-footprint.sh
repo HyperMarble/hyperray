@@ -37,6 +37,14 @@ deaddead)
 ffffffff)
 	printf '(trace\n  (bytes %01024d)\n)\n' 1
 	;;
+abababab)
+	printf '%s\n' 'No primop external_operation (Name 7)' >&2
+	printf '(trace\n  (bytes %s)\n)\n' "$instruction"
+	;;
+cdcdcdcd)
+	printf '%s\n' 'Warning: unknown diagnostic' >&2
+	printf '(trace\n  (bytes %s)\n)\n' "$instruction"
+	;;
 *)
 	printf '(trace\n  (bytes %s)\n  (initial %s)\n)\n' "$instruction" "$initial_pc"
 	;;

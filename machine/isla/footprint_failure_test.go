@@ -20,6 +20,7 @@ func TestFootprintOperationRejectsToolResults(t *testing.T) {
 		{bytes: []byte{0xde, 0xad, 0xde, 0xad}, limit: 4096, code: isla.ProcessFail},
 		{bytes: []byte{0, 0, 0, 0}, limit: 4096, code: isla.ProtocolError},
 		{bytes: []byte{0xff, 0xff, 0xff, 0xff}, limit: 32, code: isla.ResourceLimit},
+		{bytes: []byte{0xcd, 0xcd, 0xcd, 0xcd}, limit: 4096, code: isla.ProtocolError},
 	}
 	for index := range cases {
 		testCase := cases[index]

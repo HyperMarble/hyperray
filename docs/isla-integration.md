@@ -95,6 +95,18 @@ The manifest is also an identified artifact. Deployment policy supplies its trus
 
 An arbitrary self-declared manifest records inputs but does not establish trusted provenance.
 
+### Diagnostic dispositions
+
+Isla reports every unavailable primitive while it loads the model. The primitive remains a normal call inside its instruction semantics.
+
+If execution reaches that call, Isla returns a missing-function error. Hyperray accepts no instruction report after that error.
+
+A successful complete instruction run therefore records each unavailable primitive as not called in that run.
+
+Each disposition contains the exact diagnostic and complete output digest. The coverage validator compares every diagnostic and disposition in both directions.
+
+Any other diagnostic stops the operation. A release configuration must remove stale entries instead of hiding their warnings.
+
 The instruction inventory and trace inventory must contain the same addresses and bytes. Missing, extra, changed, or duplicate records cause an engine error.
 
 An unmatched RISC-V encoding maps to Sail's declared illegal-instruction case. It is a modeled trap, not an omitted instruction.

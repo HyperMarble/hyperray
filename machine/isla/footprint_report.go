@@ -4,12 +4,13 @@ package isla
 
 // InstructionTrace records Isla output for one executable instruction.
 type InstructionTrace struct {
-	Address             uint64 `json:"address"`
-	Encoding            string `json:"encoding"`
-	TraceCount          uint64 `json:"trace_count"`
-	OutputDigest        string `json:"output_sha256"`
-	ElapsedMilliseconds int64  `json:"elapsed_milliseconds"`
-	Diagnostics         string `json:"diagnostics,omitempty"`
+	Address             uint64                  `json:"address"`
+	Encoding            string                  `json:"encoding"`
+	TraceCount          uint64                  `json:"trace_count"`
+	OutputDigest        string                  `json:"output_sha256"`
+	ElapsedMilliseconds int64                   `json:"elapsed_milliseconds"`
+	Diagnostics         string                  `json:"diagnostics,omitempty"`
+	Dispositions        []DiagnosticDisposition `json:"diagnostic_dispositions,omitempty"`
 }
 
 // FootprintEvidence identifies every shared input and finite limit.

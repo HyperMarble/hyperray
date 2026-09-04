@@ -14,12 +14,32 @@ func traceInventory(traces []InstructionTrace) (map[uint64]InstructionTrace, err
 		if !validDigest(trace.OutputDigest) {
 			return nil, footprintCoverageError("invalid digest for", trace.Address)
 		}
+		if err := validateTraceDiagnostics(trace); err != nil {
+			return nil, err
+		}
 		if _, exists := result[trace.Address]; exists {
 			return nil, footprintCoverageError("duplicate", trace.Address)
 		}
 		result[trace.Address] = trace
 	}
 	return result, nil
+}
+
+func validateTraceDiagnostics(trace InstructionTrace) error {
+	lines := diagnosticLines(trace.Diagnostics)
+	if len(lines) != len(trace.Dispositions) {
+		return footprintCoverageError("unresolved diagnostic for", trace.Address)
+	}
+	for index := range lines {
+		disposition := trace.Dispositions[index]
+		if disposition.Message != lines[index] || disposition.Kind != UnavailablePrimitive {
+			return footprintCoverageError("invalid diagnostic for", trace.Address)
+		}
+		if disposition.Disposition != NotCalledInCompletedExecution || disposition.EvidenceDigest != trace.OutputDigest {
+			return footprintCoverageError("unsupported diagnostic for", trace.Address)
+		}
+	}
+	return nil
 }
 
 func validateFootprintEvidence(evidence FootprintEvidence) error {
