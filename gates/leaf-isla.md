@@ -7,8 +7,10 @@ Scope: Connect arbitrary bounded RISC-V program queries to Isla without instruct
   EXPECT: This result remains a proposal until coverage accepts it
   EVIDENCE: `docs/isla-integration.md` defines the route, result, error, coverage, and program-independence rules.
 
-- [ ] G2: A public constructor records the Isla executable version and SHA-256 digest.
-  EVIDENCE: pending
+- [x] G2: A public constructor records the Isla executable version and SHA-256 digest.
+  CHECK: go test -count=1 ./machine/isla -run TestPublicEngineIdentity
+  EXPECT: ok
+  EVIDENCE: The external test operated an executable, measured its version and digest, and observed both through `Engine.Identity`.
 
 - [ ] G3: A public request accepts all artifact paths, expected digests, and finite resource limits.
   EVIDENCE: pending
