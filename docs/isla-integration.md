@@ -123,4 +123,6 @@ The trace wrote `x5 = 3`. The instruction-footprint report named `x5` as the wri
 
 The public Hyperray operation traced legal and illegal encodings in 1.31 seconds. It returned one distinct trace digest for each encoding.
 
+The independent inventory validator accepted both real records. Its result reported complete instruction coverage for that two-instruction input.
+
 The measured run also emitted unavailable-primitive diagnostics. Coverage remains incomplete until each diagnostic has a proved disposition.

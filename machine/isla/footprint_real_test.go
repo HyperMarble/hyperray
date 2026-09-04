@@ -33,7 +33,11 @@ func TestRealFootprintTracesLegalAndIllegalEncodings(t *testing.T) {
 		t.Fatalf("TraceInstructions() error = %v", err)
 	}
 	assertRealFootprints(t, report)
-	fmt.Printf("traces=%d legal=%s illegal=%s\n", len(report.Instructions), report.Instructions[0].OutputDigest, report.Instructions[1].OutputDigest)
+	coverage, err := isla.ValidateFootprintInventory(instructions, report)
+	if err != nil {
+		t.Fatalf("ValidateFootprintInventory() error = %v", err)
+	}
+	fmt.Printf("complete=%t traces=%d legal=%s illegal=%s\n", coverage.Complete, len(report.Instructions), report.Instructions[0].OutputDigest, report.Instructions[1].OutputDigest)
 }
 
 func assertRealFootprints(t *testing.T, report isla.FootprintReport) {

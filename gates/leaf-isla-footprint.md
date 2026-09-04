@@ -47,7 +47,10 @@ Scope: Bind every loaded instruction to semantics from one pinned Sail and Isla 
   EXPECT: ok
   EVIDENCE: Strict JSON binds the release identifier, tool version, tool digest, Sail digest, and configuration digest.
 
-- [ ] G10: An independent validator reconciles the request inventory and trace inventory in both directions.
+- [x] G10: An independent validator reconciles the request inventory and trace inventory in both directions.
+  CHECK: go test -count=1 ./machine/isla -run 'TestPublicFootprintCoverage|TestFootprintCoverageRejects'
+  EXPECT: ok
+  EVIDENCE: The public validator rejects missing, extra, changed, duplicate, unproved, and invalid trace records.
 
 - [ ] G11: Every Isla diagnostic has a proved unreachable disposition or stops coverage acceptance.
 
