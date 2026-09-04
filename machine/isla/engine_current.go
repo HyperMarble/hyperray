@@ -3,15 +3,23 @@
 package isla
 
 func (engine Engine) current() error {
-	if engine.identity.Path == "" || engine.identity.Digest == "" {
+	return toolCurrent(engine.identity)
+}
+
+func (engine FootprintEngine) current() error {
+	return toolCurrent(engine.identity)
+}
+
+func toolCurrent(identity ToolIdentity) error {
+	if identity.Path == "" || identity.Digest == "" {
 		return engineError(ToolIdentityFail, "engine", "unidentified tool")
 	}
-	digest, err := fileDigest(engine.identity.Path)
+	digest, err := fileDigest(identity.Path)
 	if err != nil {
-		return engineError(ToolChanged, engine.identity.Path, err.Error())
+		return engineError(ToolChanged, identity.Path, err.Error())
 	}
-	if digest != engine.identity.Digest {
-		return engineError(ToolChanged, engine.identity.Path, digest)
+	if digest != identity.Digest {
+		return engineError(ToolChanged, identity.Path, digest)
 	}
 	return nil
 }

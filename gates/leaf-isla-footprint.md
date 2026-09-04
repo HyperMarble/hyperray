@@ -12,11 +12,20 @@ Scope: Bind every loaded instruction to semantics from one pinned Sail and Isla 
   EXPECT: ok
   EVIDENCE: The public constructor ran a real executable and exposed its path, version, and SHA-256 digest.
 
-- [ ] G3: A public request accepts identified model artifacts, all instructions, and finite limits.
+- [x] G3: A public request accepts identified model artifacts, all instructions, and finite limits.
+  CHECK: go test -count=1 ./machine/isla -run 'TestPublicFootprintRequest|TestFootprintRequestRejects'
+  EXPECT: ok
+  EVIDENCE: External tests construct the full request and observe rejected inventories and limits.
 
-- [ ] G4: The operation returns one trace record for every instruction address and encoding.
+- [x] G4: The operation returns one trace record for every instruction address and encoding.
+  CHECK: go test -count=1 ./machine/isla -run TestPublicFootprintRequestAndOperation
+  EXPECT: ok
+  EVIDENCE: One public operation returned two ordered records with exact addresses, encodings, trace counts, and distinct digests.
 
-- [ ] G5: Tool, artifact, timeout, trace, or inventory failures return exact engine errors.
+- [x] G5: Tool, artifact, timeout, trace, or inventory failures return exact engine errors.
+  CHECK: go test -count=1 ./machine/isla -run 'TestFootprintOperationRejects|TestZeroFootprint'
+  EXPECT: ok
+  EVIDENCE: Process, protocol, output, context, changed-tool, and unidentified-tool failures returned no partial report.
 
 - [ ] G6: Real ADDI and illegal-encoding measurements produce distinct Sail semantics.
 
