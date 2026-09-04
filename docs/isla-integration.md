@@ -1,6 +1,6 @@
 # Sail and Isla Integration
 
-Status: ACCEPTED ROUTE. The measured proof slice works. The Hyperray integration is in progress.
+Status: ACCEPTED ROUTE. The proposal bridge works. Instruction coverage integration is in progress.
 
 ## Purpose
 
@@ -70,6 +70,22 @@ The comparison works in both directions. A missing, extra, duplicate, or stale m
 
 An unavailable primitive is permitted only with a proof that the bounded program cannot reach it. Otherwise, it causes an engine error.
 
+## Instruction trace route
+
+Hyperray sends each loaded instruction's bytes and address to `isla-footprint`.
+
+Isla decodes the bytes with the pinned Sail model. Hyperray does not decode instruction names or contain opcode rules.
+
+Each successful operation must return one or more semantic traces. Hyperray records the instruction address, bytes, trace count, and raw trace digest.
+
+The engine, Sail snapshot, and Isla configuration must come from one recorded release set. A mixed release set causes an engine error.
+
+The instruction inventory and trace inventory must contain the same addresses and bytes. Missing, extra, changed, or duplicate records cause an engine error.
+
+An unmatched RISC-V encoding maps to Sail's declared illegal-instruction case. It is a modeled trap, not an omitted instruction.
+
+This route establishes instruction-to-Sail coverage. It does not establish Sail-to-circuit equality or complete environment behavior.
+
 ## Program independence
 
 Production code must not contain fixture names, function names, instruction bytes, addresses, or property values.
@@ -85,3 +101,7 @@ For `addi x5,x0,3`, Isla and Z3 rejected the counterexample `x5 != 3`.
 For the false claim `x5 = 4`, Isla and Z3 found the counterexample `x5 = 3`.
 
 A forced timeout returned an error status. These measurements establish route feasibility, not full machine coverage.
+
+The matching Isla `7f6882b` engine and `rv64d.ir` snapshot produced ADDI semantics in 0.75 seconds.
+
+The trace wrote `x5 = 3`. The instruction-footprint report named `x5` as the written register.
