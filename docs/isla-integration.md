@@ -1,6 +1,6 @@
 # Sail and Isla Integration
 
-Status: ACCEPTED ROUTE. The proposal bridge works. Instruction coverage integration is in progress.
+Status: ACCEPTED INSTRUCTION ROUTE. Semantic trace integration is in progress.
 
 ## Purpose
 
@@ -113,6 +113,24 @@ An unmatched RISC-V encoding maps to Sail's declared illegal-instruction case. I
 
 This route establishes instruction-to-Sail coverage. It does not establish Sail-to-circuit equality or complete environment behavior.
 
+## Semantic trace artifact
+
+The next route keeps the exact Isla standard output for each instruction. It does not use trace simplification or hidden-event options.
+
+Isla output already contains SMT definitions and generic state events. Hyperray will translate this fixed event grammar instead of instruction rules.
+
+The pinned Isla executor returns after all path fractions total one. The footprint command returns an error if a reachable path fails.
+
+The coverage validator recalculates the digest from the retained output and diagnostics. A changed trace cannot enter circuit translation.
+
+The first release includes the pinned Isla executor in the trust base. A later proof can reduce this trusted base.
+
+```text
+Sail behavior -> complete Isla event traces -> circuit behavior
+```
+
+The remaining proof maps each accepted Isla event kind to its circuit state effect. No rule names a source function or RISC-V instruction.
+
 ## Program independence
 
 Production code must not contain fixture names, function names, instruction bytes, addresses, or property values.
@@ -137,7 +155,7 @@ The public Hyperray operation traced legal and illegal encodings in 1.31 seconds
 
 The independent inventory validator accepted both real records. Its result reported complete instruction coverage for that two-instruction input.
 
-The measured run also emitted unavailable-primitive diagnostics. Coverage remains incomplete until each diagnostic has a proved disposition.
+The measured run also emitted unavailable-primitive diagnostics. The diagnostic gate recorded a disposition for each diagnostic.
 
 The completed diagnostic gate recorded six dispositions for each real instruction trace. The stale configuration warning stopped a separate real run.
 
