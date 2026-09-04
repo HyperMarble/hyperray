@@ -23,26 +23,34 @@ type Engine struct {
 
 // NewEngine identifies an Isla executable by its output and content.
 func NewEngine(ctx context.Context, path string) (Engine, error) {
-	if ctx == nil {
-		return Engine{}, engineError(InvalidInput, "context", "nil")
-	}
-	resolved, err := resolveTool(path)
+	identity, err := identifyTool(ctx, path, "isla-axiomatic")
 	if err != nil {
 		return Engine{}, err
 	}
+	return Engine{identity: identity}, nil
+}
+
+func identifyTool(ctx context.Context, path string, defaultName string) (ToolIdentity, error) {
+	if ctx == nil {
+		return ToolIdentity{}, engineError(InvalidInput, "context", "nil")
+	}
+	resolved, err := resolveTool(path, defaultName)
+	if err != nil {
+		return ToolIdentity{}, err
+	}
 	output, commandError := exec.CommandContext(ctx, resolved, "--version").CombinedOutput()
 	if commandError != nil {
-		return Engine{}, engineError(ToolIdentityFail, resolved, commandError.Error())
+		return ToolIdentity{}, engineError(ToolIdentityFail, resolved, commandError.Error())
 	}
 	version := strings.TrimSpace(string(output))
 	if version == "" {
-		return Engine{}, engineError(ToolIdentityFail, resolved, "empty version")
+		return ToolIdentity{}, engineError(ToolIdentityFail, resolved, "empty version")
 	}
 	digest, err := fileDigest(resolved)
 	if err != nil {
-		return Engine{}, engineError(ToolIdentityFail, resolved, err.Error())
+		return ToolIdentity{}, engineError(ToolIdentityFail, resolved, err.Error())
 	}
-	return Engine{identity: ToolIdentity{Path: resolved, Version: version, Digest: digest}}, nil
+	return ToolIdentity{Path: resolved, Version: version, Digest: digest}, nil
 }
 
 // Identity returns the measured tool identity.
@@ -50,10 +58,10 @@ func (engine Engine) Identity() ToolIdentity {
 	return engine.identity
 }
 
-func resolveTool(path string) (string, error) {
+func resolveTool(path string, defaultName string) (string, error) {
 	name := path
 	if name == "" {
-		name = "isla-axiomatic"
+		name = defaultName
 	}
 	resolved, err := exec.LookPath(name)
 	if err != nil {

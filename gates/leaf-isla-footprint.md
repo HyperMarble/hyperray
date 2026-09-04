@@ -7,7 +7,10 @@ Scope: Bind every loaded instruction to semantics from one pinned Sail and Isla 
   EXPECT: Hyperray sends each loaded instruction
   EVIDENCE: The design binds bytes and addresses to Isla traces without Hyperray opcode rules.
 
-- [ ] G2: A public engine records the exact `isla-footprint` identity.
+- [x] G2: A public engine records the exact `isla-footprint` identity.
+  CHECK: go test -count=1 ./machine/isla -run TestPublicFootprintEngineIdentity
+  EXPECT: ok
+  EVIDENCE: The public constructor ran a real executable and exposed its path, version, and SHA-256 digest.
 
 - [ ] G3: A public request accepts identified model artifacts, all instructions, and finite limits.
 
