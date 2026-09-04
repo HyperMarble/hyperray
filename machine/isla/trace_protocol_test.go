@@ -13,7 +13,7 @@ func TestCountTraceBlocks(t *testing.T) {
 func TestCountTraceBlocksIgnoresQuotedDelimiters(t *testing.T) {
 	output := `(trace
   (event "left \" ( right")
-  (read |register(with)parentheses|) ; source location)`
+	(read |register(with)parentheses|) ; source(path))`
 	count, err := countTraceBlocks(output)
 	if err != nil || count != 1 {
 		t.Errorf("countTraceBlocks() = %d, %v", count, err)
@@ -25,6 +25,9 @@ func TestCountTraceBlocksRejectsMalformedOutput(t *testing.T) {
 		"message",
 		"(other)",
 		")",
+		"(trace)",
+		"(trace atom)",
+		"(trace ())",
 		"(trace\n) trailing",
 		"(trace\n  (event)",
 		"\"unterminated",

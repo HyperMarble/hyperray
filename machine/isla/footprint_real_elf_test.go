@@ -37,6 +37,11 @@ func TestRealLoadedELFHasEveryInstructionTrace(t *testing.T) {
 		t.Fatalf("ValidateFootprintInventory() error = %v", err)
 	}
 	fmt.Printf("elf_instructions=%d covered=%d complete=%t\n", len(image.Instructions), coverage.CoveredInstructions, coverage.Complete)
+	catalog, err := isla.InventoryTraceEvents(image.Instructions, report)
+	if err != nil {
+		t.Fatalf("InventoryTraceEvents() error = %v", err)
+	}
+	fmt.Printf("elf_traces=%d elf_events=%d event_complete=%t\n", catalog.TraceCount, catalog.EventCount, catalog.Complete)
 }
 
 func realMachineImage(t *testing.T) machine.Image {
