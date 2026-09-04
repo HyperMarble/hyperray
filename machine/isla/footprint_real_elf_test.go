@@ -13,6 +13,8 @@ import (
 	"github.com/HyperMarble/hyperray/machine/isla"
 )
 
+const realELFOutputLimitBytes = 8 * 1024 * 1024
+
 func TestRealLoadedELFHasEveryInstructionTrace(t *testing.T) {
 	image := realMachineImage(t)
 	engine, err := isla.NewFootprintEngine(t.Context(), requiredPath(t, "HYPERRAY_ISLA_FOOTPRINT"))
@@ -22,7 +24,7 @@ func TestRealLoadedELFHasEveryInstructionTrace(t *testing.T) {
 	architecture := realArtifact(t, "HYPERRAY_SAIL_IR")
 	configuration := realFootprintConfiguration(t)
 	release := footprintRelease(t, engine, architecture, configuration)
-	request, err := isla.NewFootprintRequest(release, image.Instructions, 2, 60, 4*1024*1024)
+	request, err := isla.NewFootprintRequest(release, image.Instructions, 2, 60, realELFOutputLimitBytes)
 	if err != nil {
 		t.Fatalf("NewFootprintRequest() error = %v", err)
 	}

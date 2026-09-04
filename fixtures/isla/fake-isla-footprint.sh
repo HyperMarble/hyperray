@@ -4,10 +4,16 @@
 set -eu
 
 for argument in "$@"; do
-	if [ "$argument" = "--version" ]; then
+	case "$argument" in
+	--version)
 		printf '%s\n' 'v0.2.0/footprint-test'
 		exit 0
-	fi
+		;;
+	-s|--simplify-registers|--hide)
+		printf '%s\n' 'lossy trace option received' >&2
+		exit 4
+		;;
+	esac
 done
 
 instruction=

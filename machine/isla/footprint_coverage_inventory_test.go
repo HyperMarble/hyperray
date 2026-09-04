@@ -21,6 +21,7 @@ func TestFootprintCoverageRejectsInventoryMismatch(t *testing.T) {
 		{name: "changed", change: changeTraceEncoding},
 		{name: "unproved", change: removeTraceProof},
 		{name: "digest", change: invalidateTraceDigest},
+		{name: "trace", change: changeTraceOutput},
 	}
 	for index := range cases {
 		testCase := cases[index]
@@ -66,4 +67,8 @@ func removeTraceProof(report *isla.FootprintReport) {
 
 func invalidateTraceDigest(report *isla.FootprintReport) {
 	report.Instructions[0].OutputDigest = "bad"
+}
+
+func changeTraceOutput(report *isla.FootprintReport) {
+	report.Instructions[0].TraceOutput = "(trace)"
 }

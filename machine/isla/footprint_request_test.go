@@ -34,6 +34,9 @@ func TestPublicFootprintRequestAndOperation(t *testing.T) {
 	if first.OutputDigest == second.OutputDigest {
 		t.Error("different instruction traces have one digest")
 	}
+	if first.TraceOutput == "" || second.TraceOutput == "" {
+		t.Error("instruction trace output is empty")
+	}
 	if report.Evidence.Tool.Version != "v0.2.0/footprint-test" {
 		t.Errorf("tool version = %q", report.Evidence.Tool.Version)
 	}

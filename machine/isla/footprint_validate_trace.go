@@ -14,6 +14,10 @@ func traceInventory(traces []InstructionTrace) (map[uint64]InstructionTrace, err
 		if !validDigest(trace.OutputDigest) {
 			return nil, footprintCoverageError("invalid digest for", trace.Address)
 		}
+		output := commandOutput{stdout: trace.TraceOutput, diagnostics: trace.Diagnostics}
+		if rawOutputDigest(output) != trace.OutputDigest {
+			return nil, footprintCoverageError("changed output for", trace.Address)
+		}
 		if err := validateTraceDiagnostics(trace); err != nil {
 			return nil, err
 		}

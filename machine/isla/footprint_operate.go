@@ -49,7 +49,7 @@ func (engine FootprintEngine) traceInstruction(ctx context.Context, request Foot
 	}
 	return InstructionTrace{
 		Address: instruction.Address, Encoding: hex.EncodeToString(instruction.Bytes),
-		TraceCount: traceCount, OutputDigest: rawOutputDigest(output),
+		TraceCount: traceCount, TraceOutput: output.stdout, OutputDigest: rawOutputDigest(output),
 		ElapsedMilliseconds: output.elapsed.Milliseconds(), Diagnostics: output.diagnostics,
 		Dispositions: dispositions,
 	}, nil

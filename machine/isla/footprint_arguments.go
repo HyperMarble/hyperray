@@ -19,6 +19,5 @@ func (request FootprintRequest) arguments(instruction machine.Instruction) []str
 		"-I", initialPC,
 		"-x", "-i", hex.EncodeToString(instruction.Bytes),
 		"--timeout", strconv.FormatUint(request.timeLimit, 10),
-		"-s", "--simplify-registers", "--hide",
 	}
 }

@@ -7,6 +7,7 @@ type InstructionTrace struct {
 	Address             uint64                  `json:"address"`
 	Encoding            string                  `json:"encoding"`
 	TraceCount          uint64                  `json:"trace_count"`
+	TraceOutput         string                  `json:"trace_output"`
 	OutputDigest        string                  `json:"output_sha256"`
 	ElapsedMilliseconds int64                   `json:"elapsed_milliseconds"`
 	Diagnostics         string                  `json:"diagnostics,omitempty"`
