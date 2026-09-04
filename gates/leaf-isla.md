@@ -32,8 +32,10 @@ Scope: Connect arbitrary bounded RISC-V program queries to Isla without instruct
   EXPECT: ok
   EVIDENCE: The same `Engine.Propose` operation accepted two program artifacts and returned their different results.
 
-- [ ] G7: A correct claim returns no counterexample, and an incorrect claim returns a concrete counterexample.
-  EVIDENCE: pending
+- [x] G7: A correct claim returns no counterexample, and an incorrect claim returns a concrete counterexample.
+  CHECK: go test -count=1 -tags isla_integration ./machine/isla -run TestRealIslaReturnsBothResults
+  EXPECT: proof=no_counterexample_found counterexample=counterexample_found state=0:x5=#x0000000000000003;
+  EVIDENCE: The public API passed with Isla v0.2.0. It returned both results and the exact `x5` counterexample state.
 
 - [x] G8: The integration records artifact digests, bounds, tool identity, raw-output digest, and elapsed time.
   CHECK: go test -count=1 ./machine/isla -run TestCorrectProgramHasNoCounterexample

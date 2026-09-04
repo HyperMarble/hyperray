@@ -1,0 +1,15 @@
+# This fixture searches for a counterexample to the correct ADDI result.
+# It must produce no allowed execution.
+arch = "RISCV"
+name = "ADDI-PROOF"
+symbolic = []
+
+[thread.0]
+init = {}
+code = """
+	addi x5,x0,3
+"""
+
+[final]
+expect = "unsat"
+assertion = "~(0:x5 = 3)"
