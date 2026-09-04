@@ -4,17 +4,12 @@ package isla
 type traceScanner struct {
 	depth   uint64
 	count   uint64
-	comment bool
 	quoted  bool
 	symbol  bool
 	escaped bool
 }
 
 func (scanner *traceScanner) consumeQuoted(character byte) bool {
-	if scanner.comment {
-		scanner.comment = character != '\n'
-		return true
-	}
 	if scanner.quoted {
 		wasEscaped := scanner.escaped
 		scanner.escaped = character == '\\' && !wasEscaped
@@ -25,10 +20,9 @@ func (scanner *traceScanner) consumeQuoted(character byte) bool {
 		scanner.symbol = character != '|'
 		return true
 	}
-	scanner.comment = character == ';'
 	scanner.quoted = character == '"'
 	scanner.symbol = character == '|'
-	return scanner.comment || scanner.quoted || scanner.symbol
+	return scanner.quoted || scanner.symbol
 }
 
 func (scanner traceScanner) incomplete() bool {

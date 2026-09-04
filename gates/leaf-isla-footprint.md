@@ -57,4 +57,7 @@ Scope: Bind every loaded instruction to semantics from one pinned Sail and Isla 
   EXPECT: ok
   EVIDENCE: Missing primitives bind to completed traces. Unknown, missing, changed, extra, or stale dispositions stop acceptance.
 
-- [ ] G12: One real loaded ELF passes from `machine.Load` through every instruction trace.
+- [x] G12: One real loaded ELF passes from `machine.Load` through every instruction trace.
+  CHECK: go test -count=1 -tags isla_integration ./machine/isla -run TestRealLoadedELFHasEveryInstructionTrace
+  EXPECT: elf_instructions=4 covered=4 complete=true
+  EVIDENCE: The public loader produced four instructions. The public Isla route and independent validator accepted all four.

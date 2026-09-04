@@ -1,5 +1,5 @@
 // Trace protocol parsing accepts complete top-level trace expressions only.
-// It ignores delimiters inside comments, strings, and quoted identifiers.
+// It ignores delimiters inside strings and quoted identifiers.
 package isla
 
 func countTraceBlocks(output string) (uint64, error) {

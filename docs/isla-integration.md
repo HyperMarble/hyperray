@@ -138,3 +138,9 @@ The public Hyperray operation traced legal and illegal encodings in 1.31 seconds
 The independent inventory validator accepted both real records. Its result reported complete instruction coverage for that two-instruction input.
 
 The measured run also emitted unavailable-primitive diagnostics. Coverage remains incomplete until each diagnostic has a proved disposition.
+
+The completed diagnostic gate recorded six dispositions for each real instruction trace. The stale configuration warning stopped a separate real run.
+
+The public loader then produced four instructions from a real RV64 ELF. Isla traced all four, and the independent validator reported complete coverage.
+
+These results close the instruction-to-Sail coverage leaf. They do not close Sail-to-circuit or environment coverage.
