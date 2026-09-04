@@ -12,6 +12,11 @@ const (
 	ArtifactChanged  ErrorCode = "artifact_changed"
 	ToolNotFound     ErrorCode = "tool_not_found"
 	ToolIdentityFail ErrorCode = "tool_identity_error"
+	ToolChanged      ErrorCode = "tool_changed"
+	ProcessFail      ErrorCode = "process_error"
+	ResourceLimit    ErrorCode = "resource_limit"
+	ResultError      ErrorCode = "result_error"
+	ProtocolError    ErrorCode = "protocol_error"
 )
 
 // Error gives callers a stable code and the exact failure context.

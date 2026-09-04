@@ -40,7 +40,7 @@ func NewEngine(ctx context.Context, path string) (Engine, error) {
 	}
 	digest, err := fileDigest(resolved)
 	if err != nil {
-		return Engine{}, err
+		return Engine{}, engineError(ToolIdentityFail, resolved, err.Error())
 	}
 	return Engine{identity: ToolIdentity{Path: resolved, Version: version, Digest: digest}}, nil
 }
@@ -59,9 +59,8 @@ func resolveTool(path string) (string, error) {
 	if err != nil {
 		return "", engineError(ToolNotFound, name, err.Error())
 	}
-	absolute, err := filepath.Abs(resolved)
-	if err != nil {
-		return "", engineError(ToolNotFound, resolved, err.Error())
+	if !filepath.IsAbs(resolved) {
+		return "", engineError(ToolNotFound, resolved, "tool path is not absolute")
 	}
-	return filepath.Clean(absolute), nil
+	return filepath.Clean(resolved), nil
 }

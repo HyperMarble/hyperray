@@ -12,23 +12,35 @@ Scope: Connect arbitrary bounded RISC-V program queries to Isla without instruct
   EXPECT: ok
   EVIDENCE: The external test operated an executable, measured its version and digest, and observed both through `Engine.Identity`.
 
-- [ ] G3: A public request accepts all artifact paths, expected digests, and finite resource limits.
-  EVIDENCE: pending
+- [x] G3: A public request accepts all artifact paths, expected digests, and finite resource limits.
+  CHECK: go test -count=1 ./machine/isla -run 'TestPublicRequest|TestRequestRejectsZeroLimits'
+  EXPECT: ok
+  EVIDENCE: External tests construct all four artifacts and both finite limits through `NewRequest`.
 
-- [ ] G4: One public operation returns typed proof proposals and typed engine errors.
-  EVIDENCE: pending
+- [x] G4: One public operation returns typed proof proposals and typed engine errors.
+  CHECK: go test -count=1 ./machine/isla -run 'TestDifferentProgram|TestCorrectProgram|TestOperationErrors'
+  EXPECT: ok
+  EVIDENCE: `Engine.Propose` returns one typed proposal or one typed `isla.Error`.
 
-- [ ] G5: A timeout, process error, malformed result, changed artifact, or visit-limit error cannot return a proposal.
-  EVIDENCE: pending
+- [x] G5: A timeout, process error, malformed result, changed artifact, or visit-limit error cannot return a proposal.
+  CHECK: go test -count=1 ./machine/isla -run 'TestOperationErrors|TestCanceledContext|TestChanged|TestRemoved'
+  EXPECT: ok
+  EVIDENCE: Every tested failure returned a stable error code and no proposal.
 
-- [ ] G6: Two different programs use the same production operation without a source change.
-  EVIDENCE: pending
+- [x] G6: Two different programs use the same production operation without a source change.
+  CHECK: go test -count=1 ./machine/isla -run 'TestDifferentProgramFindsCounterexample|TestCorrectProgramHasNoCounterexample'
+  EXPECT: ok
+  EVIDENCE: The same `Engine.Propose` operation accepted two program artifacts and returned their different results.
 
 - [ ] G7: A correct claim returns no counterexample, and an incorrect claim returns a concrete counterexample.
   EVIDENCE: pending
 
-- [ ] G8: The integration records artifact digests, bounds, tool identity, raw-output digest, and elapsed time.
-  EVIDENCE: pending
+- [x] G8: The integration records artifact digests, bounds, tool identity, raw-output digest, and elapsed time.
+  CHECK: go test -count=1 ./machine/isla -run TestCorrectProgramHasNoCounterexample
+  EXPECT: ok
+  EVIDENCE: The public proposal exposes six SHA-256 values, two limits, the tool version, diagnostics, and elapsed milliseconds.
 
-- [ ] G9: All tests, formatters, static analysis, source limits, and the public API gate pass.
-  EVIDENCE: pending
+- [x] G9: All tests, formatters, static analysis, source limits, and the public API gate pass.
+  CHECK: go test -count=1 ./... && go vet ./...
+  EXPECT: ok
+  EVIDENCE: All Go packages passed. The Isla package measured 100.0% statement coverage. All changed files contain 75 lines or fewer.

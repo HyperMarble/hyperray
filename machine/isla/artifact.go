@@ -14,21 +14,18 @@ type Artifact struct {
 
 // NewArtifact accepts one file only when its content matches the expected digest.
 func NewArtifact(path string, expectedDigest string) (Artifact, error) {
-	if path == "" || !validDigest(expectedDigest) {
+	if !filepath.IsAbs(path) || !validDigest(expectedDigest) {
 		return Artifact{}, engineError(InvalidInput, path, "invalid artifact path or SHA-256 digest")
 	}
-	absolute, err := filepath.Abs(path)
+	cleanPath := filepath.Clean(path)
+	actualDigest, err := fileDigest(cleanPath)
 	if err != nil {
-		return Artifact{}, engineError(InvalidInput, path, err.Error())
-	}
-	actualDigest, err := fileDigest(absolute)
-	if err != nil {
-		return Artifact{}, err
+		return Artifact{}, engineError(InvalidInput, cleanPath, err.Error())
 	}
 	if actualDigest != expectedDigest {
-		return Artifact{}, engineError(ArtifactChanged, absolute, actualDigest)
+		return Artifact{}, engineError(ArtifactChanged, cleanPath, actualDigest)
 	}
-	return Artifact{path: filepath.Clean(absolute), digest: actualDigest}, nil
+	return Artifact{path: cleanPath, digest: actualDigest}, nil
 }
 
 // Path returns the absolute artifact path.
@@ -44,7 +41,7 @@ func (artifact Artifact) Digest() string {
 func (artifact Artifact) current() error {
 	digest, err := fileDigest(artifact.path)
 	if err != nil {
-		return err
+		return engineError(ArtifactChanged, artifact.path, err.Error())
 	}
 	if artifact.digest == "" || digest != artifact.digest {
 		return engineError(ArtifactChanged, artifact.path, digest)

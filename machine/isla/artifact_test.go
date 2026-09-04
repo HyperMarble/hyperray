@@ -30,11 +30,11 @@ func TestPublicArtifactIdentity(t *testing.T) {
 }
 
 func TestArtifactRejectsWrongDigest(t *testing.T) {
-	path, _ := artifactFixture(t, "model")
-	_, err := isla.NewArtifact(path, strings.Repeat("0", 64))
+	path, sourceDigest := artifactFixture(t, "model")
+	artifact, err := isla.NewArtifact(path, strings.Repeat("0", 64))
 	var failure *isla.Error
 	if !errors.As(err, &failure) || failure.Code != isla.ArtifactChanged {
-		t.Errorf("NewArtifact() error = %v", err)
+		t.Errorf("NewArtifact() = %#v, source digest %q, error %v", artifact, sourceDigest, err)
 	}
 }
 
