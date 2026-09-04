@@ -15,6 +15,8 @@ type InstructionTrace struct {
 // FootprintEvidence identifies every shared input and finite limit.
 type FootprintEvidence struct {
 	Tool                ToolIdentity `json:"tool"`
+	ReleaseID           string       `json:"release_id"`
+	ManifestDigest      string       `json:"manifest_sha256"`
 	ArchitectureDigest  string       `json:"architecture_sha256"`
 	ConfigurationDigest string       `json:"configuration_sha256"`
 	ThreadLimit         uint64       `json:"thread_limit"`

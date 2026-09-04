@@ -34,11 +34,29 @@ func footprintTool(t *testing.T) string {
 
 func footprintRequest(t *testing.T, instructions []machine.Instruction, outputLimit uint64) isla.FootprintRequest {
 	t.Helper()
+	engine := footprintEngine(t)
 	architecture := testArtifact(t, "footprint-architecture")
 	configuration := testArtifact(t, "footprint-configuration")
-	request, err := isla.NewFootprintRequest(architecture, configuration, instructions, 2, 3, outputLimit)
+	release := footprintRelease(t, engine, architecture, configuration)
+	request, err := isla.NewFootprintRequest(release, instructions, 2, 3, outputLimit)
 	if err != nil {
 		t.Fatalf("NewFootprintRequest() error = %v", err)
 	}
 	return request
+}
+
+func defaultFootprintRelease(t *testing.T) isla.FootprintRelease {
+	t.Helper()
+	engine := footprintEngine(t)
+	architecture := testArtifact(t, "default-footprint-architecture")
+	configuration := testArtifact(t, "default-footprint-configuration")
+	return footprintRelease(t, engine, architecture, configuration)
+}
+
+func assertFootprintError(t *testing.T, report isla.FootprintReport, err error, code isla.ErrorCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("report = %#v, error = nil", report)
+	}
+	assertErrorCode(t, err, code)
 }

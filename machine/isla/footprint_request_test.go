@@ -37,10 +37,13 @@ func TestPublicFootprintRequestAndOperation(t *testing.T) {
 	if report.Evidence.Tool.Version != "v0.2.0/footprint-test" {
 		t.Errorf("tool version = %q", report.Evidence.Tool.Version)
 	}
+	if report.Evidence.ReleaseID != "test-release" || report.Evidence.ManifestDigest == "" {
+		t.Errorf("release evidence = %#v", report.Evidence)
+	}
 }
 
 func TestFootprintRequestRejectsInvalidInventory(t *testing.T) {
-	artifact := testArtifact(t, "footprint-input")
+	release := defaultFootprintRelease(t)
 	cases := [][]machine.Instruction{
 		nil,
 		{{Address: 1, Bytes: []byte{0, 0}}},
@@ -48,7 +51,7 @@ func TestFootprintRequestRejectsInvalidInventory(t *testing.T) {
 		{{Address: 2, Bytes: []byte{0, 0}}, {Address: 2, Bytes: []byte{1, 0}}},
 	}
 	for index := range cases {
-		request, err := isla.NewFootprintRequest(artifact, artifact, cases[index], 1, 1, 1)
+		request, err := isla.NewFootprintRequest(release, cases[index], 1, 1, 1)
 		if err == nil {
 			t.Errorf("case %d request = %#v, error = nil", index, request)
 		}
@@ -56,9 +59,9 @@ func TestFootprintRequestRejectsInvalidInventory(t *testing.T) {
 }
 
 func TestFootprintRequestRejectsZeroLimits(t *testing.T) {
-	artifact := testArtifact(t, "footprint-limit")
+	release := defaultFootprintRelease(t)
 	instructions := []machine.Instruction{{Address: 2, Bytes: []byte{0, 0}}}
-	request, err := isla.NewFootprintRequest(artifact, artifact, instructions, 0, 1, 1)
+	request, err := isla.NewFootprintRequest(release, instructions, 0, 1, 1)
 	if err == nil {
 		t.Errorf("request = %#v, error = nil", request)
 	}

@@ -10,8 +10,7 @@ import (
 
 // FootprintRequest contains one bounded instruction-coverage operation.
 type FootprintRequest struct {
-	architecture      Artifact
-	configuration     Artifact
+	release           FootprintRelease
 	instructions      []machine.Instruction
 	threadLimit       uint64
 	timeLimit         uint64
@@ -19,7 +18,7 @@ type FootprintRequest struct {
 }
 
 // NewFootprintRequest accepts identified model inputs and a finite inventory.
-func NewFootprintRequest(architecture Artifact, configuration Artifact, instructions []machine.Instruction, threadLimit uint64, timeLimitSeconds uint64, maximumOutputBytes uint64) (FootprintRequest, error) {
+func NewFootprintRequest(release FootprintRelease, instructions []machine.Instruction, threadLimit uint64, timeLimitSeconds uint64, maximumOutputBytes uint64) (FootprintRequest, error) {
 	if threadLimit == 0 || timeLimitSeconds == 0 || maximumOutputBytes == 0 {
 		return FootprintRequest{}, engineError(InvalidInput, "footprint limits", "limits must be more than zero")
 	}
@@ -28,11 +27,10 @@ func NewFootprintRequest(architecture Artifact, configuration Artifact, instruct
 		return FootprintRequest{}, err
 	}
 	request := FootprintRequest{
-		architecture: architecture, configuration: configuration,
-		instructions: copied, threadLimit: threadLimit,
+		release: release, instructions: copied, threadLimit: threadLimit,
 		timeLimit: timeLimitSeconds, maximumOutputSize: maximumOutputBytes,
 	}
-	if err := request.current(); err != nil {
+	if err := request.release.current(); err != nil {
 		return FootprintRequest{}, err
 	}
 	return request, nil

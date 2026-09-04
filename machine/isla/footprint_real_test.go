@@ -23,7 +23,8 @@ func TestRealFootprintTracesLegalAndIllegalEncodings(t *testing.T) {
 	}
 	architecture := realArtifact(t, "HYPERRAY_SAIL_IR")
 	configuration := realArtifact(t, "HYPERRAY_ISLA_CONFIG")
-	request, err := isla.NewFootprintRequest(architecture, configuration, instructions, 2, 30, 2*1024*1024)
+	release := footprintRelease(t, engine, architecture, configuration)
+	request, err := isla.NewFootprintRequest(release, instructions, 2, 30, 2*1024*1024)
 	if err != nil {
 		t.Fatalf("NewFootprintRequest() error = %v", err)
 	}

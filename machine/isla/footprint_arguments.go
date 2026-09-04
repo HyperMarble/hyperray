@@ -14,8 +14,8 @@ func (request FootprintRequest) arguments(instruction machine.Instruction) []str
 	initialPC := fmt.Sprintf("PC=0x%016x", instruction.Address)
 	return []string{
 		"-T", strconv.FormatUint(request.threadLimit, 10),
-		"-A", request.architecture.path,
-		"-C", request.configuration.path,
+		"-A", request.release.architecture.path,
+		"-C", request.release.configuration.path,
 		"-I", initialPC,
 		"-x", "-i", hex.EncodeToString(instruction.Bytes),
 		"--timeout", strconv.FormatUint(request.timeLimit, 10),

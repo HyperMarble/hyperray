@@ -11,7 +11,7 @@ import (
 
 func TestFootprintRequestRejectsUnidentifiedArtifact(t *testing.T) {
 	instructions := []machine.Instruction{{Address: 2, Bytes: []byte{1, 0}}}
-	request, err := isla.NewFootprintRequest(isla.Artifact{}, isla.Artifact{}, instructions, 1, 1, 1)
+	request, err := isla.NewFootprintRequest(isla.FootprintRelease{}, instructions, 1, 1, 1)
 	if err == nil {
 		t.Fatalf("request = %#v, error = nil", request)
 	}
@@ -42,14 +42,16 @@ func changedModelOperation(t *testing.T, changedIndex int) (isla.FootprintReport
 		artifacts[index] = artifact
 	}
 	instructions := []machine.Instruction{{Address: 2, Bytes: []byte{1, 0}}}
-	request, err := isla.NewFootprintRequest(artifacts[0], artifacts[1], instructions, 1, 1, 4096)
+	engine := footprintEngine(t)
+	release := footprintRelease(t, engine, artifacts[0], artifacts[1])
+	request, err := isla.NewFootprintRequest(release, instructions, 1, 1, 4096)
 	if err != nil {
 		t.Fatalf("NewFootprintRequest() error = %v", err)
 	}
 	if err := os.WriteFile(paths[changedIndex], []byte("changed"), 0o600); err != nil {
 		t.Fatalf("os.WriteFile() error = %v", err)
 	}
-	return footprintEngine(t).TraceInstructions(t.Context(), request)
+	return engine.TraceInstructions(t.Context(), request)
 }
 
 func TestFootprintOperationRejectsNilContext(t *testing.T) {

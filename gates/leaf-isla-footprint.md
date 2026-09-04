@@ -42,7 +42,10 @@ Scope: Bind every loaded instruction to semantics from one pinned Sail and Isla 
   EXPECT: coverage: 100.0% and all commands pass
   EVIDENCE: The package measured 100.0 percent statement coverage. All Go packages and static analysis passed.
 
-- [ ] G9: One release manifest binds the engine, Sail snapshot, and configuration digests.
+- [x] G9: One release manifest binds the engine, Sail snapshot, and configuration digests.
+  CHECK: go test -count=1 ./machine/isla -run 'TestPublicFootprintRelease|TestFootprintReleaseRejects|TestFootprintOperationRejectsDifferentReleaseEngine'
+  EXPECT: ok
+  EVIDENCE: Strict JSON binds the release identifier, tool version, tool digest, Sail digest, and configuration digest.
 
 - [ ] G10: An independent validator reconciles the request inventory and trace inventory in both directions.
 

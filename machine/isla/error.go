@@ -13,6 +13,7 @@ const (
 	ToolNotFound     ErrorCode = "tool_not_found"
 	ToolIdentityFail ErrorCode = "tool_identity_error"
 	ToolChanged      ErrorCode = "tool_changed"
+	ReleaseMismatch  ErrorCode = "release_mismatch"
 	ProcessFail      ErrorCode = "process_error"
 	ResourceLimit    ErrorCode = "resource_limit"
 	ResultError      ErrorCode = "result_error"

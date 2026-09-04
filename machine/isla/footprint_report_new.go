@@ -4,8 +4,10 @@ package isla
 
 func newFootprintReport(engine FootprintEngine, request FootprintRequest, traces []InstructionTrace) FootprintReport {
 	evidence := FootprintEvidence{
-		Tool: engine.identity, ArchitectureDigest: request.architecture.digest,
-		ConfigurationDigest: request.configuration.digest,
+		Tool: engine.identity, ReleaseID: request.release.id,
+		ManifestDigest:      request.release.manifest.digest,
+		ArchitectureDigest:  request.release.architecture.digest,
+		ConfigurationDigest: request.release.configuration.digest,
 		ThreadLimit:         request.threadLimit, TimeLimitSeconds: request.timeLimit,
 		MaximumOutputBytes: request.maximumOutputSize,
 	}

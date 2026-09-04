@@ -46,11 +46,18 @@ func TestFootprintOperationRejectsChangedTool(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewFootprintEngine() error = %v", err)
 	}
+	architecture := testArtifact(t, "changed-tool-architecture")
+	configuration := testArtifact(t, "changed-tool-configuration")
+	release := footprintRelease(t, engine, architecture, configuration)
+	instructions := []machine.Instruction{{Address: 2, Bytes: []byte{1, 0}}}
+	request, err := isla.NewFootprintRequest(release, instructions, 1, 1, 4096)
+	if err != nil {
+		t.Fatalf("NewFootprintRequest() error = %v", err)
+	}
 	if err := os.WriteFile(path, []byte("changed"), 0o700); err != nil {
 		t.Fatalf("os.WriteFile() error = %v", err)
 	}
-	instructions := []machine.Instruction{{Address: 2, Bytes: []byte{1, 0}}}
-	report, err := engine.TraceInstructions(t.Context(), footprintRequest(t, instructions, 4096))
+	report, err := engine.TraceInstructions(t.Context(), request)
 	assertFootprintError(t, report, err, isla.ToolChanged)
 }
 
@@ -58,12 +65,4 @@ func TestZeroFootprintEngineCannotOperate(t *testing.T) {
 	instructions := []machine.Instruction{{Address: 2, Bytes: []byte{1, 0}}}
 	report, err := (isla.FootprintEngine{}).TraceInstructions(t.Context(), footprintRequest(t, instructions, 4096))
 	assertFootprintError(t, report, err, isla.ToolIdentityFail)
-}
-
-func assertFootprintError(t *testing.T, report isla.FootprintReport, err error, code isla.ErrorCode) {
-	t.Helper()
-	if err == nil {
-		t.Fatalf("report = %#v, error = nil", report)
-	}
-	assertErrorCode(t, err, code)
 }

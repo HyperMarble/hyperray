@@ -20,7 +20,7 @@ func (engine FootprintEngine) TraceInstructions(ctx context.Context, request Foo
 	if err := engine.current(); err != nil {
 		return FootprintReport{}, err
 	}
-	if err := request.current(); err != nil {
+	if err := request.current(engine); err != nil {
 		return FootprintReport{}, err
 	}
 	traces := make([]InstructionTrace, 0, len(request.instructions))
