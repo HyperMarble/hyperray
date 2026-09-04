@@ -80,6 +80,21 @@ Each successful operation must return one or more semantic traces. Hyperray reco
 
 The engine, Sail snapshot, and Isla configuration must come from one recorded release set. A mixed release set causes an engine error.
 
+### Release manifest
+
+One JSON manifest binds these values:
+
+- Release identifier.
+- Isla version and executable SHA-256 digest.
+- Sail snapshot SHA-256 digest.
+- Isla configuration SHA-256 digest.
+
+The request accepts a release only when every measured value equals its manifest value.
+
+The manifest is also an identified artifact. Deployment policy supplies its trusted digest.
+
+An arbitrary self-declared manifest records inputs but does not establish trusted provenance.
+
 The instruction inventory and trace inventory must contain the same addresses and bytes. Missing, extra, changed, or duplicate records cause an engine error.
 
 An unmatched RISC-V encoding maps to Sail's declared illegal-instruction case. It is a modeled trap, not an omitted instruction.
