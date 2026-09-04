@@ -9,13 +9,13 @@ import (
 )
 
 func TestPublicFootprintEngineIdentity(t *testing.T) {
-	path := fixtureTool(t)
+	path := footprintTool(t)
 	engine, err := isla.NewFootprintEngine(t.Context(), path)
 	if err != nil {
 		t.Fatalf("NewFootprintEngine() error = %v", err)
 	}
 	identity := engine.Identity()
-	if identity.Path != path || identity.Version != "v0.2.0/test" {
+	if identity.Path != path || identity.Version != "v0.2.0/footprint-test" {
 		t.Errorf("Identity() = %#v", identity)
 	}
 }

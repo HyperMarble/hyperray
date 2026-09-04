@@ -11,7 +11,8 @@ type FootprintEngine struct {
 
 // NewFootprintEngine identifies an Isla footprint executable.
 func NewFootprintEngine(ctx context.Context, path string) (FootprintEngine, error) {
-	identity, err := identifyTool(ctx, path, "isla-footprint")
+	versionArguments := []string{"-i", "version-probe", "--version"}
+	identity, err := identifyTool(ctx, path, "isla-footprint", versionArguments)
 	if err != nil {
 		return FootprintEngine{}, err
 	}

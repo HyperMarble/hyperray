@@ -23,14 +23,14 @@ type Engine struct {
 
 // NewEngine identifies an Isla executable by its output and content.
 func NewEngine(ctx context.Context, path string) (Engine, error) {
-	identity, err := identifyTool(ctx, path, "isla-axiomatic")
+	identity, err := identifyTool(ctx, path, "isla-axiomatic", []string{"--version"})
 	if err != nil {
 		return Engine{}, err
 	}
 	return Engine{identity: identity}, nil
 }
 
-func identifyTool(ctx context.Context, path string, defaultName string) (ToolIdentity, error) {
+func identifyTool(ctx context.Context, path string, defaultName string, versionArguments []string) (ToolIdentity, error) {
 	if ctx == nil {
 		return ToolIdentity{}, engineError(InvalidInput, "context", "nil")
 	}
@@ -38,7 +38,7 @@ func identifyTool(ctx context.Context, path string, defaultName string) (ToolIde
 	if err != nil {
 		return ToolIdentity{}, err
 	}
-	output, commandError := exec.CommandContext(ctx, resolved, "--version").CombinedOutput()
+	output, commandError := exec.CommandContext(ctx, resolved, versionArguments...).CombinedOutput()
 	if commandError != nil {
 		return ToolIdentity{}, engineError(ToolIdentityFail, resolved, commandError.Error())
 	}

@@ -3,10 +3,12 @@
 # Special encodings simulate process, protocol, and output-limit failures.
 set -eu
 
-if [ "${1-}" = "--version" ]; then
-	printf '%s\n' 'v0.2.0/footprint-test'
-	exit 0
-fi
+for argument in "$@"; do
+	if [ "$argument" = "--version" ]; then
+		printf '%s\n' 'v0.2.0/footprint-test'
+		exit 0
+	fi
+done
 
 instruction=
 initial_pc=
