@@ -6,12 +6,9 @@ import (
 	"debug/elf"
 	"encoding/binary"
 	"fmt"
-)
 
-const instructionParcelByteLength = 2
-const standardInstructionByteLength = 4
-const compressedEncodingMask = 0x3
-const standardEncodingMask = 0x1f
+	"github.com/HyperMarble/hyperray/machine/riscv"
+)
 
 func recordInstructions(segments []loadSegment) ([]ExecutableRegion, []Instruction, error) {
 	regions := make([]ExecutableRegion, 0)
@@ -20,7 +17,7 @@ func recordInstructions(segments []loadSegment) ([]ExecutableRegion, []Instructi
 		if segment.header.Flags&elf.PF_X == 0 {
 			continue
 		}
-		if segment.header.Vaddr%instructionParcelByteLength != 0 {
+		if segment.header.Vaddr%riscv.ParcelByteLength != 0 {
 			return nil, nil, reject(UnalignedExecutableRegion, fmt.Sprintf("0x%x", segment.header.Vaddr), nil)
 		}
 		region := ExecutableRegion{StartAddress: segment.header.Vaddr, ByteLength: segment.header.Memsz}
@@ -42,12 +39,12 @@ func frameRegion(segment loadSegment) ([]Instruction, error) {
 	for offset := 0; offset < len(segment.data); {
 		remaining := len(segment.data) - offset
 		address := segment.header.Vaddr + uint64(offset)
-		if remaining < instructionParcelByteLength {
-			detail := fmt.Sprintf("address %#x has %d of %d parcel bytes", address, remaining, instructionParcelByteLength)
+		if remaining < riscv.ParcelByteLength {
+			detail := fmt.Sprintf("address %#x has %d of %d parcel bytes", address, remaining, riscv.ParcelByteLength)
 			return nil, reject(TruncatedInstructionEncoding, detail, nil)
 		}
-		parcel := binary.LittleEndian.Uint16(segment.data[offset : offset+instructionParcelByteLength])
-		length := instructionLength(parcel)
+		parcel := binary.LittleEndian.Uint16(segment.data[offset : offset+riscv.ParcelByteLength])
+		length := riscv.InstructionLength(parcel)
 		if length == 0 {
 			detail := fmt.Sprintf("address %#x starts with parcel %#04x", address, parcel)
 			return nil, reject(UnsupportedInstructionLength, detail, nil)
@@ -61,14 +58,4 @@ func frameRegion(segment loadSegment) ([]Instruction, error) {
 		offset += length
 	}
 	return result, nil
-}
-
-func instructionLength(firstParcel uint16) int {
-	if firstParcel&compressedEncodingMask != compressedEncodingMask {
-		return instructionParcelByteLength
-	}
-	if firstParcel&standardEncodingMask != standardEncodingMask {
-		return standardInstructionByteLength
-	}
-	return 0
 }
