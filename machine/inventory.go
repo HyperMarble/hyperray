@@ -2,10 +2,14 @@
 // It must not classify an opcode or claim a semantic case.
 package machine
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/HyperMarble/hyperray/machine/riscv"
+)
 
 func validateInstructionInventory(instructions []Instruction, entry uint64, flags uint32) error {
-	if flags&riscvCompressedFlag == 0 && containsCompressedInstruction(instructions) {
+	if flags&riscv.CompressedFlag == 0 && containsCompressedInstruction(instructions) {
 		return reject(UnsupportedRISCVFlags, "16-bit encoding without EF_RISCV_RVC", nil)
 	}
 	if !containsInstruction(instructions, entry) {
