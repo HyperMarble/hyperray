@@ -1,6 +1,6 @@
 # Unknown memory contents
 
-Status: parser landed. Unknown contents do not yet reach the solver.
+Status: unknown contents reach the solver. The Leaky ReLU rule is incomplete.
 
 ## Problem
 
@@ -77,7 +77,27 @@ Test 6 is the negative control. Without it, test 5 could pass vacuously,
 which is exactly what happened when the concrete all-positive inputs made the
 shift branch unreachable.
 
-## Measured blocker
+## Measured state
+
+The parser accepts an extent alone, and `loaded-initial-byte` now reads an
+undeclared address from the initial memory array rather than returning `#x00`.
+The generated script carries `(select v514 address)` in place of the literal,
+so an undeclared byte stays unknown. 204 tests pass.
+
+The evidence that this matters: with the literal default, the correct rule and
+a rule with the wrong shift both returned `forbidden`, so the negative control
+could not fail. With the array read, the same rule returns `allowed`, meaning
+the solver found an input the rule does not describe.
+
+That counterexample is a real finding about the rule, not a defect in the
+engine. The relational rule constrains the eight lanes only. The function also
+returns the count of negative lanes in `R0`, and writes its stack. A rule that
+names some outputs and ignores others cannot hold for every input.
+
+The next step states every output the function produces, then requires the
+wrong-shift control to fail.
+
+## Superseded blocker
 
 The parser change landed and 204 tests pass, but a proof over unknown inputs is
 not yet sound. `initial_memory::definition` writes one function that returns a
