@@ -14,7 +14,9 @@ import (
 )
 
 // TestRequiredSymbolsExistInArchitecture fails when native code names a Sail
-// symbol the architecture does not define. Such a name fails at run time only.
+// symbol the architecture does not define. Isla also rejects such a name, but
+// only after loading the architecture, and its report names no symbol. This
+// check names the symbol in under a tenth of a second.
 func TestRequiredSymbolsExistInArchitecture(t *testing.T) {
 	architecture := architectureText(t)
 	missing := []string{}

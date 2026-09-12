@@ -17,7 +17,8 @@ import (
 const islaSourceRoot = "HYPERRAY_ISLA_SOURCE"
 
 // TestEmittedFieldsReachTheParser fails when generated program text carries a
-// key that the Isla parser never reads. Such a key is silently ignored.
+// key that the Isla parser never reads. The parser accepts an unknown
+// top-level key without complaint, so it cannot detect this itself.
 func TestEmittedFieldsReachTheParser(t *testing.T) {
 	parser := islaLitmusSource(t)
 	unread := []string{}
