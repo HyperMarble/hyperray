@@ -6,35 +6,29 @@ import pathlib
 import re
 import sys
 
+from scope import scoped_constants
+
 LIBRARY = pathlib.Path(
     "/Users/hak/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/src/rust/library"
 )
 SUITE = LIBRARY / "coretests/tests/num/int_macros.rs"
 
-# The suite instantiates its macro for each integer type. These are its own
-# constants, read from the same file rather than restated here.
-CONSTANTS = {}
-
-
-def read_constants(source: str) -> dict:
-    found = {}
-    for name, value in re.findall(r"const (\w+): \$T = ([^;]+);", source):
-        text = value.strip()
-        if text in ("$T::MAX", "$T::MIN"):
-            found[name] = "i64::" + text.split("::")[1]
-        elif text == "!0":
-            found[name] = "!0i64"
-        else:
-            found[name] = text + "i64"
-    return found
+ASSERTION = re.compile(r"assert_eq_const_safe!\(\$T: ([^,]+), ([^)]+)\);")
 
 
 def extract(source: str) -> list:
-    """One entry per assertion the suite states about a computed value."""
+    """One entry per assertion, carrying the constants visible at its line."""
+    lines = source.split("\n")
+    visible = scoped_constants(source)
     cases = []
-    for test, body in re.findall(r"fn (test_\w+)\(\) \{(.*?)\n        \}", source, re.S):
-        for expression, expected in re.findall(
-            r"assert_eq_const_safe!\(\$T: ([^,]+), ([^)]+)\);", body
-        ):
-            cases.append({"test": test, "expression": expression.strip(), "expected": expected.strip()})
+    test = ""
+    for number, line in enumerate(lines):
+        named = re.search(r"fn (test_\w+)\(\)", line)
+        if named:
+            test = named.group(1)
+        found = ASSERTION.search(line)
+        if found and test:
+            cases.append({"test": test, "expression": found.group(1).strip(),
+                          "expected": found.group(2).strip(),
+                          "constants": visible[number], "line": number + 1})
     return cases

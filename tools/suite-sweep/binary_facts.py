@@ -28,29 +28,40 @@ def entry_and_end(binary: pathlib.Path) -> tuple:
             return start, address + 4
     return start, None
 
-def mappings(binary: pathlib.Path) -> list:
-    listing = run(["xcrun", "otool", "-l", str(binary)]).stdout
-    regions, current = [], {}
+def segments(listing: str) -> list:
+    """Every segment otool reports, as a name with its address and size."""
+    found, name, address = [], "", None
     for line in listing.split("\n"):
         text = line.strip()
         if text.startswith("segname"):
-            current = {"name": text.split()[1]}
-        elif text.startswith("vmaddr") and current:
-            current["address"] = int(text.split()[1], 16)
-        elif text.startswith("vmsize") and current:
-            size = int(text.split()[1], 16)
-            if current["name"] != "__PAGEZERO" and size > 0:
-                permission = {"__TEXT": "RX", "__DATA": "RW"}.get(current["name"], "R")
-                regions.append({
-                    "va": current["address"], "pa": current["address"],
-                    "length": size, "permission": permission,
-                })
-            current = {}
+            name, address = text.split()[1], None
+        if text.startswith("vmaddr"):
+            address = int(text.split()[1], 16)
+        if text.startswith("vmsize") and address is not None:
+            found.append({"name": name, "address": address, "size": int(text.split()[1], 16)})
+            address = None
+    return found
+
+
+def loadable(segment: dict) -> bool:
+    """A segment the proof must map: it holds bytes at a real address."""
+    return segment["name"] != "__PAGEZERO" and segment["size"] > 0
+
+
+def region(segment: dict) -> dict:
+    permission = {"__TEXT": "RX", "__DATA": "RW"}.get(segment["name"], "R")
+    return {"va": segment["address"], "pa": segment["address"],
+            "length": segment["size"], "permission": permission}
+
+
+def mappings(binary: pathlib.Path) -> list:
+    """The mapped regions of the binary, plus the scratch page the proof uses."""
+    listing = run(["xcrun", "otool", "-l", str(binary)]).stdout
     seen, unique = set(), []
-    for region in regions:
-        if region["va"] in seen:
+    for segment in segments(listing):
+        if not loadable(segment) or segment["address"] in seen:
             continue
-        seen.add(region["va"])
-        unique.append(region)
+        seen.add(segment["address"])
+        unique.append(region(segment))
     unique.append({"va": 0x3000, "pa": 0x3000, "length": 0x1000, "permission": "RW"})
     return unique

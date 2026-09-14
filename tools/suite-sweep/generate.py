@@ -6,28 +6,30 @@ import pathlib
 import re
 import sys
 
-from extract import CONSTANTS, SUITE, extract, read_constants
+from extract import SUITE, extract
+from identity import compare, identity, load
 
 
-def substitute(text: str) -> str:
-    for name, value in CONSTANTS.items():
-        text = re.sub(rf"\b{name}\b", value, text)
+def substitute(text: str, constants: dict) -> str:
+    """Longest name first, so BITS is never rewritten by a shorter match."""
+    for name in sorted(constants, key=len, reverse=True):
+        text = re.sub(rf"\b{name}\b", constants[name], text)
     return text.replace("$T", "i64")
 
 
 def main() -> int:
     source = SUITE.read_text()
-    CONSTANTS.update(read_constants(source))
     cases = extract(source)
     directory = pathlib.Path(sys.argv[1])
     directory.mkdir(parents=True, exist_ok=True)
+    previous = load(directory / "cases.json")
     written = []
-    for index, case in enumerate(cases):
-        expression = substitute(case["expression"])
-        expected = substitute(case["expected"])
+    for case in cases:
+        expression = substitute(case["expression"], case["constants"])
+        expected = substitute(case["expected"], case["constants"])
         if "$" in expression or "$" in expected:
             continue
-        name = f"s{index:03d}"
+        name = identity(case["test"], expression, expected)
         (directory / f"{name}.rs").write_text(
             f"// {SUITE.name} {case['test']}: {case['expression']} == {case['expected']}\n"
             "// The assertion is the Rust suite's. black_box keeps the work in the\n"
@@ -41,7 +43,10 @@ def main() -> int:
         )
         written.append({"name": name, **case, "rust_expression": expression, "rust_expected": expected})
     (directory / "cases.json").write_text(json.dumps(written, indent=2))
-    print(f"constants: {len(CONSTANTS)}  assertions extracted: {len(cases)}  programs written: {len(written)}")
+    change = compare(previous, written)
+    print(f"assertions extracted: {len(cases)}  programs written: {len(written)}")
+    print(f"upstream change: {len(change['added'])} added, "
+          f"{len(change['removed'])} removed, {len(change['unchanged'])} unchanged")
     return 0
 
 
