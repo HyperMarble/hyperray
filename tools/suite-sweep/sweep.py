@@ -8,7 +8,8 @@ import sys
 
 from build import build, run
 from binary_facts import entry_and_end
-from proof_request import HYPERRAY, expected_value, request
+from expected import expected_value
+from proof_request import HYPERRAY, request
 from progress import Progress
 
 

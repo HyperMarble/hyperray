@@ -3,9 +3,7 @@
 # expected value. It must not invent a boundary the binary does not show.
 import os
 import pathlib
-import subprocess
 
-from build import run
 from binary_facts import mappings
 
 HYPERRAY = "/Volumes/Hak_SSD/hyperray-build/hyperray"
@@ -50,19 +48,3 @@ def request(binary: pathlib.Path, name: str, start: int, end: int, expected: int
             "time_limit_seconds": 120, "pc_visit_limit": 512,
         },
     }
-
-def expected_value(directory: pathlib.Path, name: str, expression: str) -> tuple:
-    """Evaluates the suite's expected value with rustc, not with our own rules."""
-    probe = directory / f"{name}_expected.rs"
-    probe.write_text(
-        "fn main() {\n"
-        f"    println!(\"{{}}\", ({expression}) as i64);\n"
-        "}\n"
-    )
-    compiled = run(["rustc", "--edition=2021", "-O", str(probe), "-o", str(directory / f"{name}_expected")])
-    if compiled.returncode != 0:
-        return None, "rustc could not evaluate the expected value"
-    output = run([str(directory / f"{name}_expected")])
-    if output.returncode != 0:
-        return None, "the expected value panicked"
-    return int(output.stdout.strip()), ""

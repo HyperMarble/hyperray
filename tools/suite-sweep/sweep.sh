@@ -42,4 +42,12 @@ if [ -n "$REFRESH" ]; then
     fi
 fi
 
+# The compiler decides whether extraction is faithful. A false assertion here
+# means a substitution is wrong, and every verdict after it would be about
+# code the suite never wrote.
+if ! python3 "$HERE/check.py" "$PROGRAMS"; then
+    echo "extraction does not match the suite; not proving anything" >&2
+    exit 1
+fi
+
 exec python3 "$HERE/sweep.py" "$PROGRAMS" ${LIMIT:+"$LIMIT"}

@@ -5,17 +5,22 @@
 # would be compiled against the wrong value. Scope is tracked instead.
 import re
 
-CONSTANT = re.compile(r"const (\w+): \$T = ([^;]+);")
+# Constants are declared as $T, u32, and $U. Matching only $T missed 10 of
+# the 54 declarations, leaving HALF and the SHIFT_AMOUNT_* names unresolved.
+CONSTANT = re.compile(r"const (\w+)\s*:\s*([^=]+?)\s*=\s*([^;]+);")
 
 
-def literal(text: str) -> str:
-    """The suite's constant value, written as a typed i64 literal."""
-    text = text.strip()
-    if text in ("$T::MAX", "$T::MIN"):
-        return "i64::" + text.split("::")[1]
-    if text == "!0":
-        return "!0i64"
-    return text + "i64"
+def literal(value: str, declared: str) -> str:
+    """The suite's constant value, written with the type the suite declared.
+
+    A shift amount is u32, so it must not be given an i64 suffix. The value
+    keeps the suite's own expression; only $T is resolved to the tested type.
+    """
+    text = value.strip().replace("<$T>", "i64").replace("$T", "i64").replace("$U", "u64")
+    if declared.strip() in ("$T", "$U"):
+        suffix = "i64" if declared.strip() == "$T" else "u64"
+        return f"(({text}) as {suffix})"
+    return f"(({text}) as {declared.strip()})"
 
 
 def resolve(scopes: list, name: str) -> str:
@@ -33,7 +38,7 @@ def scoped_constants(source: str) -> list:
     for line in source.split("\n"):
         found = CONSTANT.search(line)
         if found:
-            scopes[-1][found.group(1)] = literal(found.group(2))
+            scopes[-1][found.group(1)] = literal(found.group(3), found.group(2))
         visible.append({name: resolve(scopes, name)
                         for scope in scopes for name in scope})
         depth = line.count("{") - line.count("}")

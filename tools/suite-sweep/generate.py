@@ -11,10 +11,19 @@ from identity import compare, identity, load
 
 
 def substitute(text: str, constants: dict) -> str:
-    """Longest name first, so BITS is never rewritten by a shorter match."""
-    for name in sorted(constants, key=len, reverse=True):
-        text = re.sub(rf"\b{name}\b", constants[name], text)
-    return text.replace("$T", "i64")
+    """Replace every constant in one pass, so no replacement is rescanned.
+
+    Substituting one name at a time rewrote its own output: MIN became
+    i64::MIN, and a later pass over MIN produced i64::i64::MIN. Longest name
+    first keeps BITS from matching inside a longer name, and a name after ::
+    is a path such as $T::MIN, never the suite's own constant.
+    """
+    if not constants:
+        return text.replace("<$T>", "i64").replace("$T", "i64")
+    names = sorted(constants, key=len, reverse=True)
+    pattern = r"(?<!::)\b(" + "|".join(re.escape(name) for name in names) + r")\b"
+    replaced = re.sub(pattern, lambda found: constants[found.group(1)], text)
+    return replaced.replace("<$T>", "i64").replace("$T", "i64")
 
 
 def main() -> int:
