@@ -1,0 +1,1506 @@
+[
+  {
+    "test": "test_abs",
+    "line": 41,
+    "suite": "(1 as $T).abs() == 1 as $T",
+    "compiled": "(1 as i64).abs() == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_abs",
+    "line": 42,
+    "suite": "(0 as $T).abs() == 0 as $T",
+    "compiled": "(0 as i64).abs() == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_abs",
+    "line": 43,
+    "suite": "(-1 as $T).abs() == 1 as $T",
+    "compiled": "(-1 as i64).abs() == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_be",
+    "line": 157,
+    "suite": "$T::from_be(A.to_be()) == A",
+    "compiled": "i64::from_be(((0b0101100) as i64).to_be()) == ((0b0101100) as i64)",
+    "expected_value": 44,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_be",
+    "line": 158,
+    "suite": "$T::from_be(B.to_be()) == B",
+    "compiled": "i64::from_be(((0b0100001) as i64).to_be()) == ((0b0100001) as i64)",
+    "expected_value": 33,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_be",
+    "line": 159,
+    "suite": "$T::from_be(C.to_be()) == C",
+    "compiled": "i64::from_be(((0b1111001) as i64).to_be()) == ((0b1111001) as i64)",
+    "expected_value": 121,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_be",
+    "line": 160,
+    "suite": "$T::from_be(_0) == _0",
+    "compiled": "i64::from_be(((0) as i64)) == ((0) as i64)",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_be",
+    "line": 161,
+    "suite": "$T::from_be(_1) == _1",
+    "compiled": "i64::from_be(((!0) as i64)) == ((!0) as i64)",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_be",
+    "line": 162,
+    "suite": "_0.to_be() == _0",
+    "compiled": "((0) as i64).to_be() == ((0) as i64)",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_be",
+    "line": 163,
+    "suite": "_1.to_be() == _1",
+    "compiled": "((!0) as i64).to_be() == ((!0) as i64)",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_ceil",
+    "line": 620,
+    "suite": "A.div_ceil(B) == 3",
+    "compiled": "((8) as i64).div_ceil(((3) as i64)) == 3",
+    "expected_value": 3,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_ceil",
+    "line": 621,
+    "suite": "A.div_ceil(-B) == -2",
+    "compiled": "((8) as i64).div_ceil(-((3) as i64)) == -2",
+    "expected_value": -2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_ceil",
+    "line": 622,
+    "suite": "(-A).div_ceil(B) == -2",
+    "compiled": "(-((8) as i64)).div_ceil(((3) as i64)) == -2",
+    "expected_value": -2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_ceil",
+    "line": 623,
+    "suite": "(-A).div_ceil(-B) == 3",
+    "compiled": "(-((8) as i64)).div_ceil(-((3) as i64)) == 3",
+    "expected_value": 3,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_floor",
+    "line": 611,
+    "suite": "A.div_floor(B) == 2",
+    "compiled": "((8) as i64).div_floor(((3) as i64)) == 2",
+    "expected_value": 2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_floor",
+    "line": 612,
+    "suite": "A.div_floor(-B) == -3",
+    "compiled": "((8) as i64).div_floor(-((3) as i64)) == -3",
+    "expected_value": -3,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_floor",
+    "line": 613,
+    "suite": "(-A).div_floor(B) == -3",
+    "compiled": "(-((8) as i64)).div_floor(((3) as i64)) == -3",
+    "expected_value": -3,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_div_floor",
+    "line": 614,
+    "suite": "(-A).div_floor(-B) == 2",
+    "compiled": "(-((8) as i64)).div_floor(-((3) as i64)) == 2",
+    "expected_value": 2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_le",
+    "line": 147,
+    "suite": "$T::from_le(A.to_le()) == A",
+    "compiled": "i64::from_le(((0b0101100) as i64).to_le()) == ((0b0101100) as i64)",
+    "expected_value": 44,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_le",
+    "line": 148,
+    "suite": "$T::from_le(B.to_le()) == B",
+    "compiled": "i64::from_le(((0b0100001) as i64).to_le()) == ((0b0100001) as i64)",
+    "expected_value": 33,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_le",
+    "line": 149,
+    "suite": "$T::from_le(C.to_le()) == C",
+    "compiled": "i64::from_le(((0b1111001) as i64).to_le()) == ((0b1111001) as i64)",
+    "expected_value": 121,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_le",
+    "line": 150,
+    "suite": "$T::from_le(_0) == _0",
+    "compiled": "i64::from_le(((0) as i64)) == ((0) as i64)",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_le",
+    "line": 151,
+    "suite": "$T::from_le(_1) == _1",
+    "compiled": "i64::from_le(((!0) as i64)) == ((!0) as i64)",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_le",
+    "line": 152,
+    "suite": "_0.to_le() == _0",
+    "compiled": "((0) as i64).to_le() == ((0) as i64)",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_le",
+    "line": 153,
+    "suite": "_1.to_le() == _1",
+    "compiled": "((!0) as i64).to_le() == ((!0) as i64)",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 627,
+    "suite": "(16 as $T).next_multiple_of(8) == 16",
+    "compiled": "(16 as i64).next_multiple_of(8) == 16",
+    "expected_value": 16,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 628,
+    "suite": "(23 as $T).next_multiple_of(8) == 24",
+    "compiled": "(23 as i64).next_multiple_of(8) == 24",
+    "expected_value": 24,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 629,
+    "suite": "(16 as $T).next_multiple_of(-8) == 16",
+    "compiled": "(16 as i64).next_multiple_of(-8) == 16",
+    "expected_value": 16,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 630,
+    "suite": "(23 as $T).next_multiple_of(-8) == 16",
+    "compiled": "(23 as i64).next_multiple_of(-8) == 16",
+    "expected_value": 16,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 631,
+    "suite": "(-16 as $T).next_multiple_of(8) == -16",
+    "compiled": "(-16 as i64).next_multiple_of(8) == -16",
+    "expected_value": -16,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 632,
+    "suite": "(-23 as $T).next_multiple_of(8) == -16",
+    "compiled": "(-23 as i64).next_multiple_of(8) == -16",
+    "expected_value": -16,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 633,
+    "suite": "(-16 as $T).next_multiple_of(-8) == -16",
+    "compiled": "(-16 as i64).next_multiple_of(-8) == -16",
+    "expected_value": -16,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 634,
+    "suite": "(-23 as $T).next_multiple_of(-8) == -24",
+    "compiled": "(-23 as i64).next_multiple_of(-8) == -24",
+    "expected_value": -24,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_next_multiple_of",
+    "line": 635,
+    "suite": "MIN.next_multiple_of(-1) == MIN",
+    "compiled": "((i64::MIN) as i64).next_multiple_of(-1) == ((i64::MIN) as i64)",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 322,
+    "suite": "R.wrapping_pow(0) == 1 as $T",
+    "compiled": "((0) as i64).wrapping_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 323,
+    "suite": "R.wrapping_pow(1) == 0 as $T",
+    "compiled": "((0) as i64).wrapping_pow(1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 324,
+    "suite": "R.wrapping_pow(2) == 0 as $T",
+    "compiled": "((0) as i64).wrapping_pow(2) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 325,
+    "suite": "R.wrapping_pow($T::BITS - 1) == 0 as $T",
+    "compiled": "((0) as i64).wrapping_pow(i64::BITS - 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 326,
+    "suite": "R.wrapping_pow($T::BITS) == 0 as $T",
+    "compiled": "((0) as i64).wrapping_pow(i64::BITS) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 327,
+    "suite": "R.wrapping_pow($T::BITS + 1) == 0 as $T",
+    "compiled": "((0) as i64).wrapping_pow(i64::BITS + 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 328,
+    "suite": "R.wrapping_pow(128) == 0 as $T",
+    "compiled": "((0) as i64).wrapping_pow(128) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 329,
+    "suite": "R.wrapping_pow(129) == 0 as $T",
+    "compiled": "((0) as i64).wrapping_pow(129) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 349,
+    "suite": "R.saturating_pow(0) == 1 as $T",
+    "compiled": "((0) as i64).saturating_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 350,
+    "suite": "R.saturating_pow(1) == 0 as $T",
+    "compiled": "((0) as i64).saturating_pow(1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 351,
+    "suite": "R.saturating_pow(2) == 0 as $T",
+    "compiled": "((0) as i64).saturating_pow(2) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 352,
+    "suite": "R.saturating_pow($T::BITS - 1) == 0 as $T",
+    "compiled": "((0) as i64).saturating_pow(i64::BITS - 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 353,
+    "suite": "R.saturating_pow($T::BITS) == 0 as $T",
+    "compiled": "((0) as i64).saturating_pow(i64::BITS) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 354,
+    "suite": "R.saturating_pow($T::BITS + 1) == 0 as $T",
+    "compiled": "((0) as i64).saturating_pow(i64::BITS + 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 355,
+    "suite": "R.saturating_pow(128) == 0 as $T",
+    "compiled": "((0) as i64).saturating_pow(128) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 356,
+    "suite": "R.saturating_pow(129) == 0 as $T",
+    "compiled": "((0) as i64).saturating_pow(129) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 361,
+    "suite": "R.wrapping_pow(0) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 362,
+    "suite": "R.wrapping_pow(1) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(1) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 363,
+    "suite": "R.wrapping_pow(2) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(2) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 364,
+    "suite": "R.wrapping_pow($T::BITS - 1) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(i64::BITS - 1) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 365,
+    "suite": "R.wrapping_pow($T::BITS) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(i64::BITS) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 366,
+    "suite": "R.wrapping_pow($T::BITS + 1) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(i64::BITS + 1) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 367,
+    "suite": "R.wrapping_pow(128) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(128) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 368,
+    "suite": "R.wrapping_pow(129) == 1 as $T",
+    "compiled": "((1) as i64).wrapping_pow(129) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 388,
+    "suite": "R.saturating_pow(0) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 389,
+    "suite": "R.saturating_pow(1) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(1) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 390,
+    "suite": "R.saturating_pow(2) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(2) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 391,
+    "suite": "R.saturating_pow($T::BITS - 1) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(i64::BITS - 1) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 392,
+    "suite": "R.saturating_pow($T::BITS) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(i64::BITS) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 393,
+    "suite": "R.saturating_pow($T::BITS + 1) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(i64::BITS + 1) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 394,
+    "suite": "R.saturating_pow(128) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(128) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 395,
+    "suite": "R.saturating_pow(129) == 1 as $T",
+    "compiled": "((1) as i64).saturating_pow(129) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 400,
+    "suite": "R.wrapping_pow(0) == 1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 401,
+    "suite": "R.wrapping_pow(1) == -1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(1) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 402,
+    "suite": "R.wrapping_pow(2) == 1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(2) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 403,
+    "suite": "R.wrapping_pow($T::BITS - 1) == -1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(i64::BITS - 1) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 404,
+    "suite": "R.wrapping_pow($T::BITS) == 1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(i64::BITS) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 405,
+    "suite": "R.wrapping_pow($T::BITS + 1) == -1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(i64::BITS + 1) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 406,
+    "suite": "R.wrapping_pow(128) == 1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(128) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 407,
+    "suite": "R.wrapping_pow(129) == -1 as $T",
+    "compiled": "((-1) as i64).wrapping_pow(129) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 427,
+    "suite": "R.saturating_pow(0) == 1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 428,
+    "suite": "R.saturating_pow(1) == -1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(1) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 429,
+    "suite": "R.saturating_pow(2) == 1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(2) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 430,
+    "suite": "R.saturating_pow($T::BITS - 1) == -1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(i64::BITS - 1) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 431,
+    "suite": "R.saturating_pow($T::BITS) == 1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(i64::BITS) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 432,
+    "suite": "R.saturating_pow($T::BITS + 1) == -1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(i64::BITS + 1) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 433,
+    "suite": "R.saturating_pow(128) == 1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(128) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 434,
+    "suite": "R.saturating_pow(129) == -1 as $T",
+    "compiled": "((-1) as i64).saturating_pow(129) == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 439,
+    "suite": "R.wrapping_pow(0) == 1 as $T",
+    "compiled": "((2) as i64).wrapping_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 440,
+    "suite": "R.wrapping_pow(1) == 2 as $T",
+    "compiled": "((2) as i64).wrapping_pow(1) == 2 as i64",
+    "expected_value": 2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 441,
+    "suite": "R.wrapping_pow(2) == 4 as $T",
+    "compiled": "((2) as i64).wrapping_pow(2) == 4 as i64",
+    "expected_value": 4,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 442,
+    "suite": "R.wrapping_pow($T::BITS - 1) == $T::MIN",
+    "compiled": "((2) as i64).wrapping_pow(i64::BITS - 1) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 443,
+    "suite": "R.wrapping_pow($T::BITS) == 0 as $T",
+    "compiled": "((2) as i64).wrapping_pow(i64::BITS) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 444,
+    "suite": "R.wrapping_pow($T::BITS + 1) == 0 as $T",
+    "compiled": "((2) as i64).wrapping_pow(i64::BITS + 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 445,
+    "suite": "R.wrapping_pow(128) == 0 as $T",
+    "compiled": "((2) as i64).wrapping_pow(128) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 446,
+    "suite": "R.wrapping_pow(129) == 0 as $T",
+    "compiled": "((2) as i64).wrapping_pow(129) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 466,
+    "suite": "R.saturating_pow(0) == 1 as $T",
+    "compiled": "((2) as i64).saturating_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 467,
+    "suite": "R.saturating_pow(1) == 2 as $T",
+    "compiled": "((2) as i64).saturating_pow(1) == 2 as i64",
+    "expected_value": 2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 468,
+    "suite": "R.saturating_pow(2) == 4 as $T",
+    "compiled": "((2) as i64).saturating_pow(2) == 4 as i64",
+    "expected_value": 4,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 469,
+    "suite": "R.saturating_pow($T::BITS - 1) == $T::MAX",
+    "compiled": "((2) as i64).saturating_pow(i64::BITS - 1) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 470,
+    "suite": "R.saturating_pow($T::BITS) == $T::MAX",
+    "compiled": "((2) as i64).saturating_pow(i64::BITS) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 471,
+    "suite": "R.saturating_pow($T::BITS + 1) == $T::MAX",
+    "compiled": "((2) as i64).saturating_pow(i64::BITS + 1) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 472,
+    "suite": "R.saturating_pow(128) == $T::MAX",
+    "compiled": "((2) as i64).saturating_pow(128) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 473,
+    "suite": "R.saturating_pow(129) == $T::MAX",
+    "compiled": "((2) as i64).saturating_pow(129) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 478,
+    "suite": "R.wrapping_pow(0) == 1 as $T",
+    "compiled": "((-2) as i64).wrapping_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 479,
+    "suite": "R.wrapping_pow(1) == -2 as $T",
+    "compiled": "((-2) as i64).wrapping_pow(1) == -2 as i64",
+    "expected_value": -2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 480,
+    "suite": "R.wrapping_pow(2) == 4 as $T",
+    "compiled": "((-2) as i64).wrapping_pow(2) == 4 as i64",
+    "expected_value": 4,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 481,
+    "suite": "R.wrapping_pow($T::BITS - 1) == $T::MIN",
+    "compiled": "((-2) as i64).wrapping_pow(i64::BITS - 1) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 482,
+    "suite": "R.wrapping_pow($T::BITS) == 0 as $T",
+    "compiled": "((-2) as i64).wrapping_pow(i64::BITS) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 483,
+    "suite": "R.wrapping_pow($T::BITS + 1) == 0 as $T",
+    "compiled": "((-2) as i64).wrapping_pow(i64::BITS + 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 484,
+    "suite": "R.wrapping_pow(128) == 0 as $T",
+    "compiled": "((-2) as i64).wrapping_pow(128) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 485,
+    "suite": "R.wrapping_pow(129) == 0 as $T",
+    "compiled": "((-2) as i64).wrapping_pow(129) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 505,
+    "suite": "R.saturating_pow(0) == 1 as $T",
+    "compiled": "((-2) as i64).saturating_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 506,
+    "suite": "R.saturating_pow(1) == -2 as $T",
+    "compiled": "((-2) as i64).saturating_pow(1) == -2 as i64",
+    "expected_value": -2,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 507,
+    "suite": "R.saturating_pow(2) == 4 as $T",
+    "compiled": "((-2) as i64).saturating_pow(2) == 4 as i64",
+    "expected_value": 4,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 508,
+    "suite": "R.saturating_pow($T::BITS - 1) == $T::MIN",
+    "compiled": "((-2) as i64).saturating_pow(i64::BITS - 1) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 509,
+    "suite": "R.saturating_pow($T::BITS) == $T::MAX",
+    "compiled": "((-2) as i64).saturating_pow(i64::BITS) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 510,
+    "suite": "R.saturating_pow($T::BITS + 1) == $T::MIN",
+    "compiled": "((-2) as i64).saturating_pow(i64::BITS + 1) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 511,
+    "suite": "R.saturating_pow(128) == $T::MAX",
+    "compiled": "((-2) as i64).saturating_pow(128) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 512,
+    "suite": "R.saturating_pow(129) == $T::MIN",
+    "compiled": "((-2) as i64).saturating_pow(129) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 522,
+    "suite": "R.wrapping_pow(HALF) == 0 as $T",
+    "compiled": "((4) as i64).wrapping_pow(((u32::MAX / 2 + 1) as u32)) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 525,
+    "suite": "R.saturating_pow(HALF) == $T::MAX",
+    "compiled": "((4) as i64).saturating_pow(((u32::MAX / 2 + 1) as u32)) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 531,
+    "suite": "R.wrapping_pow(HALF) == 0 as $T",
+    "compiled": "((-4) as i64).wrapping_pow(((u32::MAX / 2 + 1) as u32)) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 534,
+    "suite": "R.saturating_pow(HALF) == $T::MAX",
+    "compiled": "((-4) as i64).saturating_pow(((u32::MAX / 2 + 1) as u32)) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 539,
+    "suite": "R.wrapping_pow(0) == 1 as $T",
+    "compiled": "((i64::MAX) as i64).wrapping_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 540,
+    "suite": "R.wrapping_pow(1) == R as $T",
+    "compiled": "((i64::MAX) as i64).wrapping_pow(1) == ((i64::MAX) as i64) as i64",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 541,
+    "suite": "R.wrapping_pow(2) == 1 as $T",
+    "compiled": "((i64::MAX) as i64).wrapping_pow(2) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 543,
+    "suite": "R.wrapping_pow(128) == 1 as $T",
+    "compiled": "((i64::MAX) as i64).wrapping_pow(128) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 544,
+    "suite": "R.wrapping_pow(129) == R as $T",
+    "compiled": "((i64::MAX) as i64).wrapping_pow(129) == ((i64::MAX) as i64) as i64",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 558,
+    "suite": "R.saturating_pow(0) == 1 as $T",
+    "compiled": "((i64::MAX) as i64).saturating_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 559,
+    "suite": "R.saturating_pow(1) == R as $T",
+    "compiled": "((i64::MAX) as i64).saturating_pow(1) == ((i64::MAX) as i64) as i64",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 560,
+    "suite": "R.saturating_pow(2) == $T::MAX",
+    "compiled": "((i64::MAX) as i64).saturating_pow(2) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 561,
+    "suite": "R.saturating_pow($T::BITS - 1) == $T::MAX",
+    "compiled": "((i64::MAX) as i64).saturating_pow(i64::BITS - 1) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 562,
+    "suite": "R.saturating_pow($T::BITS) == $T::MAX",
+    "compiled": "((i64::MAX) as i64).saturating_pow(i64::BITS) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 563,
+    "suite": "R.saturating_pow($T::BITS + 1) == $T::MAX",
+    "compiled": "((i64::MAX) as i64).saturating_pow(i64::BITS + 1) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 564,
+    "suite": "R.saturating_pow(128) == $T::MAX",
+    "compiled": "((i64::MAX) as i64).saturating_pow(128) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 565,
+    "suite": "R.saturating_pow(129) == $T::MAX",
+    "compiled": "((i64::MAX) as i64).saturating_pow(129) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 570,
+    "suite": "R.wrapping_pow(0) == 1 as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 571,
+    "suite": "R.wrapping_pow(1) == R as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(1) == ((i64::MIN) as i64) as i64",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 572,
+    "suite": "R.wrapping_pow(2) == 0 as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(2) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 573,
+    "suite": "R.wrapping_pow($T::BITS - 1) == 0 as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(i64::BITS - 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 574,
+    "suite": "R.wrapping_pow($T::BITS) == 0 as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(i64::BITS) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 575,
+    "suite": "R.wrapping_pow($T::BITS + 1) == 0 as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(i64::BITS + 1) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 576,
+    "suite": "R.wrapping_pow(128) == 0 as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(128) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 577,
+    "suite": "R.wrapping_pow(129) == 0 as $T",
+    "compiled": "((i64::MIN) as i64).wrapping_pow(129) == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 597,
+    "suite": "R.saturating_pow(0) == 1 as $T",
+    "compiled": "((i64::MIN) as i64).saturating_pow(0) == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 598,
+    "suite": "R.saturating_pow(1) == R as $T",
+    "compiled": "((i64::MIN) as i64).saturating_pow(1) == ((i64::MIN) as i64) as i64",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 599,
+    "suite": "R.saturating_pow(2) == $T::MAX",
+    "compiled": "((i64::MIN) as i64).saturating_pow(2) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 600,
+    "suite": "R.saturating_pow($T::BITS - 1) == $T::MIN",
+    "compiled": "((i64::MIN) as i64).saturating_pow(i64::BITS - 1) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 601,
+    "suite": "R.saturating_pow($T::BITS) == $T::MAX",
+    "compiled": "((i64::MIN) as i64).saturating_pow(i64::BITS) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 602,
+    "suite": "R.saturating_pow($T::BITS + 1) == $T::MIN",
+    "compiled": "((i64::MIN) as i64).saturating_pow(i64::BITS + 1) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 603,
+    "suite": "R.saturating_pow(128) == $T::MAX",
+    "compiled": "((i64::MIN) as i64).saturating_pow(128) == i64::MAX",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_pow",
+    "line": 604,
+    "suite": "R.saturating_pow(129) == $T::MIN",
+    "compiled": "((i64::MIN) as i64).saturating_pow(129) == i64::MIN",
+    "expected_value": -9223372036854775808,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rem_euclid",
+    "line": 37,
+    "suite": "(-1 as $T).rem_euclid(MIN) == MAX",
+    "compiled": "(-1 as i64).rem_euclid(((i64::MIN) as i64)) == ((i64::MAX) as i64)",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 113,
+    "suite": "A.rotate_left(6).rotate_right(2).rotate_right(4) == A",
+    "compiled": "((0b0101100) as i64).rotate_left(6).rotate_right(2).rotate_right(4) == ((0b0101100) as i64)",
+    "expected_value": 44,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 114,
+    "suite": "B.rotate_left(3).rotate_left(2).rotate_right(5) == B",
+    "compiled": "((0b0100001) as i64).rotate_left(3).rotate_left(2).rotate_right(5) == ((0b0100001) as i64)",
+    "expected_value": 33,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 115,
+    "suite": "C.rotate_left(6).rotate_right(2).rotate_right(4) == C",
+    "compiled": "((0b1111001) as i64).rotate_left(6).rotate_right(2).rotate_right(4) == ((0b1111001) as i64)",
+    "expected_value": 121,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 121,
+    "suite": "_0.rotate_left(124) == _0",
+    "compiled": "((0) as i64).rotate_left(124) == ((0) as i64)",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 122,
+    "suite": "_1.rotate_left(124) == _1",
+    "compiled": "((!0) as i64).rotate_left(124) == ((!0) as i64)",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 123,
+    "suite": "_0.rotate_right(124) == _0",
+    "compiled": "((0) as i64).rotate_right(124) == ((0) as i64)",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 124,
+    "suite": "_1.rotate_right(124) == _1",
+    "compiled": "((!0) as i64).rotate_right(124) == ((!0) as i64)",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 127,
+    "suite": "A.rotate_left(0) == A",
+    "compiled": "((0b0101100) as i64).rotate_left(0) == ((0b0101100) as i64)",
+    "expected_value": 44,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 128,
+    "suite": "B.rotate_left(0) == B",
+    "compiled": "((0b0100001) as i64).rotate_left(0) == ((0b0100001) as i64)",
+    "expected_value": 33,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 129,
+    "suite": "C.rotate_left(0) == C",
+    "compiled": "((0b1111001) as i64).rotate_left(0) == ((0b1111001) as i64)",
+    "expected_value": 121,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 131,
+    "suite": "A.rotate_left(128) == A",
+    "compiled": "((0b0101100) as i64).rotate_left(128) == ((0b0101100) as i64)",
+    "expected_value": 44,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 132,
+    "suite": "B.rotate_left(128) == B",
+    "compiled": "((0b0100001) as i64).rotate_left(128) == ((0b0100001) as i64)",
+    "expected_value": 33,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_rotate",
+    "line": 133,
+    "suite": "C.rotate_left(128) == C",
+    "compiled": "((0b1111001) as i64).rotate_left(128) == ((0b1111001) as i64)",
+    "expected_value": 121,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 173,
+    "suite": "(0 as $T).saturating_abs() == 0",
+    "compiled": "(0 as i64).saturating_abs() == 0",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 174,
+    "suite": "(123 as $T).saturating_abs() == 123",
+    "compiled": "(123 as i64).saturating_abs() == 123",
+    "expected_value": 123,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 175,
+    "suite": "(-123 as $T).saturating_abs() == 123",
+    "compiled": "(-123 as i64).saturating_abs() == 123",
+    "expected_value": 123,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 176,
+    "suite": "(MAX - 2).saturating_abs() == MAX - 2",
+    "compiled": "(((i64::MAX) as i64) - 2).saturating_abs() == ((i64::MAX) as i64) - 2",
+    "expected_value": 9223372036854775805,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 177,
+    "suite": "(MAX - 1).saturating_abs() == MAX - 1",
+    "compiled": "(((i64::MAX) as i64) - 1).saturating_abs() == ((i64::MAX) as i64) - 1",
+    "expected_value": 9223372036854775806,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 178,
+    "suite": "MAX.saturating_abs() == MAX",
+    "compiled": "((i64::MAX) as i64).saturating_abs() == ((i64::MAX) as i64)",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 179,
+    "suite": "(MIN + 2).saturating_abs() == MAX - 1",
+    "compiled": "(((i64::MIN) as i64) + 2).saturating_abs() == ((i64::MAX) as i64) - 1",
+    "expected_value": 9223372036854775806,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 180,
+    "suite": "(MIN + 1).saturating_abs() == MAX",
+    "compiled": "(((i64::MIN) as i64) + 1).saturating_abs() == ((i64::MAX) as i64)",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_abs",
+    "line": 181,
+    "suite": "MIN.saturating_abs() == MAX",
+    "compiled": "((i64::MIN) as i64).saturating_abs() == ((i64::MAX) as i64)",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 185,
+    "suite": "(0 as $T).saturating_neg() == 0",
+    "compiled": "(0 as i64).saturating_neg() == 0",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 186,
+    "suite": "(123 as $T).saturating_neg() == -123",
+    "compiled": "(123 as i64).saturating_neg() == -123",
+    "expected_value": -123,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 187,
+    "suite": "(-123 as $T).saturating_neg() == 123",
+    "compiled": "(-123 as i64).saturating_neg() == 123",
+    "expected_value": 123,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 188,
+    "suite": "(MAX - 2).saturating_neg() == MIN + 3",
+    "compiled": "(((i64::MAX) as i64) - 2).saturating_neg() == ((i64::MIN) as i64) + 3",
+    "expected_value": -9223372036854775805,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 189,
+    "suite": "(MAX - 1).saturating_neg() == MIN + 2",
+    "compiled": "(((i64::MAX) as i64) - 1).saturating_neg() == ((i64::MIN) as i64) + 2",
+    "expected_value": -9223372036854775806,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 190,
+    "suite": "MAX.saturating_neg() == MIN + 1",
+    "compiled": "((i64::MAX) as i64).saturating_neg() == ((i64::MIN) as i64) + 1",
+    "expected_value": -9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 191,
+    "suite": "(MIN + 2).saturating_neg() == MAX - 1",
+    "compiled": "(((i64::MIN) as i64) + 2).saturating_neg() == ((i64::MAX) as i64) - 1",
+    "expected_value": 9223372036854775806,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 192,
+    "suite": "(MIN + 1).saturating_neg() == MAX",
+    "compiled": "(((i64::MIN) as i64) + 1).saturating_neg() == ((i64::MAX) as i64)",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_saturating_neg",
+    "line": 193,
+    "suite": "MIN.saturating_neg() == MAX",
+    "compiled": "((i64::MIN) as i64).saturating_neg() == ((i64::MAX) as i64)",
+    "expected_value": 9223372036854775807,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_signum",
+    "line": 47,
+    "suite": "(1 as $T).signum() == 1 as $T",
+    "compiled": "(1 as i64).signum() == 1 as i64",
+    "expected_value": 1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_signum",
+    "line": 48,
+    "suite": "(0 as $T).signum() == 0 as $T",
+    "compiled": "(0 as i64).signum() == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_signum",
+    "line": 49,
+    "suite": "(-0 as $T).signum() == 0 as $T",
+    "compiled": "(-0 as i64).signum() == 0 as i64",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_signum",
+    "line": 50,
+    "suite": "(-1 as $T).signum() == -1 as $T",
+    "compiled": "(-1 as i64).signum() == -1 as i64",
+    "expected_value": -1,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_swap_bytes",
+    "line": 137,
+    "suite": "A.swap_bytes().swap_bytes() == A",
+    "compiled": "((0b0101100) as i64).swap_bytes().swap_bytes() == ((0b0101100) as i64)",
+    "expected_value": 44,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_swap_bytes",
+    "line": 138,
+    "suite": "B.swap_bytes().swap_bytes() == B",
+    "compiled": "((0b0100001) as i64).swap_bytes().swap_bytes() == ((0b0100001) as i64)",
+    "expected_value": 33,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_swap_bytes",
+    "line": 139,
+    "suite": "C.swap_bytes().swap_bytes() == C",
+    "compiled": "((0b1111001) as i64).swap_bytes().swap_bytes() == ((0b1111001) as i64)",
+    "expected_value": 121,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_swap_bytes",
+    "line": 142,
+    "suite": "_0.swap_bytes() == _0",
+    "compiled": "((0) as i64).swap_bytes() == ((0) as i64)",
+    "expected_value": 0,
+    "result": "PROVED"
+  },
+  {
+    "test": "test_swap_bytes",
+    "line": 143,
+    "suite": "_1.swap_bytes() == _1",
+    "compiled": "((!0) as i64).swap_bytes() == ((!0) as i64)",
+    "expected_value": -1,
+    "result": "PROVED"
+  }
+]
