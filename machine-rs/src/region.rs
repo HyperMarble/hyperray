@@ -14,10 +14,8 @@ pub struct Region {
 
 /// Every segment that occupies memory, with the bytes the file supplies.
 ///
-/// A segment whose memory size is zero holds no runtime state: debug
-/// information is the common case, and rejecting it would reject any binary
-/// built with `-g`. A segment larger than its file bytes is zero filled, which
-/// is how `.bss` and Mach-O zero-fill sections are expressed.
+/// A segment of memory size zero occupies nothing and is skipped. A segment
+/// larger than its file bytes is zero filled.
 pub fn regions(binary: &[u8]) -> Result<Vec<Region>, String> {
     let file = object::File::parse(binary).map_err(|error| error.to_string())?;
     let mut found = Vec::new();

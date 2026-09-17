@@ -24,10 +24,7 @@ pub struct Range {
 }
 
 /// The image the engine starts from: the binary's own bytes, and the caller's
-/// declared unknown ranges.
-///
-/// A writable region is placed like any other, because its initial contents
-/// are part of the program even where the program later overwrites them.
+/// declared unknown ranges. A writable region is placed like any other.
 pub fn of(regions: &[Region], unknown: &[Range]) -> Result<Image, String> {
     if let Some(reason) = unusable(unknown) {
         return Err(reason);
@@ -48,10 +45,7 @@ fn placed(region: &Region) -> Placed {
 }
 
 /// Why the declared unknown ranges cannot be used, or `None` when they can.
-///
-/// An empty range declares nothing, and overlapping ranges would have to be
-/// merged. Naming either lets the caller fix the request instead of receiving
-/// a silently altered one.
+/// An empty range and an overlapping pair are both named.
 fn unusable(unknown: &[Range]) -> Option<String> {
     for (index, range) in unknown.iter().enumerate() {
         if range.high <= range.low {

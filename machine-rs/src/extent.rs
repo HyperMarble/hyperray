@@ -10,10 +10,9 @@ pub struct Extent {
 
 /// The address range of a named function.
 ///
-/// Mach-O records size 0 for every symbol, so the end is the next symbol
-/// above the start. The last function in a section has no such symbol, and
-/// there the section's own end is the stated boundary. Both come from the
-/// file, so neither needs disassembly or a search for a return instruction.
+/// The end is the next symbol above the start, or the containing section's
+/// end when no symbol follows. Mach-O records size 0 for every symbol, so the
+/// symbol's own size cannot supply it.
 pub fn of(binary: &[u8], name: &str) -> Result<Extent, String> {
     let file = object::File::parse(binary).map_err(|error| error.to_string())?;
     let start = named(&file, name)?;
@@ -38,8 +37,7 @@ fn containing_section_end(file: &object::File<'_>, start: u64) -> Option<u64> {
         .map(|(_, high)| high)
 }
 
-/// The address of one symbol, matched with or without the Mach-O leading
-/// underscore.
+/// The address of one symbol, with or without the Mach-O leading underscore.
 fn named(file: &object::File<'_>, name: &str) -> Result<u64, String> {
     let underscored = format!("_{name}");
     for symbol in file.symbols() {

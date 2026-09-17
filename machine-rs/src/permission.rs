@@ -9,10 +9,8 @@ pub enum Permission {
     ReadExecute,
 }
 
-/// The permission a segment declares, for either binary format.
-///
-/// Execute wins over write: a segment carrying instructions is proved as code
-/// even when the format also marks it writable.
+/// The permission a segment declares, for either binary format. Execute wins
+/// over write.
 pub fn of(flags: SegmentFlags) -> Permission {
     match flags {
         SegmentFlags::MachO { initprot, .. } => from_bits(initprot & 0x2 != 0, initprot & 0x4 != 0),
