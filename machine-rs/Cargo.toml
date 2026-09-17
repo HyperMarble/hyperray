@@ -1,0 +1,23 @@
+# The machine path: read one binary, run it symbolically, report one verdict.
+#
+# Replaces machine/arm64 (1,202 lines of hand-written Mach-O parsing) and
+# machine/isla (5,045 lines, of which 14 files existed only to parse Isla's
+# text output). Both jobs have libraries: `object` reads the binary, and
+# isla-lib is the engine. Importing isla-lib removes the process boundary,
+# so a trace arrives as a struct and needs no parsing.
+[package]
+name = "hyperray-machine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+object = "0.36"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+too_many_lines = "warn"
+excessive_nesting = "warn"

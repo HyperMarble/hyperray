@@ -55,3 +55,6 @@ a.out
 
 # Solver cache written by the Sail/Isla proof path
 sail_smt_cache
+
+# Rust crate build output
+machine-rs/target/
