@@ -313,10 +313,12 @@ checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 name = "hyperray-machine"
 version = "0.1.0"
 dependencies = [
+ "crossbeam",
  "isla-lib",
  "object",
  "serde",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]
