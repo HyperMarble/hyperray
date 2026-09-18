@@ -10,6 +10,9 @@ fn an_object_without_segments_reports_its_bytes() {
         };
         let loaded = region::regions(&bytes)
             .map(|found| found.iter().map(|one| one.bytes.len()).sum::<usize>());
-        assert!(matches!(loaded, Ok(count) if count > 0), "{name}: {loaded:?}");
+        assert!(
+            matches!(loaded, Ok(count) if count > 0),
+            "{name}: {loaded:?}"
+        );
     }
 }
