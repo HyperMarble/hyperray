@@ -3,16 +3,20 @@
 // ever built here; the compiler wrote them and `seen` reads them back.
 
 mod driver;
+mod dumps;
+mod fresh;
 mod function;
 mod global;
 mod hunk;
 mod join;
 mod locate;
-mod mir;
 mod names;
+mod outcome;
 mod patch;
 mod reader;
+mod request;
 mod seen;
+mod toolchain;
 mod workspace;
 
 pub use driver::{run, Run};
@@ -22,6 +26,7 @@ pub use join::{join, Joined, Status};
 pub use locate::{manifest, Located, Manifest};
 pub use patch::FileChange;
 pub use reader::Opened;
+pub use request::CompileRequest;
 pub use seen::{seen_in, Body, Read, Seen};
 pub use workspace::crate_dir;
 

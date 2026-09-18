@@ -12,5 +12,5 @@ use serde::Serialize;
 pub struct Global {
     pub path: String,
     pub start_line: u32,
-    pub value: Option<u128>,
+    pub value: Option<String>,
 }

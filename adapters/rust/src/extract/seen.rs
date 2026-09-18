@@ -6,7 +6,7 @@
 // code's (design.md §2).
 
 use super::global::Global;
-use super::mir::{Kind, Row};
+use crate::mir::{self, Item, Kind, ReadError};
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -21,6 +21,7 @@ pub struct Seen {
     pub start_line: u32,
     pub end_line: u32,
     pub item_path: Option<String>,
+    pub parent_path: Option<String>,
     pub body: Body,
 }
 
@@ -29,37 +30,37 @@ pub struct Read {
     pub globals: Vec<Global>,
 }
 
-pub fn seen_in(dump: std::fs::File) -> Result<Read, serde_json::Error> {
-    let reader = std::io::BufReader::new(dump);
-    let rows: Vec<Row> = serde_json::from_reader(reader)?;
-    let (functions, globals): (Vec<Row>, Vec<Row>) = rows.into_iter().partition(is_function);
+pub fn seen_in(dump: std::fs::File) -> Result<Read, ReadError> {
+    let items = mir::read(dump)?.items;
+    let (functions, globals): (Vec<Item>, Vec<Item>) = items.into_iter().partition(is_function);
     Ok(Read {
         functions: functions.into_iter().map(seen).collect(),
         globals: globals.into_iter().map(global).collect(),
     })
 }
 
-fn is_function(row: &Row) -> bool {
-    row.kind == Kind::Fn || row.kind == Kind::Ctor
+fn is_function(item: &Item) -> bool {
+    item.kind == Kind::Function || item.kind == Kind::Constructor
 }
 
-fn seen(row: Row) -> Seen {
+fn seen(item: Item) -> Seen {
     Seen {
-        path: row.file,
-        start_line: row.start_line,
-        end_line: row.end_line,
-        item_path: Some(row.name),
-        body: match row.has_body {
+        path: item.file,
+        start_line: item.start_line,
+        end_line: item.end_line,
+        item_path: Some(item.name),
+        parent_path: item.parent,
+        body: match item.body.is_some() {
             true => Body::Extracted,
             false => Body::NoBody,
         },
     }
 }
 
-fn global(row: Row) -> Global {
+fn global(item: Item) -> Global {
     Global {
-        path: row.file,
-        start_line: row.start_line,
-        value: row.value,
+        path: item.file,
+        start_line: item.start_line,
+        value: item.value,
     }
 }

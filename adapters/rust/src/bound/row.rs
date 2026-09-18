@@ -1,66 +1,57 @@
-// Phase D: one bound row per manifest function, manifest order, joined
-// to Phase A by path + start_line (the stage-1 key). Charon emits more
-// than one fun_decl at a closure's or a derive's line; the first whose
-// span contains the function's start line is the function, the same
-// choice stage 1's join makes.
+// One MODEL row joins a manifest function to its exact compiler item. A
+// missing or ambiguous join is an extraction error, not a partial row.
 
-use super::kind::{Bound, Row};
-use super::pile::Pile;
-use super::sort::Sorted;
-use crate::extract::{Joined, Status};
+use super::{ownership, Error, ItemAnalysis, Row};
+use crate::extract::{Joined, Status as JoinStatus};
 
-pub fn rows(joined: &[Joined], sorted: &[Sorted]) -> Vec<Row> {
-    joined
+pub fn rows(manifest: &[Joined], items: &[ItemAnalysis]) -> Result<Vec<Row>, Error> {
+    manifest.iter().map(|entry| row(entry, items)).collect()
+}
+
+fn row(entry: &Joined, items: &[ItemAnalysis]) -> Result<Row, Error> {
+    let item_path = entry
+        .item_path
+        .as_deref()
+        .ok_or_else(|| row_error(entry, "stage 1 did not name a compiler item".to_string()))?;
+    if entry.status != JoinStatus::Extracted {
+        return Err(row_error(
+            entry,
+            "stage 1 did not extract a compiler body".to_string(),
+        ));
+    }
+    let roots: Vec<&ItemAnalysis> = items
         .iter()
-        .map(|j| Row {
-            path: j.path.clone(),
-            name: j.name.clone(),
-            start_line: j.start_line,
-            bound: bound_for(j, sorted),
-        })
-        .collect()
+        .filter(|item| item.name == item_path && item.path == entry.path)
+        .collect();
+    let [root] = roots.as_slice() else {
+        return Err(row_error(entry, root_error(item_path, roots.len())));
+    };
+    Ok(analyzed(entry, root, items))
 }
 
-fn bound_for(j: &Joined, sorted: &[Sorted]) -> Bound {
-    let hit = sorted
-        .iter()
-        .find(|s| s.path == j.path && s.start_line <= j.start_line && j.start_line <= s.end_line);
-    match hit {
-        Some(s) => bound_of(s),
-        None => Bound::NotInCharon {
-            reason: reason_of(&j.status),
-        },
+fn analyzed(entry: &Joined, root: &ItemAnalysis, items: &[ItemAnalysis]) -> Row {
+    let mut loops = root.loops.clone();
+    for item in ownership::descendants(&root.name, items) {
+        loops.extend(item.loops.clone());
+    }
+    Row {
+        path: entry.path.clone(),
+        name: entry.name.clone(),
+        start_line: entry.start_line,
+        end_line: entry.end_line,
+        inputs: root.inputs.clone(),
+        loops,
     }
 }
 
-fn bound_of(s: &Sorted) -> Bound {
-    let inputs = s.inputs.clone();
-    let limits = s.limits.clone();
-    match &s.pile {
-        Pile::NoBound => Bound::None,
-        Pile::FixedWidth => Bound::FixedWidth { inputs },
-        Pile::Sized => Bound::Sized { inputs, limits },
-        Pile::Loop => Bound::Loop {
-            inputs,
-            reason: limits
-                .is_empty()
-                .then(|| "no evaluated constant is compared in this body".to_string()),
-            limits,
-        },
-        Pile::Unbuildable { input, kind } => Bound::Unbuildable {
-            input: *input,
-            ty_kind: kind.clone(),
-            inputs,
-        },
+fn row_error(entry: &Joined, reason: String) -> Error {
+    Error::Row {
+        path: entry.path.clone(),
+        name: entry.name.clone(),
+        reason,
     }
 }
 
-// Stage 1's words, verbatim. `Extracted` with no Phase-A row cannot
-// happen (Phase A reads every item), and is still named, not hidden.
-fn reason_of(status: &Status) -> String {
-    match status {
-        Status::Missing => "the compiler built no item for this function".to_string(),
-        Status::FileNotSeen => "the compiler never saw this file".to_string(),
-        Status::Extracted => "the body was read but no signature row matched".to_string(),
-    }
+fn root_error(item: &str, count: usize) -> String {
+    format!("compiler item {item} has {count} Stage 3 analyses")
 }

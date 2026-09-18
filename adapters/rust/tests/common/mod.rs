@@ -13,18 +13,18 @@ pub fn dir(name: &str) -> Option<PathBuf> {
     Some(path)
 }
 
-// Every Charon output under HYPERRAY_FIXTURE_SRC/<tree>/target/hyperray/,
-// one per crate, written by the stage-1 live test.
+// Every `mir-dump` output under HYPERRAY_FIXTURE_SRC/<tree>/target/
+// hyperray-mir/, one per crate, written by the stage-1 live test.
 #[allow(dead_code)]
-pub fn ullbc_files(tree: &std::path::Path) -> Vec<PathBuf> {
-    let dir = tree.join("target").join("hyperray");
+pub fn mir_files(tree: &std::path::Path) -> Vec<PathBuf> {
+    let dir = tree.join("target").join("hyperray-mir");
     let Ok(entries) = std::fs::read_dir(&dir) else {
         return Vec::new();
     };
     let mut found: Vec<PathBuf> = entries
         .filter_map(Result::ok)
         .map(|e| e.path())
-        .filter(|p| p.extension().is_some_and(|x| x == "ullbc"))
+        .filter(|p| p.to_string_lossy().ends_with(".mir.json"))
         .collect();
     found.sort();
     found

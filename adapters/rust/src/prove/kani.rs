@@ -20,6 +20,7 @@ pub struct Scope<'a> {
     pub harness: Option<&'a str>,
     pub default_unwind: u32,
     pub async_lib: bool,
+    pub kani_arguments: &'a [String],
 }
 
 pub fn run(scope: &Scope) -> Run {
@@ -35,6 +36,7 @@ pub fn run(scope: &Scope) -> Run {
     if scope.async_lib {
         command.args(["-Z", "async-lib"]);
     }
+    command.args(scope.kani_arguments);
     let result = command.output();
     let log = match &result {
         Ok(done) => {

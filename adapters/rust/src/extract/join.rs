@@ -18,6 +18,7 @@ pub struct Joined {
     pub path: String,
     pub name: String,
     pub start_line: u32,
+    pub end_line: u32,
     pub item_path: Option<String>,
     pub status: Status,
 }
@@ -31,6 +32,7 @@ pub fn join(functions: &[Located], seen: &[Seen]) -> Vec<Joined> {
                 path: function.path.clone(),
                 name: function.name.clone(),
                 start_line: function.start_line,
+                end_line: function.end_line,
                 item_path: hit.and_then(|s| s.item_path.clone()),
                 status: status_of(function, seen, hit),
             }
@@ -46,7 +48,14 @@ fn hit_for<'a>(function: &Located, seen: &'a [Seen]) -> Option<&'a Seen> {
         s.path == function.path
             && s.start_line <= function.start_line
             && s.end_line >= function.end_line
+            && s.item_path
+                .as_deref()
+                .is_some_and(|path| item_name_matches(path, &function.name))
     })
+}
+
+fn item_name_matches(path: &str, name: &str) -> bool {
+    path == name || path.ends_with(&format!("::{name}"))
 }
 
 fn status_of(function: &Located, seen: &[Seen], hit: Option<&Seen>) -> Status {

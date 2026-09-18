@@ -1,4 +1,6 @@
 mod common;
+#[path = "extract_patch/added.rs"]
+mod extract_patch_added;
 
 use hyperray_rust::extract::{change, Change, HunkChange};
 
@@ -67,13 +69,4 @@ fn bounded(hunk: &HunkChange) {
 
 fn identifier(name: &str) -> bool {
     name.chars().all(|c| c.is_alphanumeric() || c == '_')
-}
-
-#[test]
-fn pass_one_reads_only_the_patch_text() {
-    let text = "+++ b/src/lib.rs\n@@ -1,2 +1,3 @@ mod x\n+pub fn added() {}\n-old\n";
-    let files = change(text);
-    assert_eq!(files[0].path, "src/lib.rs");
-    assert_eq!(files[0].hunks[0].defines, vec!["added".to_string()]);
-    assert_eq!(files[0].hunks[0].context, "mod x");
 }

@@ -1,29 +1,53 @@
-// BOUND: for every changed function, say what could make a proof run
-// forever (a loop, a growable input) and where its finite limit comes
-// from. Phase A sorts; later phases attach the limit.
+// Compiler MIR supplies input shapes and structural cycle diagnostics.
+// These diagnostics must never claim a numeric loop bound.
 
-mod adt;
-mod binop;
-mod block;
-mod constant;
-mod decl;
+mod analyze;
+mod artifact;
+mod build;
+mod call;
+mod cbmc;
+mod contract;
+mod definition;
+mod domain;
 mod edge;
+mod error;
+mod exit;
+mod expression;
+mod fresh;
+mod goto;
+mod graph;
+mod harness;
+mod harness_model;
+mod input;
+mod inventory;
+mod kani;
 mod kind;
-mod limit;
-mod meta;
-mod pile;
+mod local;
+mod r#loop;
+mod loop_analysis;
+mod metadata;
+mod metadata_kind;
+mod metadata_paths;
+mod model;
+mod operand;
+mod ownership;
+mod place_trace;
 mod row;
-mod size;
-mod sort;
-mod stmt;
-mod ty;
-mod ullbc;
+mod rvalue;
+mod selection;
+mod tool;
+mod trace;
 
-pub use binop::BinOp;
-pub use kind::{Bound, Row};
-pub use limit::Limit;
-pub use pile::{pile, Pile};
+pub use analyze::{analyze, dump as analyze_dump, ItemAnalysis};
+pub use build::build_model;
+pub use contract::ContractedFunction;
+pub use error::Error;
+pub use expression::Expression;
+pub use goto::{GotoLocation, GotoLoop};
+pub use harness_model::{HarnessClass, HarnessModel};
+pub use inventory::decode_cbmc_loop_inventory;
+pub use kind::{Domain, Input, Row};
+pub use model::{HarnessMode, Model, Scope, ToolVersions};
+pub use r#loop::{Edge, Exit, Loop};
 pub use row::rows;
-pub use size::Size;
-pub use sort::{sort_all, Sorted};
-pub use ullbc::{read, Output};
+pub use selection::AutomaticSelection;

@@ -1,0 +1,17 @@
+# Build only the generated ABI connection, never a replacement subject.
+[package]
+name = "hyperray-native-binding"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "binding"
+path = "binding.rs"
+crate-type = ["staticlib"]
+
+[workspace]
+resolver = "2"
+
+[profile.dev]
+panic = "abort"
