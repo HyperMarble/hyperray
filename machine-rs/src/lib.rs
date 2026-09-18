@@ -3,6 +3,8 @@
 pub mod architecture;
 pub mod engine;
 pub mod extent;
+pub mod footprint;
 pub mod image;
 pub mod permission;
 pub mod region;
+pub mod trace_queue;
