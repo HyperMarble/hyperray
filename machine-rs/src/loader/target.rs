@@ -29,3 +29,17 @@ pub struct Target {
     pub stack_pointer: &'static str,
     pub program_counter: &'static str,
 }
+
+/// The target a binary was compiled for.
+///
+/// An architecture we hold no convention for is named, never guessed at.
+pub fn of(binary: &[u8]) -> Result<Target, String> {
+    use object::{Architecture, Object};
+    let file = object::File::parse(binary).map_err(|error| error.to_string())?;
+    match file.architecture() {
+        Architecture::Aarch64 => Ok(super::arm64::TARGET),
+        Architecture::X86_64 => Ok(super::x86_64::TARGET),
+        Architecture::Riscv64 => Ok(super::riscv64::TARGET),
+        other => Err(format!("no convention for architecture {other:?}")),
+    }
+}
