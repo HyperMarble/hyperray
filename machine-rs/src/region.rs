@@ -19,6 +19,9 @@ pub struct Region {
 pub fn regions(binary: &[u8]) -> Result<Vec<Region>, String> {
     let file = object::File::parse(binary).map_err(|error| error.to_string())?;
     let mut found = Vec::new();
+    if file.segments().next().is_none() {
+        return crate::section::regions(&file);
+    }
     for segment in file.segments() {
         let supplied = segment.data().map_err(|error| error.to_string())?;
         let Some(region) = occupied(
@@ -39,7 +42,7 @@ pub fn regions(binary: &[u8]) -> Result<Vec<Region>, String> {
 ///
 /// Returns `None` for a segment that occupies no memory, which is a statement
 /// about the file rather than a failure.
-fn occupied(
+pub(crate) fn occupied(
     address: u64,
     size: u64,
     supplied: &[u8],

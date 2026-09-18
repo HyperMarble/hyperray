@@ -26,3 +26,14 @@ fn from_bits(writable: bool, executable: bool) -> Permission {
         (false, false) => Permission::Read,
     }
 }
+
+/// The permission a section's kind implies.
+///
+/// Executable code is RX; everything else that occupies memory is RW.
+pub fn of_section(kind: object::SectionKind) -> Permission {
+    match kind {
+        object::SectionKind::Text => Permission::ReadExecute,
+        object::SectionKind::ReadOnlyData | object::SectionKind::ReadOnlyString => Permission::Read,
+        _ => Permission::ReadWrite,
+    }
+}

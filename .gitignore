@@ -58,3 +58,5 @@ sail_smt_cache
 
 # Rust crate build output
 machine-rs/target/
+!machine-rs/tests/fixtures/*.o
+!machine-rs/tests/fixtures/*.o
