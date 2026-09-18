@@ -26,7 +26,7 @@ func NewTraceStore(root string) *TraceStore {
 func (store *TraceStore) path(encoding string, architecture string) string {
 	sum := sha256.Sum256([]byte(architecture + ":" + encoding))
 	name := hex.EncodeToString(sum[:])
-	return filepath.Join(store.root, name[:2], name[2:]+".json")
+	return filepath.Join(store.root, name[:2], name[2:]+".json.gz")
 }
 
 // Lookup returns a stored trace, and whether one was found.
@@ -34,7 +34,11 @@ func (store *TraceStore) Lookup(encoding string, architecture string) (Instructi
 	if store.root == "" {
 		return InstructionTrace{}, false
 	}
-	content, err := os.ReadFile(store.path(encoding, architecture))
+	packed, err := os.ReadFile(store.path(encoding, architecture))
+	if err != nil {
+		return InstructionTrace{}, false
+	}
+	content, err := unpack(packed)
 	if err != nil {
 		return InstructionTrace{}, false
 	}
@@ -54,9 +58,13 @@ func (store *TraceStore) Keep(encoding string, architecture string, trace Instru
 	if err != nil {
 		return err
 	}
+	packed, err := pack(content)
+	if err != nil {
+		return err
+	}
 	target := store.path(encoding, architecture)
 	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(target, content, 0o644)
+	return os.WriteFile(target, packed, 0o644)
 }
