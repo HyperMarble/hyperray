@@ -6,14 +6,14 @@ import "strings"
 
 const missingPrimitivePrefix = "No primop "
 
-func classifyDiagnostics(output commandOutput) ([]DiagnosticDisposition, error) {
+func classifyDiagnostics(output commandOutput, subject string) ([]DiagnosticDisposition, error) {
 	lines := diagnosticLines(output.diagnostics)
 	result := make([]DiagnosticDisposition, 0, len(lines))
 	digest := rawOutputDigest(output)
 	for index := range lines {
 		line := lines[index]
 		if !strings.HasPrefix(line, missingPrimitivePrefix) {
-			return nil, engineError(ProtocolError, "footprint diagnostic", line)
+			return nil, engineError(ProtocolError, subject, line)
 		}
 		result = append(result, DiagnosticDisposition{
 			Message: line, Kind: UnavailablePrimitive,

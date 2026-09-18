@@ -7,13 +7,17 @@ import re
 from build import run
 
 
-def entry_and_end(binary: pathlib.Path) -> tuple:
-    """The entry symbol and the address after its return instruction."""
+def entry_and_end(binary: pathlib.Path, entry: str = "__start") -> tuple:
+    """The named entry symbol and the address after its return instruction.
+
+    The first text symbol is not the entry. A no_std program defines a panic
+    handler that branches to itself, and it can sort first.
+    """
     symbols = run(["xcrun", "nm", "-g", str(binary)]).stdout
     start = None
     for line in symbols.split("\n"):
         parts = line.split()
-        if len(parts) == 3 and parts[1] == "T":
+        if len(parts) == 3 and parts[1] == "T" and parts[2] == entry:
             start = int(parts[0], 16)
             break
     if start is None:
@@ -29,17 +33,20 @@ def entry_and_end(binary: pathlib.Path) -> tuple:
     return start, None
 
 def segments(listing: str) -> list:
-    """Every segment otool reports, as a name with its address and size."""
-    found, name, address = [], "", None
+    """Every segment otool reports, with the protection it declares."""
+    found, name, address, size = [], "", None, None
     for line in listing.split("\n"):
         text = line.strip()
         if text.startswith("segname"):
-            name, address = text.split()[1], None
+            name, address, size = text.split()[1], None, None
         if text.startswith("vmaddr"):
             address = int(text.split()[1], 16)
-        if text.startswith("vmsize") and address is not None:
-            found.append({"name": name, "address": address, "size": int(text.split()[1], 16)})
-            address = None
+        if text.startswith("vmsize"):
+            size = int(text.split()[1], 16)
+        if text.startswith("initprot") and address is not None and size is not None:
+            found.append({"name": name, "address": address, "size": size,
+                          "initprot": int(text.split()[1], 16)})
+            address, size = None, None
     return found
 
 
@@ -49,7 +56,18 @@ def loadable(segment: dict) -> bool:
 
 
 def region(segment: dict) -> dict:
-    permission = {"__TEXT": "RX", "__DATA": "RW"}.get(segment["name"], "R")
+    """One mapping, with the protection the segment states.
+
+    The name does not decide this: __DATA_CONST is read and write, and
+    naming it read-only leaves its bytes uncovered.
+    """
+    protection = segment["initprot"]
+    if protection & 0x4:
+        permission = "RX"
+    elif protection & 0x2:
+        permission = "RW"
+    else:
+        permission = "R"
     return {"va": segment["address"], "pa": segment["address"],
             "length": segment["size"], "permission": permission}
 

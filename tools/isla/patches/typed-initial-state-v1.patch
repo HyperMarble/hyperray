@@ -1,0 +1,2962 @@
+diff --git a/fixtures/initial-state.ir b/fixtures/initial-state.ir
+new file mode 100644
+index 0000000..bbb0bc0
+--- /dev/null
++++ b/fixtures/initial-state.ir
+@@ -0,0 +1,10 @@
++#comment Declared types exercise initial-state transport without instructions.
++#comment Test values must obey these declarations, not inferred program behavior.
++enum zMode { zReady, zBusy }
++enum zOtherMode { zOther }
++struct zControl { zbits: %bv64, zflag: %bool }
++register zcontrol: %struct zControl
++register zaddress: %bv64
++register zflag: %bool
++register zmode: %enum zMode
++register zvector: %fvec(2, %bool)
+diff --git a/isla-axiomatic/src/axiomatic.rs b/isla-axiomatic/src/axiomatic.rs
+index 3a2b781..eb632e0 100644
+--- a/isla-axiomatic/src/axiomatic.rs
++++ b/isla-axiomatic/src/axiomatic.rs
+@@ -1152,7 +1152,8 @@ pub fn final_state_from_z3_output<'exec, 'ev, 'litmus, 'model, B: BV>(
+             .get(&(*reg, *thread_id))
+             .cloned()
+             .cloned()
+-            .ok_or_else(|| FinalLocValuesError::BadRegisterName(reg, *thread_id)),
++            .ok_or_else(|| FinalLocValuesError::BadRegisterName(reg, *thread_id))
++            .and_then(|value| crate::final_value::concrete(value, &mut model).map_err(FinalLocValuesError::ReadModelError)),
+         LitmusLoc::LastWriteTo { address, bytes } => {
+             let symbolic_addr =
+                 litmus.symbolic_addrs.get(address).ok_or_else(|| FinalLocValuesError::BadAddress(address))?;
+diff --git a/isla-axiomatic/src/final_value.rs b/isla-axiomatic/src/final_value.rs
+new file mode 100644
+index 0000000..0b676d3
+--- /dev/null
++++ b/isla-axiomatic/src/final_value.rs
+@@ -0,0 +1,37 @@
++// Final register values come from the solver model, never symbolic identifiers.
++// Unsupported model values remain explicit output errors.
++
++use crate::sexp::SexpVal;
++use crate::smt_model::Model;
++use isla_lib::bitvector::BV;
++use isla_lib::ir::Val;
++use std::collections::BTreeSet;
++
++#[cfg(test)]
++#[path = "final_value_tests.rs"]
++mod tests;
++
++pub(crate) fn symbols<'a, B: BV>(values: impl Iterator<Item = &'a Val<B>>) -> BTreeSet<String> {
++    let mut symbols = BTreeSet::new();
++    for value in values {
++        if let Val::Symbolic(symbol) = value {
++            symbols.insert(format!("v{}", symbol));
++        }
++    }
++    symbols
++}
++
++pub(crate) fn concrete<B: BV>(value: Val<B>, model: &mut Model<'_, '_, B>) -> Result<Val<B>, String> {
++    let symbol = match value {
++        Val::Symbolic(symbol) => symbol,
++        Val::Bits(_) | Val::Bool(_) | Val::I64(_) | Val::I128(_) => return Ok(value),
++        _ => return Err("final register is not a scalar model value".to_string()),
++    };
++    let result = model.interpret(&format!("v{}", symbol), &[]).map_err(|error| error.to_string())?;
++    match result {
++        SexpVal::Bits(bits) => Ok(Val::Bits(bits)),
++        SexpVal::Bool(value) => Ok(Val::Bool(value)),
++        SexpVal::I128(value) => Ok(Val::I128(value)),
++        SexpVal::Event(_) | SexpVal::Relation(_) => Err("final register model value is not a scalar".to_string()),
++    }
++}
+diff --git a/isla-axiomatic/src/final_value_tests.rs b/isla-axiomatic/src/final_value_tests.rs
+new file mode 100644
+index 0000000..f5474fb
+--- /dev/null
++++ b/isla-axiomatic/src/final_value_tests.rs
+@@ -0,0 +1,41 @@
++// Solver model values must replace symbolic identifiers in final states.
++// Unknown symbols and non-scalar values must remain errors.
++
++use super::{concrete, symbols};
++use crate::smt_model::Model;
++use isla_lib::bitvector::{b64::B64, BV};
++use isla_lib::ir::Val;
++use isla_lib::smt::Sym;
++
++#[test]
++fn resolves_a_symbolic_bitvector() -> Result<(), String> {
++    let text = "(model (define-fun v7 () (_ BitVec 64) #x0000000000000040))";
++    let mut model = Model::<B64>::parse(&[], text).map_err(|error| error.to_string())?;
++    let result = concrete(Val::Symbolic(Sym::from_u32(7)), &mut model)?;
++    assert_eq!(result, Val::Bits(B64::from_u64(64)));
++    Ok(())
++}
++
++#[test]
++fn resolves_a_get_value_bitvector() -> Result<(), String> {
++    let mut model = Model::<B64>::parse(&[], "((v7 #x0000000000000040))").map_err(|error| error.to_string())?;
++    assert_eq!(concrete(Val::Symbolic(Sym::from_u32(7)), &mut model)?, Val::Bits(B64::from_u64(64)));
++    Ok(())
++}
++
++#[test]
++fn requests_distinct_final_symbols() {
++    let value = Val::<B64>::Symbolic(Sym::from_u32(7));
++    let values = [value.clone(), Val::Bool(true), value];
++    let result = symbols(values.iter());
++    assert_eq!(result.into_iter().collect::<Vec<_>>(), vec!["v7"]);
++}
++
++#[test]
++fn rejects_missing_symbols_and_non_scalars() -> Result<(), String> {
++    let mut model = Model::<B64>::parse(&[], "(model)").map_err(|error| error.to_string())?;
++    assert!(concrete(Val::Symbolic(Sym::from_u32(7)), &mut model).is_err());
++    assert!(concrete(Val::Unit, &mut model).is_err());
++    assert_eq!(concrete(Val::Bool(true), &mut model)?, Val::Bool(true));
++    Ok(())
++}
+diff --git a/isla-axiomatic/src/initial_memory/mod.rs b/isla-axiomatic/src/initial_memory/mod.rs
+new file mode 100644
+index 0000000..3abc0e4
+--- /dev/null
++++ b/isla-axiomatic/src/initial_memory/mod.rs
+@@ -0,0 +1,44 @@
++// Initial read and final-memory expressions share the loaded byte image.
++// This layer must not replace read-from or ordering constraints.
++use isla_cat::smt::Sexp;
++use isla_lib::bitvector::BV;
++use isla_lib::ir::Val;
++use isla_lib::memory::Memory;
++use std::io::Write;
++use std::num::NonZeroU32;
++
++#[cfg(test)]
++mod tests;
++
++pub(super) fn definition<B: BV>(output: &mut dyn Write, memory: &Memory<B>) -> std::io::Result<()> {
++    write!(output, "(define-fun loaded-initial-byte ((address (_ BitVec 64))) (_ BitVec 8) ")?;
++    for (address, byte) in memory.initialized_bytes() {
++        write!(output, "(ite (= address #x{:016x}) #x{:02x} ", address, byte)?;
++    }
++    write!(output, "#x00")?;
++    write!(output, "{}", ")".repeat(memory.initialized_bytes().len()))?;
++    writeln!(output, ")")
++}
++
++pub(super) fn value(address: &str, bytes: NonZeroU32) -> String {
++    let mut result = format!("(loaded-initial-byte {})", address);
++    for offset in 1..bytes.get() {
++        let part = format!("(loaded-initial-byte (bvadd {} #x{:016x}))", address, offset);
++        result = format!("(concat {} {})", part, result);
++    }
++    result
++}
++
++pub(super) fn condition<B: BV>(read: &Val<B>, address: &Val<B>, bytes: u32, memory: &Memory<B>) -> Option<Sexp> {
++    if memory.initialized_bytes().is_empty() || bytes == 0 {
++        return None;
++    }
++    if let Val::Bits(address) = address {
++        if memory.in_custom_region(address.lower_u64()).is_some() {
++            return None;
++        }
++    }
++    let address = super::smt_bitvec(address);
++    let read = super::smt_bitvec(read);
++    Some(Sexp::Literal(format!("(= {} {})", read, value(&address, NonZeroU32::new(bytes)?))))
++}
+diff --git a/isla-axiomatic/src/initial_memory/tests.rs b/isla-axiomatic/src/initial_memory/tests.rs
+new file mode 100644
+index 0000000..c744b5a
+--- /dev/null
++++ b/isla-axiomatic/src/initial_memory/tests.rs
+@@ -0,0 +1,48 @@
++// Solver tests compare initialized reads with the declared byte image.
++// Each rejected mutation also needs a satisfiable unchanged query.
++use super::*;
++use isla_lib::bitvector::b64::B64;
++use isla_lib::smt::Sym;
++use std::collections::HashMap;
++
++mod solver;
++
++#[test]
++fn initial_memory_symbolic_addresses_preserve_all_read_widths() -> Result<(), Box<dyn std::error::Error>> {
++    let image = [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0];
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &image, true)?;
++    for bytes in [1, 2, 4, 8] {
++        let script = solver::read_script(&memory, &image, bytes)?;
++        assert_eq!(solver::operate(&script)?, "sat\nunsat\n");
++    }
++    Ok(())
++}
++
++#[test]
++fn initial_memory_legacy_location_retains_priority() -> Result<(), Box<dyn std::error::Error>> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12, 0x34], true)?;
++    let address = Val::Bits(B64::from_u64(0x1000));
++    let initial = HashMap::from([(0x1000, 0x99)]);
++    let expression = super::super::read_initial_symbolic(Sym::from_u32(0), &address, 1, &memory, &initial);
++    let mut script = Vec::new();
++    definition(&mut script, &memory)?;
++    writeln!(script, "(declare-const v0 (_ BitVec 8))\n(assert ")?;
++    expression.write_to(&mut script, false, 0, false)?;
++    writeln!(script, ")\n(check-sat)\n(assert (not (= v0 #x99)))\n(check-sat)")?;
++    assert_eq!(solver::operate(&script)?, "sat\nunsat\n");
++    Ok(())
++}
++
++#[test]
++fn initial_memory_final_value_preserves_loaded_bytes() -> Result<(), Box<dyn std::error::Error>> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12, 0x34], true)?;
++    let value = super::super::initial_write_values::<B64>("#x0000000000001000", 64, &HashMap::new())?;
++    let mut script = Vec::new();
++    definition(&mut script, &memory)?;
++    writeln!(script, "(check-sat)\n(assert (not (= {} #x0000000000003412)))\n(check-sat)", value)?;
++    assert_eq!(solver::operate(&script)?, "sat\nunsat\n");
++    Ok(())
++}
+diff --git a/isla-axiomatic/src/initial_memory/tests/solver.rs b/isla-axiomatic/src/initial_memory/tests/solver.rs
+new file mode 100644
+index 0000000..81ff38c
+--- /dev/null
++++ b/isla-axiomatic/src/initial_memory/tests/solver.rs
+@@ -0,0 +1,50 @@
++// Native solver queries exercise the production initial-read expression.
++// Solver errors and unexpected output are visible test errors.
++use super::*;
++use std::process::{Command, Stdio};
++
++pub(super) fn operate(script: &[u8]) -> Result<String, Box<dyn std::error::Error>> {
++    let mut process =
++        Command::new("z3").arg("-in").stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
++    let mut input = process.stdin.take().ok_or("solver stdin is absent")?;
++    input.write_all(script)?;
++    drop(input);
++    let result = process.wait_with_output()?;
++    if !result.status.success() || !result.stderr.is_empty() {
++        return Err(format!("solver error: {:?}: {}", result.status, String::from_utf8_lossy(&result.stderr)).into());
++    }
++    Ok(String::from_utf8(result.stdout)?)
++}
++
++pub(super) fn read_script(
++    memory: &Memory<B64>,
++    image: &[u8],
++    bytes: u32,
++) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
++    let mut script = Vec::new();
++    definition(&mut script, memory)?;
++    writeln!(script, "(declare-const v0 (_ BitVec {}))\n(declare-const v1 (_ BitVec 64))", bytes * 8)?;
++    let expression = super::super::super::read_initial_symbolic(
++        Sym::from_u32(0),
++        &Val::Symbolic(Sym::from_u32(1)),
++        bytes,
++        memory,
++        &HashMap::new(),
++    );
++    write!(script, "(assert ")?;
++    expression.write_to(&mut script, false, 0, false)?;
++    writeln!(
++        script,
++        ")\n(assert (and (bvuge v1 #x0000000000001000) (bvule v1 #x{:016x})))",
++        0x1000 + image.len() - bytes as usize
++    )?;
++    writeln!(script, "(check-sat)\n(assert (or")?;
++    for offset in 0..=image.len() - bytes as usize {
++        let mut expected = [0; 8];
++        expected[..bytes as usize].copy_from_slice(&image[offset..offset + bytes as usize]);
++        let expected = u64::from_le_bytes(expected);
++        writeln!(script, "(and (= v1 #x{:016x}) (not (= v0 (_ bv{} {}))))", 0x1000 + offset, expected, bytes * 8)?;
++    }
++    writeln!(script, "))\n(check-sat)")?;
++    Ok(script)
++}
+diff --git a/isla-axiomatic/src/initial_state.rs b/isla-axiomatic/src/initial_state.rs
+new file mode 100644
+index 0000000..6c0c3e8
+--- /dev/null
++++ b/isla-axiomatic/src/initial_state.rs
+@@ -0,0 +1,50 @@
++// Initial state reuses the model value parser and declared register types.
++// Unknown names and conflicting assignments must not disappear from execution.
++use isla_lib::bitvector::BV;
++use isla_lib::ir::{Name, SharedState, Val};
++use isla_lib::ir_lexer::new_ir_lexer;
++use isla_lib::value_parser::ValParser;
++use isla_lib::zencode;
++use std::collections::{BTreeMap, HashMap};
++use toml::Value;
++
++pub(crate) fn parse(input: &Value) -> Result<BTreeMap<String, String>, String> {
++    let Some(table) = input.get("initial_state") else {
++        return Ok(BTreeMap::new());
++    };
++    let table = table.as_table().ok_or("Initial state must be a table")?;
++    table
++        .iter()
++        .map(|(name, value)| {
++            let value = value.as_str().ok_or("Initial state values must be strings")?;
++            Ok((name.clone(), value.to_string()))
++        })
++        .collect()
++}
++
++pub(crate) fn values<B: BV>(
++    input: &BTreeMap<String, String>,
++    state: &SharedState<B>,
++) -> Result<HashMap<Name, Val<B>>, String> {
++    let mut values = HashMap::new();
++    for (name, source) in input {
++        let register = state
++            .symtab
++            .get(&zencode::encode(name))
++            .ok_or_else(|| format!("Initial state names unknown register {}", name))?;
++        let ty =
++            state.registers.get(&register).ok_or_else(|| format!("Initial state name is not a register: {}", name))?;
++        let value = ValParser::new()
++            .parse(&state.symtab, &state.type_info, new_ir_lexer(source))
++            .map_err(|error| format!("Invalid initial state for {}: {}", name, error))?;
++        if !crate::initial_state_type::matches(&value, ty, &state.type_info) {
++            return Err(format!("Initial state for {} does not match its declared type", name));
++        }
++        values.insert(register, value);
++    }
++    Ok(values)
++}
++
++#[cfg(test)]
++#[path = "initial_state_tests.rs"]
++mod tests;
+diff --git a/isla-axiomatic/src/initial_state_table_tests.rs b/isla-axiomatic/src/initial_state_table_tests.rs
+new file mode 100644
+index 0000000..688bd4a
+--- /dev/null
++++ b/isla-axiomatic/src/initial_state_table_tests.rs
+@@ -0,0 +1,14 @@
++// The state table must remain explicit input, not a permissive default.
++// Malformed table types cannot disappear during parsing.
++use crate::initial_state::parse;
++
++#[test]
++fn rejects_malformed_state_table() -> Result<(), String> {
++    for source in ["initial_state = true", "[initial_state]\nflag = true"] {
++        let input = toml::from_str(source).map_err(|error| error.to_string())?;
++        assert!(parse(&input).is_err());
++    }
++    let empty = toml::from_str("").map_err(|error| error.to_string())?;
++    assert!(parse(&empty)?.is_empty());
++    Ok(())
++}
+diff --git a/isla-axiomatic/src/initial_state_tests.rs b/isla-axiomatic/src/initial_state_tests.rs
+new file mode 100644
+index 0000000..96b1f74
+--- /dev/null
++++ b/isla-axiomatic/src/initial_state_tests.rs
+@@ -0,0 +1,71 @@
++// Real parser fixtures establish initial-state shape and type requirements.
++// Invalid declarations must fail even when no instruction reads them.
++use super::values;
++use isla_lib::bitvector::b64::B64;
++use isla_lib::ir::{IRTypeInfo, SharedState, Symtab};
++use isla_lib::ir_lexer::new_ir_lexer;
++use isla_lib::ir_parser::IrParser;
++use std::collections::BTreeMap;
++
++fn with_state(test: impl FnOnce(&SharedState<B64>) -> Result<(), String>) -> Result<(), String> {
++    let mut symbols = Symtab::new();
++    let source = include_str!("../../fixtures/initial-state.ir");
++    let definitions = IrParser::new().parse(&mut symbols, new_ir_lexer(source)).map_err(|error| error.to_string())?;
++    let types = IRTypeInfo::new(&definitions);
++    let state = SharedState::new(
++        symbols,
++        &definitions,
++        types,
++        Default::default(),
++        Default::default(),
++        Default::default(),
++        Vec::new(),
++        Vec::new(),
++        Vec::new(),
++    );
++    test(&state)
++}
++
++#[test]
++fn accepts_declared_model_values() -> Result<(), String> {
++    with_state(|state| {
++        let assignments = BTreeMap::from([
++            ("control".to_string(), "{ bits = 0x0000000080100048, flag = true }".to_string()),
++            ("address".to_string(), "0x0000000000000000".to_string()),
++            ("flag".to_string(), "false".to_string()),
++            ("mode".to_string(), "Ready".to_string()),
++            ("vector".to_string(), "[true; 2]".to_string()),
++        ]);
++        assert_eq!(values(&assignments, state)?.len(), assignments.len());
++        Ok(())
++    })
++}
++
++#[test]
++fn rejects_invalid_names_shapes_and_types() -> Result<(), String> {
++    with_state(|state| {
++        let assignments = [
++            ("missing", "true"),
++            ("bits", "0x0000000000000000"),
++            ("address", "true"),
++            ("address", "0x00"),
++            ("control", "{ bits = 0x0000000000000000 }"),
++            ("control", "{ bits = 0x00, flag = true }"),
++            ("control", "{ bits = 0x0000000000000000, flag = 0x01 }"),
++            ("control", "{ bits = 0x0000000000000000, flag = true, address = 0x00 }"),
++            ("vector", "[true; 3]"),
++            ("vector", "[0x01; 2]"),
++            ("mode", "Other"),
++            ("flag", "()"),
++            ("address", "("),
++        ];
++        for (name, value) in assignments {
++            let input = BTreeMap::from([(name.to_string(), value.to_string())]);
++            assert!(values(&input, state).is_err(), "accepted {} = {}", name, value);
++        }
++        Ok(())
++    })
++}
++
++#[path = "initial_state_table_tests.rs"]
++mod table;
+diff --git a/isla-axiomatic/src/initial_state_type.rs b/isla-axiomatic/src/initial_state_type.rs
+new file mode 100644
+index 0000000..cbbcea9
+--- /dev/null
++++ b/isla-axiomatic/src/initial_state_type.rs
+@@ -0,0 +1,32 @@
++// Initial values must match the existing model type declarations exactly.
++// Aggregate values cannot bypass checks of their fields or elements.
++use isla_lib::bitvector::BV;
++use isla_lib::ir::{IRTypeInfo, Name, Ty, Val};
++
++pub(crate) fn matches<B: BV>(value: &Val<B>, ty: &Ty<Name>, types: &IRTypeInfo) -> bool {
++    match (value, ty) {
++        (Val::I64(_), Ty::I64) | (Val::I128(_), Ty::I128) => true,
++        (Val::Bool(_), Ty::Bool) | (Val::Unit, Ty::Unit) => true,
++        (Val::String(_), Ty::String) | (Val::Bits(_), Ty::AnyBits) => true,
++        (Val::Bits(bits), Ty::Bits(width)) => bits.len() == *width,
++        (Val::Bits(bits), Ty::Bit) => bits.len() == 1,
++        (Val::Struct(values), Ty::Struct(name)) => {
++            let Some(fields) = types.structs.get(name) else {
++                return false;
++            };
++            fields.len() == values.len()
++                && fields.iter().all(|(field, ty)| values.get(field).is_some_and(|value| matches(value, ty, types)))
++        }
++        (Val::Enum(member), Ty::Enum(name)) => {
++            member.enum_id.to_name() == *name
++                && types.enums.get(name).is_some_and(|members| member.member < members.len())
++        }
++        (Val::Vector(values), Ty::FixedVector(length, element)) => {
++            values.len() == *length as usize && values.iter().all(|value| matches(value, element, types))
++        }
++        (Val::Vector(values), Ty::Vector(element)) | (Val::List(values), Ty::List(element)) => {
++            values.iter().all(|value| matches(value, element, types))
++        }
++        _ => false,
++    }
++}
+diff --git a/isla-axiomatic/src/lib.rs b/isla-axiomatic/src/lib.rs
+index ad87265..6afd7dc 100644
+--- a/isla-axiomatic/src/lib.rs
++++ b/isla-axiomatic/src/lib.rs
+@@ -45,10 +45,17 @@ lalrpop_mod!(
+ 
+ pub mod axiomatic;
+ pub mod footprint_analysis;
++mod final_value;
++mod initial_state;
++mod initial_state_type;
+ pub mod graph;
+ pub mod litmus;
++pub mod memory_profile;
+ pub mod page_table;
+ pub mod run_litmus;
++mod sequential_candidate;
++mod sequential_candidate_assertion;
++mod sequential_setup;
+ pub mod sandbox;
+ pub mod sexp;
+ mod sexp_lexer;
+diff --git a/isla-axiomatic/src/litmus.rs b/isla-axiomatic/src/litmus.rs
+index a728be5..4f9d751 100644
+--- a/isla-axiomatic/src/litmus.rs
++++ b/isla-axiomatic/src/litmus.rs
+@@ -129,6 +129,7 @@ struct UnassembledSection<'a> {
+     name: &'a str,
+     address: u64,
+     code: &'a str,
++    writable: bool,
+ }
+ 
+ static THREAD_PREFIX: &str = "litmus_";
+@@ -736,11 +737,23 @@ pub fn parse_reset_registers<B: BV>(
+ }
+ 
+ struct ThreadInit {
++    entry: Option<u64>,
+     inits: Vec<(Name, u64)>,
+     reset: HashMap<Loc<Name>, exp::Exp<String>>,
+     interrupts: Vec<Interrupt>,
+ }
+ 
++#[cfg(test)]
++#[path = "litmus_input_tests.rs"]
++mod input_tests;
++
++fn parse_executable_entry(thread: &Value) -> Result<Option<u64>, String> {
++    thread.get("entry").map(|value| {
++        let address = value.as_str().ok_or("Thread entry must be an address string")?;
++        parse_address(address)
++    }).transpose()
++}
++
+ fn parse_interrupt<B: BV>(
+     value: &Value,
+     symbolic_addrs: &HashMap<String, u64>,
+@@ -802,7 +815,8 @@ fn parse_thread_initialization<B: BV>(
+         Vec::new()
+     };
+ 
+-    Ok(ThreadInit { inits, reset, interrupts })
++    let entry = parse_executable_entry(thread)?;
++    Ok(ThreadInit { entry, inits, reset, interrupts })
+ }
+ 
+ fn parse_self_modify_region<B: BV>(toml_region: &Value, objdump: &Objdump) -> Result<Region<B>, String> {
+@@ -852,7 +866,11 @@ fn parse_extra<'v>(extra: (&'v String, &'v Value)) -> Result<UnassembledSection<
+     let addr =
+         extra.1.get("address").and_then(|addr| addr.as_str()).ok_or_else(|| format!("No address in {}", extra.0))?;
+     let code = extra.1.get("code").and_then(|code| code.as_str()).ok_or_else(|| format!("No code in {}", extra.0))?;
+-    Ok(UnassembledSection { name: extra.0, address: parse_address(addr)?, code })
++    let writable = match extra.1.get("writable") {
++        None => false,
++        Some(value) => value.as_bool().ok_or("Section writable must be a boolean")?,
++    };
++    Ok(UnassembledSection { name: extra.0, address: parse_address(addr)?, code, writable })
+ }
+ 
+ #[derive(Clone, Debug, PartialEq, Eq)]
+@@ -898,6 +916,7 @@ pub struct Interrupt {
+ pub struct AssembledThread {
+     pub name: ThreadName,
+     pub address: u64,
++    pub entry: u64,
+     pub inits: Vec<(Name, u64)>,
+     pub reset: HashMap<Loc<Name>, exp::Exp<String>>,
+     pub interrupts: Vec<Interrupt>,
+@@ -963,6 +982,7 @@ pub struct AssembledSection {
+     pub address: u64,
+     pub bytes: Vec<u8>,
+     pub source: String,
++    pub writable: bool,
+ }
+ 
+ #[derive(Debug, Clone)]
+@@ -974,6 +994,8 @@ pub struct LitmusGraphOpts {
+ #[derive(Debug)]
+ pub struct Litmus<B> {
+     pub arch: String,
++    pub initial_state: std::collections::BTreeMap<String, String>,
++    pub memory_profile: crate::memory_profile::MemoryProfile,
+     pub name: String,
+     pub hash: Option<String>,
+     pub symbolic_addrs: HashMap<String, u64>,
+@@ -1104,6 +1126,7 @@ impl<B: BV> Litmus<B> {
+                 address,
+                 bytes,
+                 source: unassembled.code.to_string(),
++                writable: unassembled.writable,
+             })
+             .collect();
+ 
+@@ -1122,6 +1145,7 @@ impl<B: BV> Litmus<B> {
+                     Ok(Thread::Assembled(AssembledThread {
+                         name,
+                         address,
++                        entry: init.entry.unwrap_or(address),
+                         inits: init.inits,
+                         reset: init.reset,
+                         interrupts: init.interrupts,
+@@ -1129,7 +1153,12 @@ impl<B: BV> Litmus<B> {
+                         source: source.to_string(),
+                     }))
+                 }
+-                ThreadBody::Call(call) => Ok(Thread::IR(IRThread { name, inits: init.inits, reset: init.reset, call })),
++                ThreadBody::Call(call) => {
++                    if init.entry.is_some() {
++                        return Err("A function-call thread cannot have an executable entry".to_string());
++                    }
++                    Ok(Thread::IR(IRThread { name, inits: init.inits, reset: init.reset, call }))
++                }
+             })
+             .collect::<Result<_, String>>()?;
+ 
+@@ -1166,6 +1195,8 @@ impl<B: BV> Litmus<B> {
+ 
+         Ok(Litmus {
+             arch,
++            initial_state: crate::initial_state::parse(&litmus_toml)?,
++            memory_profile: crate::memory_profile::MemoryProfile::parse(&litmus_toml)?,
+             name,
+             hash,
+             symbolic_addrs,
+diff --git a/isla-axiomatic/src/litmus_input_tests.rs b/isla-axiomatic/src/litmus_input_tests.rs
+new file mode 100644
+index 0000000..24c3109
+--- /dev/null
++++ b/isla-axiomatic/src/litmus_input_tests.rs
+@@ -0,0 +1,33 @@
++// Executable input metadata must retain addresses and writable declarations.
++// Malformed values must not silently select a legacy default.
++use super::{parse_executable_entry, parse_extra};
++use toml::Value;
++
++#[test]
++fn executable_entry_is_explicit_or_absent() -> Result<(), String> {
++    let explicit: Value = toml::from_str("entry = '0x80100024'").map_err(|error| error.to_string())?;
++    assert_eq!(parse_executable_entry(&explicit)?, Some(0x80100024));
++    let absent: Value = toml::from_str("").map_err(|error| error.to_string())?;
++    assert_eq!(parse_executable_entry(&absent)?, None);
++    for source in ["entry = 64", "entry = '0xwrong'", "entry = ''"] {
++        let malformed: Value = toml::from_str(source).map_err(|error| error.to_string())?;
++        assert!(parse_executable_entry(&malformed).is_err());
++    }
++    Ok(())
++}
++
++#[test]
++fn writable_sections_require_a_boolean() -> Result<(), String> {
++    let name = "loaded".to_string();
++    for writable in ["true", "false"] {
++        let source = format!("address = '0x80200000'\ncode = '.byte 11'\nwritable = {}", writable);
++        let value: Value = toml::from_str(&source).map_err(|error| error.to_string())?;
++        let section = parse_extra((&name, &value))?;
++        assert_eq!(section.writable, writable == "true");
++        assert_eq!(section.address, 0x80200000);
++    }
++    let source = "address = '0x80200000'\ncode = '.byte 11'\nwritable = 'true'";
++    let value: Value = toml::from_str(source).map_err(|error| error.to_string())?;
++    assert!(parse_extra((&name, &value)).is_err());
++    Ok(())
++}
+diff --git a/isla-axiomatic/src/memory_profile.rs b/isla-axiomatic/src/memory_profile.rs
+new file mode 100644
+index 0000000..3933028
+--- /dev/null
++++ b/isla-axiomatic/src/memory_profile.rs
+@@ -0,0 +1,23 @@
++// Memory profiles declare execution contracts before trace exploration.
++// Unknown profiles must never select different semantics silently.
++use toml::Value;
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum MemoryProfile {
++    Axiomatic,
++    Sequential,
++}
++
++impl MemoryProfile {
++    pub fn parse(source: &Value) -> Result<Self, String> {
++        match source.get("memory_profile") {
++            None => Ok(Self::Axiomatic),
++            Some(Value::String(name)) if name == "sequential" => Ok(Self::Sequential),
++            Some(value) => Err(format!("Unsupported memory profile: {}", value)),
++        }
++    }
++}
++
++#[cfg(test)]
++#[path = "memory_profile_tests.rs"]
++mod tests;
+diff --git a/isla-axiomatic/src/memory_profile_tests.rs b/isla-axiomatic/src/memory_profile_tests.rs
+new file mode 100644
+index 0000000..51cfa63
+--- /dev/null
++++ b/isla-axiomatic/src/memory_profile_tests.rs
+@@ -0,0 +1,17 @@
++// Profile parsing must preserve explicit semantics and reject malformed choices.
++// Absence alone retains the original axiomatic route.
++use super::MemoryProfile;
++use toml::Value;
++
++#[test]
++fn profile_selection_is_explicit() -> Result<(), String> {
++    let absent: Value = toml::from_str("").map_err(|error| error.to_string())?;
++    assert_eq!(MemoryProfile::parse(&absent)?, MemoryProfile::Axiomatic);
++    let sequential: Value = toml::from_str("memory_profile = 'sequential'").map_err(|error| error.to_string())?;
++    assert_eq!(MemoryProfile::parse(&sequential)?, MemoryProfile::Sequential);
++    for source in ["memory_profile = true", "memory_profile = ''", "memory_profile = 'unknown'"] {
++        let value: Value = toml::from_str(source).map_err(|error| error.to_string())?;
++        assert!(MemoryProfile::parse(&value).is_err());
++    }
++    Ok(())
++}
+diff --git a/isla-axiomatic/src/run_litmus.rs b/isla-axiomatic/src/run_litmus.rs
+index 4bfb9a4..ae41d81 100644
+--- a/isla-axiomatic/src/run_litmus.rs
++++ b/isla-axiomatic/src/run_litmus.rs
+@@ -70,6 +70,7 @@ use crate::smt_model::Model;
+ #[derive(Debug)]
+ pub enum LitmusRunError<E> {
+     NoMain,
++    MemorySetup(String),
+     Trace(TraceError),
+     Footprint(FootprintError),
+     PageTableSetup(SetupError),
+@@ -95,6 +96,7 @@ impl<E: fmt::Display> fmt::Display for LitmusRunError<E> {
+                 "There is no `main` function in the specified architecture.\
+                  This function is used as the entry point for each thread in a litmus test."
+             ),
++            MemorySetup(error) => write!(f, "Error during loaded memory setup: {}", error),
+             Trace(err) => write!(f, "Error during symbolic execution: {}", err),
+             Footprint(err) => write!(f, "{}", err),
+             PageTableSetup(err) => write!(f, "Error during page table setup: {}", err),
+@@ -194,6 +196,14 @@ where
+ {
+     let isa_config = arch.isa_config;
+     let shared_state = arch.shared_state;
++    crate::sequential_setup::validate(litmus, opts).map_err(LitmusRunError::MemorySetup)?;
++    let initial_state = crate::initial_state::values(&litmus.initial_state, shared_state)
++        .map_err(LitmusRunError::MemorySetup)?;
++    for (register, _) in litmus.threads.iter().flat_map(Thread::inits) {
++        if initial_state.contains_key(register) {
++            return Err(LitmusRunError::MemorySetup("Conflicting initial register assignments".to_string()));
++        }
++    }
+     let mut memory = Memory::new();
+ 
+     for region in &litmus.self_modify_regions {
+@@ -231,11 +241,8 @@ where
+     }
+     for section in litmus.sections.iter() {
+         log!(log::VERBOSE, &format!("Section {} @ 0x{:x}", section.name, section.address));
+-        memory.add_concrete_region((section.address)..(section.address + section.bytes.len() as u64), HashMap::new());
+-
+-        for (i, byte) in section.bytes.iter().enumerate() {
+-            memory.write_byte(section.address + i as u64, *byte)
+-        }
++        memory.initialize_section(section.address, &section.bytes, section.writable)
++            .map_err(LitmusRunError::MemorySetup)?;
+     }
+     memory.log();
+ 
+@@ -244,6 +251,7 @@ where
+         cfg.set_param_value("model", "true");
+         let ctx = Context::new(cfg);
+         let mut solver = Solver::<B>::from_checkpoint(&ctx, page_table_setup.memory_checkpoint.clone());
++        crate::sequential_setup::install(litmus.memory_profile, &mut memory, &mut solver);
+ 
+         let final_assertion = match partial_eval(
+             &litmus.final_assertion,
+@@ -304,6 +312,9 @@ where
+         .enumerate()
+         .map(|(i, thread)| {
+             let mut regs = arch.regs.clone();
++            for (register, value) in &initial_state {
++                regs.insert(*register, isa_config.relaxed_registers.contains(register), UVal::Init(value.clone()));
++            }
+             for (reg, value) in thread.inits() {
+                 regs.insert(
+                     *reg,
+@@ -314,7 +325,7 @@ where
+             match thread {
+                 Thread::Assembled(thread) => {
+                     let (args, ret_ty, instrs) = shared_state.functions.get(&function_id).unwrap();
+-                    lets.insert(ELF_ENTRY, UVal::Init(Val::I128(thread.address as i128)));
++                    lets.insert(ELF_ENTRY, UVal::Init(Val::I128(thread.entry as i128)));
+                     LocalFrame::new(function_id, args, ret_ty, Some(&[Val::Unit]), instrs)
+                         .add_lets(&lets)
+                         .add_regs(&regs)
+@@ -541,6 +552,9 @@ where
+         ) -> Result<(), E>,
+     E: Send + std::fmt::Debug + IslaError,
+ {
++    crate::sequential_candidate::validate(litmus.memory_profile, graph_opts.mode, extra_smt, opts.exhaustive)
++        .map_err(LitmusRunError::MemorySetup)?;
++    let sequential = litmus.memory_profile == crate::memory_profile::MemoryProfile::Sequential;
+     litmus_per_candidate(opts, litmus, arch, farch, &cache, &|candidate| {
+         let mut negate_rf_assertion = "true".to_string();
+         let mut first_run = true;
+@@ -593,8 +607,10 @@ where
+                 }
+ 
+                 // generate all other enums, e.g. from memory model
+-                for id in sexps.enum_ids() {
+-                    enums.insert(id.to_name());
++                if !sequential {
++                    for id in sexps.enum_ids() {
++                        enums.insert(id.to_name());
++                    }
+                 }
+ 
+                 for name in enums {
+@@ -641,63 +657,69 @@ where
+                     }
+                 }
+ 
+-                smt_of_candidate(
+-                    &mut fd,
+-                    &exec,
+-                    litmus,
+-                    opts.ignore_ifetch,
+-                    opts.armv8_page_tables,
+-                    candidate.footprints,
+-                    candidate.memory,
+-                    &candidate.page_table_setup.initial_physical_addrs,
+-                    candidate.final_assertion,
+-                    arch.shared_state,
+-                    arch.isa_config,
+-                )
+-                .map_err(internal_err_boxed)?;
+-
+-                log!(log::LITMUS, "generating final smt");
+-                writeln!(&mut fd, "(assert (and {}))", negate_rf_assertion).map_err(internal_err)?;
+-
+-                let mut sexps = sexps.clone();
+-
+-                writeln!(&mut fd, "; Accessors").map_err(internal_err)?;
+-                let mut accessor_sexps = Vec::new();
+-                for (accessor_fn, accessor_info) in memory_model_accessors {
+-                    log!(log::LITMUS, &format!("accessor function {}", &memory_model_symtab[*accessor_fn]));
+-                    let f = accessor::generate_function(
+-                        *accessor_fn,
+-                        *accessor_info,
+-                        &exec.smt_events,
+-                        &exec.types,
++                if sequential {
++                    let assertion = crate::smt_events::sequential_assertion(candidate.final_assertion, &exec.final_writes)
++                        .map_err(CallbackError::Internal)?;
++                    writeln!(&mut fd, "(assert {})", assertion).map_err(internal_err)?;
++                } else {
++                    smt_of_candidate(
++                        &mut fd,
++                        &exec,
++                        litmus,
++                        opts.ignore_ifetch,
++                        opts.armv8_page_tables,
++                        candidate.footprints,
++                        candidate.memory,
++                        &candidate.page_table_setup.initial_physical_addrs,
++                        candidate.final_assertion,
+                         arch.shared_state,
++                        arch.isa_config,
++                    )
++                    .map_err(internal_err_boxed)?;
++
++                    log!(log::LITMUS, "generating final smt");
++                    writeln!(&mut fd, "(assert (and {}))", negate_rf_assertion).map_err(internal_err)?;
++
++                    let mut sexps = sexps.clone();
++
++                    writeln!(&mut fd, "; Accessors").map_err(internal_err)?;
++                    let mut accessor_sexps = Vec::new();
++                    for (accessor_fn, accessor_info) in memory_model_accessors {
++                        log!(log::LITMUS, &format!("accessor function {}", &memory_model_symtab[*accessor_fn]));
++                        let f = accessor::generate_function(
++                            *accessor_fn,
++                            *accessor_info,
++                            &exec.smt_events,
++                            &exec.types,
++                            arch.shared_state,
++                            &memory_model_symtab,
++                            &mut sexps,
++                        );
++                        accessor_sexps.push(f);
++                    }
++                    let index_bitwidths = index_bitwidths(&exec.smt_events);
++
++                    write_sexps(
++                        &mut fd,
++                        &accessor_sexps,
++                        &sexps,
+                         &memory_model_symtab,
+-                        &mut sexps,
+-                    );
+-                    accessor_sexps.push(f);
++                        arch.shared_state.typedefs(),
++                        &index_bitwidths,
++                    )
++                    .map_err(internal_err)?;
++
++                    writeln!(&mut fd, "; Memory Model").map_err(internal_err)?;
++                    write_sexps(
++                        &mut fd,
++                        memory_model,
++                        &sexps,
++                        &memory_model_symtab,
++                        arch.shared_state.typedefs(),
++                        &index_bitwidths,
++                    )
++                    .map_err(internal_err)?;
+                 }
+-                let index_bitwidths = index_bitwidths(&exec.smt_events);
+-
+-                write_sexps(
+-                    &mut fd,
+-                    &accessor_sexps,
+-                    &sexps,
+-                    &memory_model_symtab,
+-                    arch.shared_state.typedefs(),
+-                    &index_bitwidths,
+-                )
+-                .map_err(internal_err)?;
+-
+-                writeln!(&mut fd, "; Memory Model").map_err(internal_err)?;
+-                write_sexps(
+-                    &mut fd,
+-                    memory_model,
+-                    &sexps,
+-                    &memory_model_symtab,
+-                    arch.shared_state.typedefs(),
+-                    &index_bitwidths,
+-                )
+-                .map_err(internal_err)?;
+ 
+                 for (file, smt) in extra_smt {
+                     writeln!(&mut fd, "; Extra SMT {}", file.as_str()).map_err(internal_err)?;
+@@ -710,7 +732,9 @@ where
+                     writeln!(&mut fd, "(check-sat)").map_err(internal_err)?
+                 }
+ 
+-                if get_model {
++                if get_model && sequential {
++                    crate::sequential_candidate::write_values(&mut fd, &exec.final_writes).map_err(internal_err)?;
++                } else if get_model {
+                     // Use get-value rather than get-model so we only get the values we need, otherwise z3 is very slow.
+                     write!(&mut fd, "(get-value (").map_err(internal_err)?;
+                     for (n, name) in memory_model_symtab.iter_toplevel().enumerate() {
+@@ -740,6 +764,9 @@ where
+                         }
+                     }
+ 
++                    for symbol in crate::final_value::symbols(exec.final_writes.values().copied()) {
++                        write!(&mut fd, " {}", symbol).map_err(internal_err)?;
++                    }
+                     writeln!(&mut fd, "))").map_err(internal_err)?;
+                 }
+                 log!(log::LITMUS, &format!("finished generating {}", path.display()));
+diff --git a/isla-axiomatic/src/sequential_candidate.rs b/isla-axiomatic/src/sequential_candidate.rs
+new file mode 100644
+index 0000000..ffc2fcb
+--- /dev/null
++++ b/isla-axiomatic/src/sequential_candidate.rs
+@@ -0,0 +1,45 @@
++// Sequential candidates retain trace constraints without whole-access RF rules.
++// Unsupported candidate requests return errors before solver execution.
++use crate::graph::GraphMode;
++use crate::memory_profile::MemoryProfile;
++use isla_lib::bitvector::BV;
++use isla_lib::ir::{Name, Val};
++use std::collections::HashMap;
++use std::io::Write;
++
++pub(crate) fn validate(
++    profile: MemoryProfile,
++    graph: GraphMode,
++    extra_smt: &[(String, String)],
++    exhaustive: bool,
++) -> Result<(), String> {
++    if profile == MemoryProfile::Axiomatic {
++        return Ok(());
++    }
++    if exhaustive {
++        return Err("Sequential memory does not support read-from enumeration".to_string());
++    }
++    if graph != GraphMode::Disabled {
++        return Err("Sequential candidates do not support CAT graph requests".to_string());
++    }
++    if !extra_smt.is_empty() {
++        return Err("Sequential candidates do not support extra SMT contracts".to_string());
++    }
++    Ok(())
++}
++
++pub(crate) fn write_values<B: BV>(
++    output: &mut dyn Write,
++    final_writes: &HashMap<(Name, usize), &Val<B>>,
++) -> std::io::Result<()> {
++    writeln!(output, "(define-fun sequential-model-present () Bool true)")?;
++    write!(output, "(get-value (sequential-model-present")?;
++    for symbol in crate::final_value::symbols(final_writes.values().copied()) {
++        write!(output, " {}", symbol)?;
++    }
++    writeln!(output, "))")
++}
++
++#[cfg(test)]
++#[path = "sequential_candidate_tests.rs"]
++mod tests;
+diff --git a/isla-axiomatic/src/sequential_candidate_assertion.rs b/isla-axiomatic/src/sequential_candidate_assertion.rs
+new file mode 100644
+index 0000000..6199b80
+--- /dev/null
++++ b/isla-axiomatic/src/sequential_candidate_assertion.rs
+@@ -0,0 +1,44 @@
++// Assertion validation protects the reused upstream expression translator.
++// Memory assertions and missing or unsupported registers remain explicit errors.
++use crate::litmus::exp::{Exp, Loc};
++use isla_lib::bitvector::BV;
++use isla_lib::ir::{Name, Val};
++use std::collections::HashMap;
++
++pub(crate) fn validate<B: BV>(expression: &Exp<u64>, writes: &HashMap<(Name, usize), &Val<B>>) -> Result<(), String> {
++    let mut pending = vec![expression];
++    while let Some(expression) = pending.pop() {
++        match expression {
++            Exp::EqLoc(location, value) => {
++                validate_location(location, writes)?;
++                pending.push(value);
++            }
++            Exp::App(_, _, keywords) if !keywords.is_empty() => {
++                return Err("Sequential final assertion contains unresolved keyword arguments".to_string())
++            }
++            Exp::And(values) | Exp::Or(values) | Exp::App(_, values, _) => pending.extend(values),
++            Exp::Not(value) => pending.push(value),
++            Exp::Implies(left, right) => {
++                pending.push(left);
++                pending.push(right);
++            }
++            Exp::Label(_) => return Err("Sequential final assertion contains an unresolved label".to_string()),
++            Exp::Loc(_) | Exp::True | Exp::False | Exp::Bin(_) | Exp::Hex(_) | Exp::Bits64(_, _) | Exp::Nat(_) => (),
++        }
++    }
++    Ok(())
++}
++
++fn validate_location<B: BV>(location: &Loc<u64>, writes: &HashMap<(Name, usize), &Val<B>>) -> Result<(), String> {
++    let (reg, thread_id) = match location {
++        Loc::Register { reg, thread_id } => (*reg, *thread_id),
++        Loc::LastWriteTo { .. } => {
++            return Err("Sequential final-memory assertions require separate support".to_string())
++        }
++    };
++    match writes.get(&(reg, thread_id)) {
++        Some(Val::Bits(_)) | Some(Val::Symbolic(_)) => Ok(()),
++        Some(_) => Err("Sequential final register is not a bitvector".to_string()),
++        None => Err("Sequential final register has no recorded value".to_string()),
++    }
++}
+diff --git a/isla-axiomatic/src/sequential_candidate_solver_tests.rs b/isla-axiomatic/src/sequential_candidate_solver_tests.rs
+new file mode 100644
+index 0000000..0dda516
+--- /dev/null
++++ b/isla-axiomatic/src/sequential_candidate_solver_tests.rs
+@@ -0,0 +1,59 @@
++// Native solver tests use the production assertion and witness emitters.
++// Mixed-width byte overlap must retain a satisfiable execution.
++use super::*;
++use isla_lib::smt::Sym;
++use std::error::Error;
++use std::process::{Command, Stdio};
++
++fn operate(script: &[u8]) -> Result<String, Box<dyn Error>> {
++    let mut child =
++        Command::new("z3").arg("-in").stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
++    let mut input = child.stdin.take().ok_or("solver stdin is absent")?;
++    input.write_all(script)?;
++    drop(input);
++    let result = child.wait_with_output()?;
++    if !result.status.success() || !result.stderr.is_empty() {
++        return Err(format!("solver error: {} {}", result.status, String::from_utf8_lossy(&result.stderr)).into());
++    }
++    Ok(String::from_utf8(result.stdout)?)
++}
++
++#[test]
++fn mixed_width_result_and_mutation() -> Result<(), Box<dyn Error>> {
++    let register = Name::from_u32(1);
++    let value = Val::<B64>::Symbolic(Sym::from_u32(7));
++    let writes = HashMap::from([((register, 0), &value)]);
++    let location = Loc::Register { reg: register, thread_id: 0 };
++    let assertion = Exp::EqLoc(location, Box::new(Exp::Nat(0x2211)));
++    let correct = crate::smt_events::sequential_assertion(&assertion, &writes)?;
++    let incorrect = crate::smt_events::sequential_assertion(&Exp::Not(Box::new(assertion)), &writes)?;
++    let mut script = br#"(set-option :produce-models true)
++(declare-const initial (Array (_ BitVec 64) (_ BitVec 8)))
++(define-fun first () (Array (_ BitVec 64) (_ BitVec 8)) (store initial #x0000000000001000 #x11))
++(define-fun second () (Array (_ BitVec 64) (_ BitVec 8)) (store first #x0000000000001001 #x22))
++(define-fun v7 () (_ BitVec 64) ((_ zero_extend 48) (concat (select second #x0000000000001001) (select second #x0000000000001000))))
++"#.to_vec();
++    writeln!(script, "(push)\n(assert {})\n(check-sat)", correct)?;
++    write_values(&mut script, &writes)?;
++    writeln!(script, "(pop)\n(assert {})\n(check-sat)", incorrect)?;
++    let result = operate(&script)?;
++    assert!(result.starts_with("sat\n"), "{}", result);
++    assert!(result.contains("(v7 #x0000000000002211)"), "{}", result);
++    assert!(result.ends_with("unsat\n"), "{}", result);
++    let model_text = result.strip_prefix("sat\n").ok_or("missing satisfiable result")?;
++    let model_text = model_text.strip_suffix("unsat\n").ok_or("missing unsatisfiable result")?;
++    let mut model = crate::smt_model::Model::<B64>::parse(&[], model_text).map_err(|error| error.to_string())?;
++    let concrete = crate::final_value::concrete(value, &mut model)?;
++    assert_eq!(concrete, Val::Bits(B64::from_u64(0x2211)));
++    Ok(())
++}
++
++#[test]
++fn constant_final_values_need_no_cat_symbols() -> Result<(), Box<dyn Error>> {
++    let writes = HashMap::<(Name, usize), &Val<B64>>::new();
++    let mut script = b"(check-sat)\n".to_vec();
++    write_values(&mut script, &writes)?;
++    let result = operate(&script)?;
++    assert_eq!(result, "sat\n((sequential-model-present true))\n");
++    Ok(())
++}
+diff --git a/isla-axiomatic/src/sequential_candidate_tests.rs b/isla-axiomatic/src/sequential_candidate_tests.rs
+new file mode 100644
+index 0000000..3ef801b
+--- /dev/null
++++ b/isla-axiomatic/src/sequential_candidate_tests.rs
+@@ -0,0 +1,34 @@
++// Candidate request tests reject features absent from the sequential contract.
++// A default axiomatic request retains its existing behavior.
++use super::*;
++use crate::litmus::exp::{Exp, Loc};
++use isla_lib::bitvector::b64::B64;
++
++#[path = "sequential_candidate_solver_tests.rs"]
++mod solver;
++
++#[test]
++fn rejects_graphs_and_extra_smt() {
++    assert!(validate(MemoryProfile::Sequential, GraphMode::ASCII, &[], false).is_err());
++    assert!(validate(MemoryProfile::Sequential, GraphMode::Dot, &[], false).is_err());
++    let extra = [("custom".to_string(), "(assert false)".to_string())];
++    assert!(validate(MemoryProfile::Sequential, GraphMode::Disabled, &extra, false).is_err());
++    assert!(validate(MemoryProfile::Axiomatic, GraphMode::Dot, &extra, true).is_ok());
++    assert!(validate(MemoryProfile::Sequential, GraphMode::Disabled, &[], false).is_ok());
++    assert!(validate(MemoryProfile::Sequential, GraphMode::Disabled, &[], true).is_err());
++}
++
++#[test]
++fn rejects_memory_and_unresolved_register_assertions() {
++    let writes = HashMap::<(Name, usize), &Val<B64>>::new();
++    let memory = Exp::EqLoc(Loc::LastWriteTo { address: 4096, bytes: 8 }, Box::new(Exp::Nat(0)));
++    assert!(crate::smt_events::sequential_assertion(&memory, &writes).is_err());
++    let register = Exp::EqLoc(Loc::Register { reg: Name::from_u32(1), thread_id: 0 }, Box::new(Exp::Nat(0)));
++    assert!(crate::smt_events::sequential_assertion(&register, &writes).is_err());
++    let value = Val::<B64>::Bool(true);
++    let writes = HashMap::from([((Name::from_u32(1), 0), &value)]);
++    assert!(crate::smt_events::sequential_assertion(&register, &writes).is_err());
++    assert!(crate::smt_events::sequential_assertion(&Exp::Label("unknown".to_string()), &writes).is_err());
++    let application = Exp::App("unknown".to_string(), vec![], HashMap::from([("key".to_string(), Exp::True)]));
++    assert!(crate::smt_events::sequential_assertion(&application, &writes).is_err());
++}
+diff --git a/isla-axiomatic/src/sequential_setup.rs b/isla-axiomatic/src/sequential_setup.rs
+new file mode 100644
+index 0000000..8c6dd14
+--- /dev/null
++++ b/isla-axiomatic/src/sequential_setup.rs
+@@ -0,0 +1,41 @@
++// Sequential execution requires one closed thread and ordinary loaded memory.
++// Unsupported effects remain errors instead of hidden assumptions.
++use isla_lib::bitvector::BV;
++use isla_lib::memory::Memory;
++use isla_lib::sequential_memory::SequentialMemory;
++use isla_lib::smt::Solver;
++
++use crate::litmus::{Litmus, Thread};
++use crate::memory_profile::MemoryProfile;
++use crate::run_litmus::LitmusRunOpts;
++
++pub(crate) fn validate<B: BV>(litmus: &Litmus<B>, opts: &LitmusRunOpts) -> Result<(), String> {
++    if litmus.memory_profile == MemoryProfile::Axiomatic {
++        return Ok(());
++    }
++    if litmus.arch != "RISCV" || litmus.threads.len() != 1 {
++        return Err("Sequential memory requires one RV64 program thread".to_string());
++    }
++    if opts.armv8_page_tables || !litmus.page_table_setup.is_empty() {
++        return Err("Sequential memory does not support page-table effects".to_string());
++    }
++    if opts.merge_translations.is_some() || opts.remove_uninteresting_translates.is_some() {
++        return Err("Sequential memory does not support translation-event rewrites".to_string());
++    }
++    if !litmus.self_modify_regions.is_empty() || !litmus.locations.is_empty() {
++        return Err("Sequential memory requires section-based initial memory".to_string());
++    }
++    match &litmus.threads[0] {
++        Thread::Assembled(thread) if thread.code.is_empty() && thread.interrupts.is_empty() => Ok(()),
++        Thread::Assembled(_) | Thread::IR(_) => {
++            Err("Sequential memory requires an executable entry without interrupts".to_string())
++        }
++    }
++}
++
++pub(crate) fn install<B: BV>(profile: MemoryProfile, memory: &mut Memory<B>, solver: &mut Solver<B>) {
++    if profile == MemoryProfile::Sequential {
++        let callback = SequentialMemory::new(memory.initialized_bytes(), solver);
++        memory.set_client_info(Box::new(callback));
++    }
++}
+diff --git a/isla-axiomatic/src/smt_events.rs b/isla-axiomatic/src/smt_events.rs
+index 87f28ae..0c18d84 100644
+--- a/isla-axiomatic/src/smt_events.rs
++++ b/isla-axiomatic/src/smt_events.rs
+@@ -48,6 +48,9 @@ use crate::footprint_analysis::Footprint;
+ use crate::litmus::{exp::Exp, exp::Loc, opcode_from_objdump, Litmus};
+ use crate::smt_model::pairwise::Pairs;
+ 
++#[path = "initial_memory/mod.rs"]
++mod initial_memory;
++
+ fn smt_bitvec<B: BV>(val: &Val<B>) -> String {
+     match val {
+         Val::Symbolic(v) => format!("v{}", v),
+@@ -184,6 +187,10 @@ fn read_initial_symbolic<B: BV>(
+         Eq(Box::new(Literal(smt_bitvec(&sym))), Box::new(Literal(smt_bitvec(&bv))))
+     };
+ 
++    if let Some(loaded) = initial_memory::condition(&sym, addr1, bytes, memory) {
++        expr = loaded;
++    }
++
+     for (addr2, value) in initial_addrs {
+         let addr2 = Val::Bits(B::new(*addr2, 64));
+         let value = Val::Bits(B::new(*value, 8 * bytes));
+@@ -221,6 +228,10 @@ fn read_initial_concrete<B: BV>(bv: B, addr1: &Val<B>, memory: &Memory<B>, initi
+         }
+     };
+ 
++    if let Some(loaded) = initial_memory::condition(&Val::Bits(bv), addr1, bv.len() / 8, memory) {
++        expr = loaded;
++    }
++
+     for (addr2, value) in initial_addrs {
+         let addr2 = Val::Bits(B::new(*addr2, 64));
+         expr = IfThenElse(
+@@ -233,7 +244,11 @@ fn read_initial_concrete<B: BV>(bv: B, addr1: &Val<B>, memory: &Memory<B>, initi
+     expr
+ }
+ 
+-fn initial_write_values<B: BV>(addr_name: &str, width: u32, initial_addrs: &HashMap<u64, u64>) -> String {
++fn initial_write_values<B: BV>(
++    addr_name: &str,
++    width: u32,
++    initial_addrs: &HashMap<u64, u64>,
++) -> Result<String, String> {
+     let mut expr = "".to_string();
+     let mut ites = 0;
+ 
+@@ -242,13 +257,14 @@ fn initial_write_values<B: BV>(addr_name: &str, width: u32, initial_addrs: &Hash
+         ites += 1
+     }
+ 
+-    expr = format!("{}{}", expr, B::zeros(width));
++    let bytes = std::num::NonZeroU32::new(width / 8).ok_or("initial write has zero byte width")?;
++    expr = format!("{}{}", expr, initial_memory::value(addr_name, bytes));
+ 
+     for _ in 0..ites {
+         expr = format!("{})", expr)
+     }
+ 
+-    expr
++    Ok(expr)
+ }
+ 
+ /// Some symbolic locations can have custom initial values, otherwise
+@@ -517,6 +533,14 @@ fn eq_loc_to_smt<B: BV>(loc: &Loc<u64>, exp: &Exp<u64>, final_writes: &HashMap<(
+     }
+ }
+ 
++pub(crate) fn sequential_assertion<B: BV>(
++    exp: &Exp<u64>,
++    final_writes: &HashMap<(Name, usize), &Val<B>>,
++) -> Result<String, String> {
++    crate::sequential_candidate_assertion::validate(exp, final_writes)?;
++    Ok(exp_to_smt(exp, final_writes))
++}
++
+ fn exp_to_smt<B: BV>(exp: &Exp<u64>, final_writes: &HashMap<(Name, usize), &Val<B>>) -> String {
+     use Exp::*;
+     match exp {
+@@ -588,6 +612,8 @@ pub fn smt_of_candidate<B: BV>(
+     let events = &exec.smt_events;
+     let translations = exec.translations();
+ 
++    initial_memory::definition(output, memory)?;
++
+     log!(log::LITMUS, "generating smt for candidate");
+ 
+     writeln!(output, "\n\n; === EVENTS ===\n")?;
+@@ -947,7 +973,7 @@ pub fn smt_of_candidate<B: BV>(
+ 
+     for &width in all_write_widths.iter() {
+         let lwt =
+-            subst_template(LAST_WRITE_TO, "INITIAL", initial_write_values::<B>("addr", 64, initial_physical_addrs));
++            subst_template(LAST_WRITE_TO, "INITIAL", initial_write_values::<B>("addr", 64, initial_physical_addrs)?);
+         let lwt = subst_template(lwt, "LEN_MINUS_1", format!("{}", width * 8 - 1));
+         let lwt = subst_template(lwt, "LEN", format!("{}", width * 8));
+         writeln!(output, "{}", lwt)?;
+diff --git a/isla-lib/src/executor.rs b/isla-lib/src/executor.rs
+index e2de8b6..b660f78 100644
+--- a/isla-lib/src/executor.rs
++++ b/isla-lib/src/executor.rs
+@@ -965,6 +965,10 @@ fn run_special_primop<'ir, B: BV>(
+     } else if f == INSTR_ANNOUNCE {
+         assert!(args.len() == 1);
+         let opcode = eval_exp(&args[0], &mut frame.local_state, shared_state, solver, info)?.into_owned();
++        match opcode {
++            Val::Bits(bv) if bv.is_zero() && task_state.zero_announce_exit => return Ok(SpecialResult::Exit),
++            _ => (),
++        };
+         if let Some((arch_pc, limit)) = task_state.pc_limit {
+             if let Some(reg) = frame.local_state.regs.get(arch_pc, shared_state, solver, info)? {
+                 match reg {
+@@ -985,10 +989,6 @@ fn run_special_primop<'ir, B: BV>(
+                 }
+             }
+         };
+-        match opcode {
+-            Val::Bits(bv) if bv.is_zero() && task_state.zero_announce_exit => return Ok(SpecialResult::Exit),
+-            _ => (),
+-        };
+         solver.add_event(Event::Instr(opcode));
+         assign(tid, loc, Val::Unit, &mut frame.local_state, shared_state, solver, info)?;
+         frame.pc += 1
+diff --git a/isla-lib/src/initialized_memory/boundary_tests.rs b/isla-lib/src/initialized_memory/boundary_tests.rs
+new file mode 100644
+index 0000000..74b16d2
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/boundary_tests.rs
+@@ -0,0 +1,44 @@
++// Adjacent loaded sections share byte-level read behavior.
++// A missing initial byte must cause an error instead of a constant.
++use super::*;
++use crate::bitvector::b64::B64;
++use crate::ir::Val;
++use crate::smt::{Config, Context, ReadOpts, Solver};
++
++#[test]
++fn read_across_readonly_sections_retains_each_byte() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12], false)?;
++    memory.initialize_section(0x1001, &[0x34], false)?;
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let result =
++        memory.read(Val::Unit, Val::Bits(B64::from_u64(0x1000)), Val::I128(2), &mut solver, false, ReadOpts::default());
++    assert!(matches!(result, Ok(Val::Bits(bits)) if bits.lower_u64() == 0x3412));
++    Ok(())
++}
++
++#[test]
++fn read_across_readonly_and_writable_sections_is_symbolic() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12], false)?;
++    memory.initialize_section(0x1001, &[0x34], true)?;
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let result =
++        memory.read(Val::Unit, Val::Bits(B64::from_u64(0x1000)), Val::I128(2), &mut solver, false, ReadOpts::default());
++    assert!(matches!(result, Ok(Val::Symbolic(_))));
++    Ok(())
++}
++
++#[test]
++fn partial_initial_image_is_an_error() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12], false)?;
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let result =
++        memory.read(Val::Unit, Val::Bits(B64::from_u64(0x1000)), Val::I128(2), &mut solver, false, ReadOpts::default());
++    assert!(result.is_err());
++    Ok(())
++}
+diff --git a/isla-lib/src/initialized_memory/loaded_read.rs b/isla-lib/src/initialized_memory/loaded_read.rs
+new file mode 100644
+index 0000000..722e060
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/loaded_read.rs
+@@ -0,0 +1,37 @@
++// Reads across loaded section boundaries preserve each byte and writable state.
++// A partial initial image must not supply invented zero bytes.
++use super::*;
++use crate::error::ExecError;
++use crate::ir::Val;
++use crate::memory::{read_concrete, SmtKind};
++use crate::smt::{ReadOpts, Solver};
++
++impl<B: BV> Memory<B> {
++    #[allow(clippy::too_many_arguments)]
++    pub(crate) fn read_initialized(
++        &self,
++        read_kind: Val<B>,
++        address: Address,
++        bytes: u32,
++        solver: &mut Solver<B>,
++        tag: bool,
++        opts: ReadOpts,
++    ) -> Result<Option<Val<B>>, ExecError> {
++        let end = address.checked_add(u64::from(bytes)).ok_or(ExecError::BadRead("Loaded read address overflow"))?;
++        let loaded: HashMap<Address, u8> =
++            self.initial_bytes.range(address..end).map(|(address, byte)| (*address, *byte)).collect();
++        if loaded.is_empty() {
++            return Ok(None);
++        }
++        if loaded.len() != bytes as usize {
++            return Err(ExecError::BadRead("Read partially overlaps initialized sections"));
++        }
++        let writable = (address..end).any(|byte| self.access_check(byte, 1, SmtKind::WriteData));
++        let value = if writable {
++            self.read_symbolic(read_kind, Val::Bits(B::from_u64(address)), bytes, solver, tag, opts, "symbolic")?
++        } else {
++            read_concrete(&loaded, read_kind, address, bytes, solver, tag, opts, "concrete")?
++        };
++        Ok(Some(value))
++    }
++}
+diff --git a/isla-lib/src/initialized_memory/loaded_write.rs b/isla-lib/src/initialized_memory/loaded_write.rs
+new file mode 100644
+index 0000000..800eba1
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/loaded_write.rs
+@@ -0,0 +1,58 @@
++// Stores must not modify initialized read-only bytes behind constant reads.
++// Possible permission faults remain explicit model errors, not constraints.
++use super::*;
++use crate::error::ExecError;
++use crate::ir::Val;
++use crate::memory::SmtKind;
++use crate::smt::smtlib::{bits64, Exp};
++use crate::smt::{SmtResult, Solver};
++use crate::source_loc::SourceLoc;
++
++impl<B: BV> Memory<B> {
++    pub(crate) fn validate_initialized_write(
++        &self,
++        address: &Val<B>,
++        bytes: u32,
++        solver: &mut Solver<B>,
++    ) -> Result<(), ExecError> {
++        if bytes == 0 || self.initial_bytes.is_empty() {
++            return Ok(());
++        }
++        if let Val::Bits(address) = address {
++            return concrete_write(self, address.lower_u64(), bytes);
++        }
++        let Val::Symbolic(address) = address else {
++            return Err(ExecError::BadWrite("Loaded write address is not a bitvector"));
++        };
++        let invalid = self.readonly_write_overlap(Exp::Var(*address), bytes);
++        match solver.check_sat_with(&invalid, SourceLoc::unknown()) {
++            SmtResult::Unsat => Ok(()),
++            SmtResult::Unknown => Err(ExecError::Z3Unknown),
++            SmtResult::Sat => Err(ExecError::BadWrite("Write can overlap initialized read-only memory or overflow")),
++        }
++    }
++
++    fn readonly_write_overlap(&self, address: Exp<crate::smt::Sym>, bytes: u32) -> Exp<crate::smt::Sym> {
++        let mut invalid = Exp::Bvugt(Box::new(address.clone()), Box::new(bits64(u64::MAX - u64::from(bytes), 64)));
++        let readonly = self.initial_bytes.keys().filter(|byte| !self.access_check(**byte, 1, SmtKind::WriteData));
++        for byte in readonly {
++            let first = byte.saturating_sub(u64::from(bytes) - 1);
++            let overlap = Exp::And(
++                Box::new(Exp::Bvuge(Box::new(address.clone()), Box::new(bits64(first, 64)))),
++                Box::new(Exp::Bvule(Box::new(address.clone()), Box::new(bits64(*byte, 64)))),
++            );
++            invalid = Exp::Or(Box::new(invalid), Box::new(overlap));
++        }
++        invalid
++    }
++}
++
++fn concrete_write<B: BV>(memory: &Memory<B>, start: Address, bytes: u32) -> Result<(), ExecError> {
++    let end = start.checked_add(u64::from(bytes)).ok_or(ExecError::BadWrite("Loaded write address overflow"))?;
++    let invalid =
++        memory.initial_bytes.range(start..end).any(|(byte, _)| !memory.access_check(*byte, 1, SmtKind::WriteData));
++    if invalid {
++        return Err(ExecError::BadWrite("Write overlaps initialized read-only memory"));
++    }
++    Ok(())
++}
+diff --git a/isla-lib/src/initialized_memory/mod.rs b/isla-lib/src/initialized_memory/mod.rs
+new file mode 100644
+index 0000000..fe58f57
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/mod.rs
+@@ -0,0 +1,45 @@
++// Loaded sections preserve their initial bytes and access mode.
++// Invalid or overlapping sections must leave memory unchanged.
++use super::{Address, Memory, Region};
++use crate::bitvector::BV;
++use std::collections::{BTreeMap, HashMap};
++
++#[cfg(test)]
++mod boundary_tests;
++mod loaded_read;
++mod loaded_write;
++#[cfg(test)]
++mod read_tests;
++mod regions;
++#[cfg(test)]
++mod tests;
++#[cfg(test)]
++mod write_tests;
++
++impl<B: BV> Memory<B> {
++    pub fn initialize_section(&mut self, address: Address, bytes: &[u8], writable: bool) -> Result<(), String> {
++        let length = u64::try_from(bytes.len()).map_err(|error| error.to_string())?;
++        if length == 0 {
++            return Err("initialized section is empty".to_string());
++        }
++        let end = address.checked_add(length).ok_or("initialized section address overflow")?;
++        let range = address..end;
++        if self.initial_bytes.range(range.clone()).next().is_some() {
++            return Err("initialized sections overlap".to_string());
++        }
++        let mut remaining = Vec::new();
++        for region in &self.regions {
++            remaining.extend(regions::outside(region, &range)?);
++        }
++        let contents: HashMap<Address, u8> = range.clone().zip(bytes.iter().copied()).collect();
++        let section = if writable { Region::Symbolic(range) } else { Region::Concrete(range, contents.clone()) };
++        remaining.push(section);
++        self.regions = remaining;
++        self.initial_bytes.extend(contents);
++        Ok(())
++    }
++
++    pub fn initialized_bytes(&self) -> &BTreeMap<Address, u8> {
++        &self.initial_bytes
++    }
++}
+diff --git a/isla-lib/src/initialized_memory/read_tests.rs b/isla-lib/src/initialized_memory/read_tests.rs
+new file mode 100644
+index 0000000..725b05a
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/read_tests.rs
+@@ -0,0 +1,54 @@
++// Writable data remains a symbolic event after initialization and stores.
++// These tests must not introduce sequential forwarding into the memory model.
++use super::*;
++use crate::bitvector::b64::B64;
++use crate::ir::Val;
++use crate::smt::smtlib::{bits64, Exp, Ty};
++use crate::smt::{Config, Context, Event, ReadOpts, SmtResult, Solver, WriteOpts};
++use crate::source_loc::SourceLoc;
++
++#[test]
++fn writable_reads_preserve_symbolic_values() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12, 0x34], true)?;
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let address = Val::Bits(B64::from_u64(0x1000));
++    memory
++        .write(Val::Unit, address.clone(), Val::Bits(B64::new(0x77, 8)), &mut solver, None, WriteOpts::default())
++        .map_err(|error| format!("{:?}", error))?;
++    let read = memory
++        .read(Val::Unit, address, Val::I128(1), &mut solver, false, ReadOpts::default())
++        .map_err(|error| format!("{:?}", error))?;
++    let Val::Symbolic(value) = read else {
++        return Err("writable read returned a constant".to_string());
++    };
++    for alternative in [0x12, 0x77] {
++        let equality = Exp::Eq(Box::new(Exp::Var(value)), Box::new(bits64(alternative, 8)));
++        assert!(matches!(solver.check_sat_with(&equality, SourceLoc::unknown()), SmtResult::Sat));
++    }
++    let events = solver.trace().to_vec();
++    assert_eq!(events.iter().filter(|event| matches!(event, Event::WriteMem { .. })).count(), 1);
++    assert_eq!(events.iter().filter(|event| matches!(event, Event::ReadMem { .. })).count(), 1);
++    Ok(())
++}
++
++#[test]
++fn symbolic_addresses_can_select_writable_bytes() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.add_zero_region(0..0x2000);
++    memory.initialize_section(0x1000, &[0x12, 0x34], true)?;
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let address = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    solver.assert(Exp::Or(
++        Box::new(Exp::Eq(Box::new(Exp::Var(address)), Box::new(bits64(0x1000, 64)))),
++        Box::new(Exp::Eq(Box::new(Exp::Var(address)), Box::new(bits64(0x1001, 64)))),
++    ));
++    let value = memory
++        .read(Val::Unit, Val::Symbolic(address), Val::I128(1), &mut solver, false, ReadOpts::default())
++        .map_err(|error| format!("{:?}", error))?;
++    assert!(matches!(value, Val::Symbolic(_)));
++    assert!(matches!(solver.check_sat(SourceLoc::unknown()), SmtResult::Sat));
++    Ok(())
++}
+diff --git a/isla-lib/src/initialized_memory/regions.rs b/isla-lib/src/initialized_memory/regions.rs
+new file mode 100644
+index 0000000..36fb056
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/regions.rs
+@@ -0,0 +1,23 @@
++// A loaded section replaces concrete reservation bytes only.
++// Existing symbolic or custom behavior must not disappear.
++use super::{Address, Region};
++use std::ops::Range;
++
++pub(super) fn outside<B>(region: &Region<B>, section: &Range<Address>) -> Result<Vec<Region<B>>, String> {
++    let range = region.region_range();
++    if range.end <= section.start || section.end <= range.start {
++        return Ok(vec![region.clone()]);
++    }
++    let Region::Concrete(range, contents) = region else {
++        return Err("initialized section overlaps a non-concrete region".to_string());
++    };
++    let mut remaining = Vec::new();
++    for remainder in [range.start..section.start, section.end..range.end] {
++        if remainder.start < remainder.end {
++            let bytes = contents.iter().filter(|(address, _)| remainder.contains(address));
++            let bytes = bytes.map(|(address, byte)| (*address, *byte)).collect();
++            remaining.push(Region::Concrete(remainder, bytes));
++        }
++    }
++    Ok(remaining)
++}
+diff --git a/isla-lib/src/initialized_memory/tests.rs b/isla-lib/src/initialized_memory/tests.rs
+new file mode 100644
+index 0000000..345902c
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/tests.rs
+@@ -0,0 +1,49 @@
++// Initialization tests use the public memory API and declared input bytes.
++// Invalid input must not change earlier bytes or region permissions.
++use super::*;
++use crate::bitvector::b64::B64;
++use crate::ir::Val;
++use crate::memory::SmtKind;
++
++#[test]
++fn section_replaces_reservation_without_losing_neighbors() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.add_concrete_region(0x1000..0x2000, [(0x1010, 0x77), (0x1030, 0x88)].into_iter().collect());
++    memory.initialize_section(0x1020, &[0x12, 0x34], true)?;
++    assert_eq!(memory.regions().len(), 3);
++    assert_eq!(memory.region_name_at(0x1020), "symbolic");
++    assert!(memory.access_check(0x1020, 2, SmtKind::WriteData));
++    assert!(!memory.access_check(0x1010, 1, SmtKind::WriteData));
++    assert!(matches!(memory.read_initial(0x1020, 2), Ok(Val::Bits(bits)) if bits.lower_u64() == 0x3412));
++    assert!(matches!(memory.read_initial(0x1010, 1), Ok(Val::Bits(bits)) if bits.lower_u64() == 0x77));
++    assert!(matches!(memory.read_initial(0x1030, 1), Ok(Val::Bits(bits)) if bits.lower_u64() == 0x88));
++    Ok(())
++}
++
++#[test]
++fn invalid_sections_leave_memory_unchanged() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12, 0x34], false)?;
++    let before = format!("{:?}", memory);
++    for (address, bytes) in [(0x1001, vec![1]), (u64::MAX, vec![1]), (0, vec![])] {
++        assert!(memory.initialize_section(address, &bytes, true).is_err());
++        assert_eq!(format!("{:?}", memory), before);
++    }
++    memory.add_symbolic_region(0x2000..0x3000);
++    let before = format!("{:?}", memory);
++    assert!(memory.initialize_section(0x2001, &[1], true).is_err());
++    assert_eq!(format!("{:?}", memory), before);
++    Ok(())
++}
++
++#[test]
++fn adjacent_sections_share_initial_bytes() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12, 0x34], false)?;
++    memory.initialize_section(0x1002, &[0x56, 0x78], true)?;
++    assert_eq!(memory.initialized_bytes().len(), 4);
++    assert!(matches!(memory.read_initial(0x1001, 2), Ok(Val::Bits(bits)) if bits.lower_u64() == 0x5634));
++    assert!(!memory.access_check(0x1000, 1, SmtKind::WriteData));
++    assert!(memory.access_check(0x1002, 1, SmtKind::WriteData));
++    Ok(())
++}
+diff --git a/isla-lib/src/initialized_memory/write_tests.rs b/isla-lib/src/initialized_memory/write_tests.rs
+new file mode 100644
+index 0000000..7e25176
+--- /dev/null
++++ b/isla-lib/src/initialized_memory/write_tests.rs
+@@ -0,0 +1,63 @@
++// Permission tests reject concrete and possible symbolic writes to read-only bytes.
++// Rejection must preserve the model state rather than remove an execution.
++use super::*;
++use crate::bitvector::b64::B64;
++use crate::ir::Val;
++use crate::smt::smtlib::{bits64, Exp, Ty};
++use crate::smt::{Config, Context, Event, SmtResult, Solver, WriteOpts};
++use crate::source_loc::SourceLoc;
++
++#[test]
++fn concrete_write_cannot_change_readonly_initial_bytes() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12, 0x34], false)?;
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let result = memory.write(
++        Val::Unit,
++        Val::Bits(B64::from_u64(0x0fff)),
++        Val::Bits(B64::new(0x7788, 16)),
++        &mut solver,
++        None,
++        WriteOpts::default(),
++    );
++    assert!(matches!(result, Err(crate::error::ExecError::BadWrite("Write overlaps initialized read-only memory"))));
++    assert!(!solver.trace().to_vec().iter().any(|event| matches!(event, Event::WriteMem { .. })));
++    assert!(matches!(memory.read_initial(0x1000, 2), Ok(Val::Bits(bits)) if bits.lower_u64() == 0x3412));
++    Ok(())
++}
++
++#[test]
++fn possible_symbolic_readonly_write_is_an_error() -> Result<(), String> {
++    let mut memory = Memory::<B64>::new();
++    memory.initialize_section(0x1000, &[0x12], false)?;
++    memory.initialize_section(0x1001, &[0x34], true)?;
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let address = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    solver.assert(Exp::Or(
++        Box::new(Exp::Eq(Box::new(Exp::Var(address)), Box::new(bits64(0x1000, 64)))),
++        Box::new(Exp::Eq(Box::new(Exp::Var(address)), Box::new(bits64(0x1001, 64)))),
++    ));
++    let rejected = memory.write(
++        Val::Unit,
++        Val::Symbolic(address),
++        Val::Bits(B64::new(0x77, 8)),
++        &mut solver,
++        None,
++        WriteOpts::default(),
++    );
++    assert!(rejected.is_err());
++    assert!(matches!(solver.check_sat(SourceLoc::unknown()), SmtResult::Sat));
++    solver.assert_eq(Exp::Var(address), bits64(0x1001, 64));
++    let accepted = memory.write(
++        Val::Unit,
++        Val::Symbolic(address),
++        Val::Bits(B64::new(0x77, 8)),
++        &mut solver,
++        None,
++        WriteOpts::default(),
++    );
++    assert!(accepted.is_ok());
++    Ok(())
++}
+diff --git a/isla-lib/src/lib.rs b/isla-lib/src/lib.rs
+index 5a5e169..137abe2 100644
+--- a/isla-lib/src/lib.rs
++++ b/isla-lib/src/lib.rs
+@@ -52,6 +52,7 @@ pub mod ir;
+ pub mod ir_lexer;
+ pub mod lexer;
+ pub mod memory;
++pub mod sequential_memory;
+ pub mod primop;
+ pub mod primop_util;
+ mod probe;
+@@ -60,6 +61,7 @@ pub mod simplify;
+ pub mod smt;
+ pub mod source_loc;
+ pub mod trace;
++mod unique_value;
+ pub mod zencode;
+ 
+ pub const ISLA_VERSION: &str = env!("ISLA_VERSION");
+diff --git a/isla-lib/src/memory.rs b/isla-lib/src/memory.rs
+index 6275c22..6fa31c6 100644
+--- a/isla-lib/src/memory.rs
++++ b/isla-lib/src/memory.rs
+@@ -49,7 +49,7 @@ use crate::ir::Val;
+ use crate::log;
+ use crate::probe;
+ use crate::smt::smtlib::{bits64, Def, Exp};
+-use crate::smt::{Event, Model, ModelVal, ReadOpts, SmtResult, Solver, Sym, WriteOpts};
++use crate::smt::{Event, ReadOpts, SmtResult, Solver, Sym, WriteOpts};
+ use crate::source_loc::SourceLoc;
+ 
+ /// For now, we assume that we only deal with 64-bit architectures.
+@@ -159,13 +159,21 @@ impl<B> Region<B> {
+     }
+ }
+ 
+-// Optional client interface.  At the time of writing this is only
+-// used by the test generation to enforce sequential memory, so we
+-// jump through a few hoops to avoid other clients seeing it.  If it
+-// was used more generally then it would be better to parametrise the
+-// Memory struct instead.
++// Optional memory clients add execution-time constraints.
++// Callback errors stop event publication and remain execution errors.
+ 
+ pub trait MemoryCallbacks<B>: fmt::Debug + MemoryCallbacksClone<B> + Send + Sync {
++    /// A replacement must equal the read value in every permitted execution.
++    fn resolve_read(&self, _solver: &mut Solver<B>, _value: Sym) -> Result<Option<B>, ExecError> {
++        Ok(None)
++    }
++
++    fn validate_read(&self, _opts: &ReadOpts, _tagged: bool) -> Result<(), ExecError> {
++        Ok(())
++    }
++    fn validate_write(&self, _opts: &WriteOpts, _tagged: bool) -> Result<(), ExecError> {
++        Ok(())
++    }
+     #[allow(clippy::too_many_arguments)]
+     fn symbolic_read(
+         &self,
+@@ -177,7 +185,7 @@ pub trait MemoryCallbacks<B>: fmt::Debug + MemoryCallbacksClone<B> + Send + Sync
+         bytes: u32,
+         tag: &Option<Val<B>>,
+         opts: &ReadOpts,
+-    );
++    ) -> Result<(), ExecError>;
+     #[allow(clippy::too_many_arguments)]
+     fn symbolic_write(
+         &mut self,
+@@ -190,7 +198,7 @@ pub trait MemoryCallbacks<B>: fmt::Debug + MemoryCallbacksClone<B> + Send + Sync
+         bytes: u32,
+         tag: &Option<Val<B>>,
+         opts: &WriteOpts,
+-    );
++    ) -> Result<(), ExecError>;
+     fn symbolic_write_tag(
+         &mut self,
+         regions: &[Region<B>],
+@@ -199,7 +207,7 @@ pub trait MemoryCallbacks<B>: fmt::Debug + MemoryCallbacksClone<B> + Send + Sync
+         write_kind: &Val<B>,
+         address: &Val<B>,
+         tag: &Val<B>,
+-    );
++    ) -> Result<(), ExecError>;
+ }
+ 
+ pub trait MemoryCallbacksClone<B> {
+@@ -232,8 +240,12 @@ fn make_bv_bit_pair<B>(left: Val<B>, right: Val<B>) -> Val<B> {
+ pub struct Memory<B> {
+     regions: Vec<Region<B>>,
+     client_info: Option<Box<dyn MemoryCallbacks<B>>>,
++    initial_bytes: std::collections::BTreeMap<Address, u8>,
+ }
+ 
++#[path = "initialized_memory/mod.rs"]
++mod initialized_memory;
++
+ static DEFAULT_REGION_NAME: &str = "default";
+ 
+ enum Overlap {
+@@ -243,7 +255,7 @@ enum Overlap {
+ 
+ impl<B: BV> Memory<B> {
+     pub fn new() -> Self {
+-        Memory { regions: Vec::new(), client_info: None }
++        Memory { regions: Vec::new(), client_info: None, initial_bytes: std::collections::BTreeMap::new() }
+     }
+ 
+     pub fn regions(&self) -> &[Region<B>] {
+@@ -336,6 +348,9 @@ impl<B: BV> Memory<B> {
+ 
+     fn read_initial_byte(&self, address: Address) -> Result<u8, ExecError> {
+         use Region::*;
++        if let Some(byte) = self.initial_bytes.get(&address) {
++            return Ok(*byte);
++        }
+         for region in &self.regions {
+             match region {
+                 Constrained(range, _) | Symbolic(range) | SymbolicCode(range) if range.contains(&address) => {
+@@ -401,32 +416,13 @@ impl<B: BV> Memory<B> {
+         if let Some(r) = region_constraints.pop() {
+             let constraint = region_constraints.drain(..).fold(r, |r1, r2| Or(Box::new(r1), Box::new(r2)));
+             match solver.check_sat_with(&constraint, SourceLoc::unknown()) {
+-                Sat => {
+-                    let sat_address = {
+-                        let mut model = Model::new(solver);
+-                        let ModelVal::Exp(Bits64(sat_address)) = model.get_var(address)? else {
+-                            return Err(ExecError::Z3Error(
+-                                "No bitvector address variable found in model during check_concrete_overlap"
+-                                    .to_string(),
+-                            ));
+-                        };
+-                        sat_address
+-                    };
+-                    // Check if the satisifiable address in the
+-                    // concrete region is actually unique, in which
+-                    // case the caller could choose to treat it as a
+-                    // concrete value.
+-                    let uniqueness_constraint = Neq(Box::new(Var(address)), Box::new(Bits64(sat_address)));
+-                    match solver.check_sat_with(&uniqueness_constraint, SourceLoc::unknown()) {
+-                        Unsat => Ok(Overlap::Unique(sat_address.lower_u64())),
+-                        Unknown => Err(ExecError::Z3Unknown),
+-                        Sat => {
+-                            log!(log::MEMORY, &format!("Overlapping satisfiable address: {:x}", sat_address));
+-                            probe::taint_info(log::MEMORY, address, None, solver);
+-                            Err(error)
+-                        }
++                Sat => match crate::unique_value::bitvector(solver, address)? {
++                    Some(address) => Ok(Overlap::Unique(address.lower_u64())),
++                    None => {
++                        probe::taint_info(log::MEMORY, address, None, solver);
++                        Err(error)
+                     }
+-                }
++                },
+                 Unknown => Err(ExecError::Z3Unknown),
+                 Unsat => Ok(Overlap::NoOverlap),
+             }
+@@ -455,11 +451,25 @@ impl<B: BV> Memory<B> {
+     ) -> Result<Val<B>, ExecError> {
+         log!(log::MEMORY, &format!("Read: {:?} {:?} {:?} {:?}", read_kind, address, bytes, tag));
+ 
++        if let Some(callback) = &self.client_info {
++            callback.validate_read(&opts, tag)?;
++        }
++
+         if let Val::I128(bytes) = bytes.widen_int() {
+-            let bytes = u32::try_from(bytes).expect("Bytes did not fit in u32 in memory read");
++            let bytes = u32::try_from(bytes).map_err(|_| ExecError::BadRead("Bytes do not fit in u32"))?;
+ 
+             match address {
+                 Val::Bits(concrete_addr) => {
++                    if let Some(value) = self.read_initialized(
++                        read_kind.clone(),
++                        concrete_addr.lower_u64(),
++                        bytes,
++                        solver,
++                        tag,
++                        opts.clone(),
++                    )? {
++                        return Ok(value);
++                    }
+                     for region in &self.regions {
+                         match region {
+                             Region::Constrained(range, generator) if range.contains(&concrete_addr.lower_u64()) => {
+@@ -570,6 +580,13 @@ impl<B: BV> Memory<B> {
+     ) -> Result<Val<B>, ExecError> {
+         log!(log::MEMORY, &format!("Write: {:?} {:?} {:?} {:?}", write_kind, address, data, tag));
+ 
++        if let Some(callback) = &self.client_info {
++            callback.validate_write(&opts, tag.is_some())?;
++        }
++
++        let data_bits = crate::primop_util::length_bits(&data, solver, SourceLoc::unknown())?;
++        self.validate_initialized_write(&address, data_bits / 8, solver)?;
++
+         match address {
+             Val::Bits(concrete_addr) => {
+                 for region in self.regions.iter_mut() {
+@@ -626,8 +643,12 @@ impl<B: BV> Memory<B> {
+     ) -> Result<Val<B>, ExecError> {
+         use crate::smt::smtlib::*;
+ 
++        let width = bytes.checked_mul(8).ok_or(ExecError::BadRead("Symbolic memory byte width overflow"))?;
++        if width == 0 {
++            return Err(ExecError::BadRead("Symbolic memory read has zero bytes"));
++        }
+         let value = solver.fresh();
+-        solver.add(Def::DeclareConst(value, Ty::BitVec(8 * bytes)));
++        solver.add(Def::DeclareConst(value, Ty::BitVec(width)));
+ 
+         let tag_value = if tag {
+             let v = solver.fresh();
+@@ -637,7 +658,7 @@ impl<B: BV> Memory<B> {
+             None
+         };
+         let tag_ir_value = tag_value.map(Val::Symbolic);
+-        if let Some(c) = &self.client_info {
++        let resolved = if let Some(c) = &self.client_info {
+             c.symbolic_read(
+                 &self.regions,
+                 solver,
+@@ -647,7 +668,10 @@ impl<B: BV> Memory<B> {
+                 bytes,
+                 &tag_ir_value,
+                 &opts,
+-            )
++            )?;
++            c.resolve_read(solver, value)?
++        } else {
++            None
+         };
+         solver.add_event(Event::ReadMem {
+             value: Val::Symbolic(value),
+@@ -661,10 +685,14 @@ impl<B: BV> Memory<B> {
+ 
+         log!(log::MEMORY, &format!("Read symbolic: {} {:?}", value, tag_value));
+ 
+-        let return_value = match tag_ir_value {
+-            Some(v) => make_bv_bit_pair(Val::Symbolic(value), v),
++        let returned = match resolved {
++            Some(bits) => Val::Bits(bits),
+             None => Val::Symbolic(value),
+         };
++        let return_value = match tag_ir_value {
++            Some(v) => make_bv_bit_pair(returned, v),
++            None => returned,
++        };
+         Ok(return_value)
+     }
+ 
+@@ -695,7 +723,7 @@ impl<B: BV> Memory<B> {
+         let value = solver.fresh();
+         solver.add(Def::DeclareConst(value, Ty::Bool));
+         if let Some(c) = &mut self.client_info {
+-            c.symbolic_write(&self.regions, solver, value, &write_kind, &address, &data, bytes, &tag, &opts)
++            c.symbolic_write(&self.regions, solver, value, &write_kind, &address, &data, bytes, &tag, &opts)?
+         };
+         solver.add_event(Event::WriteMem { value, write_kind, address, data, bytes, tag_value: tag, opts, region });
+ 
+@@ -714,7 +742,7 @@ impl<B: BV> Memory<B> {
+         let value = solver.fresh();
+         solver.add(Def::DeclareConst(value, Ty::Bool));
+         if let Some(c) = &mut self.client_info {
+-            c.symbolic_write_tag(&self.regions, solver, value, &write_kind, &address, &tag)
++            c.symbolic_write_tag(&self.regions, solver, value, &write_kind, &address, &tag)?
+         };
+         solver.add_event(Event::WriteMem {
+             value,
+diff --git a/isla-lib/src/sequential_memory/NOTICE b/isla-lib/src/sequential_memory/NOTICE
+new file mode 100644
+index 0000000..20a7f24
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/NOTICE
+@@ -0,0 +1,32 @@
++The byte-array read and write expressions adapt isla-testgen src/execution.rs
++at commit cc4c613410766006c8a14ecf8787c66839c17597.
++
++BSD 2-Clause License
++
++Copyright (c) 2020, 2021, 2022 Brian Campbell
++Copyright (c) 2020 Alasdair Armstrong
++
++All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions are
++met:
++
++1. Redistributions of source code must retain the above copyright
++notice, this list of conditions and the following disclaimer.
++
++2. Redistributions in binary form must reproduce the above copyright
++notice, this list of conditions and the following disclaimer in the
++documentation and/or other materials provided with the distribution.
++
++THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+diff --git a/isla-lib/src/sequential_memory/callbacks.rs b/isla-lib/src/sequential_memory/callbacks.rs
+new file mode 100644
+index 0000000..3f13eb1
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/callbacks.rs
+@@ -0,0 +1,70 @@
++// Callback errors remain public memory errors before event publication.
++// No unsupported metadata can become an array-only proof.
++use super::{read, validate, write, SequentialMemory};
++use crate::bitvector::BV;
++use crate::error::ExecError;
++use crate::ir::Val;
++use crate::memory::{MemoryCallbacks, Region};
++use crate::smt::{ReadOpts, Solver, Sym, WriteOpts};
++
++#[allow(clippy::too_many_arguments)]
++impl<B: BV> MemoryCallbacks<B> for SequentialMemory {
++    fn resolve_read(&self, solver: &mut Solver<B>, value: Sym) -> Result<Option<B>, ExecError> {
++        crate::unique_value::bitvector(solver, value)
++    }
++
++    fn validate_read(&self, opts: &ReadOpts, tagged: bool) -> Result<(), ExecError> {
++        validate::access(opts.is_exclusive, tagged)
++    }
++
++    fn validate_write(&self, opts: &WriteOpts, tagged: bool) -> Result<(), ExecError> {
++        validate::access(opts.is_exclusive(), tagged)
++    }
++
++    fn symbolic_read(
++        &self,
++        _regions: &[Region<B>],
++        solver: &mut Solver<B>,
++        value: &Val<B>,
++        _read_kind: &Val<B>,
++        address: &Val<B>,
++        bytes: u32,
++        tag: &Option<Val<B>>,
++        opts: &ReadOpts,
++    ) -> Result<(), ExecError> {
++        validate::access(opts.is_exclusive, tag.is_some())?;
++        if opts.is_ifetch {
++            return Err(ExecError::BadRead("Sequential memory does not support symbolic instruction fetch"));
++        }
++        read::constrain(self.memory, solver, value, address, bytes)
++    }
++
++    fn symbolic_write(
++        &mut self,
++        _regions: &[Region<B>],
++        solver: &mut Solver<B>,
++        _primitive_status: Sym,
++        _write_kind: &Val<B>,
++        address: &Val<B>,
++        data: &Val<B>,
++        bytes: u32,
++        tag: &Option<Val<B>>,
++        opts: &WriteOpts,
++    ) -> Result<(), ExecError> {
++        validate::access(opts.is_exclusive(), tag.is_some())?;
++        self.memory = write::update(self.memory, solver, address, data, bytes)?;
++        Ok(())
++    }
++
++    fn symbolic_write_tag(
++        &mut self,
++        _regions: &[Region<B>],
++        _solver: &mut Solver<B>,
++        _value: Sym,
++        _write_kind: &Val<B>,
++        _address: &Val<B>,
++        _tag: &Val<B>,
++    ) -> Result<(), ExecError> {
++        Err(ExecError::BadWrite("Sequential memory does not support memory tags"))
++    }
++}
+diff --git a/isla-lib/src/sequential_memory/mod.rs b/isla-lib/src/sequential_memory/mod.rs
+new file mode 100644
+index 0000000..68b7da1
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/mod.rs
+@@ -0,0 +1,32 @@
++// Sequential RISC-V RAM reuses persistent SMT byte arrays from isla-testgen.
++// It must not interpret the primitive Boolean as an ordinary-store fault.
++use crate::bitvector::BV;
++use crate::smt::smtlib::{bits64, Exp, Ty};
++use crate::smt::{Solver, Sym};
++use crate::source_loc::SourceLoc;
++use std::collections::BTreeMap;
++
++mod callbacks;
++mod read;
++#[cfg(test)]
++mod tests;
++mod validate;
++mod write;
++
++#[derive(Debug, Clone)]
++pub struct SequentialMemory {
++    memory: Sym,
++}
++
++impl SequentialMemory {
++    pub fn new<B: BV>(initialized: &BTreeMap<u64, u8>, solver: &mut Solver<B>) -> Self {
++        let array =
++            solver.declare_const(Ty::Array(Box::new(Ty::BitVec(64)), Box::new(Ty::BitVec(8))), SourceLoc::unknown());
++        let mut contents = Exp::Var(array);
++        for (address, byte) in initialized {
++            contents =
++                Exp::Store(Box::new(contents), Box::new(bits64(*address, 64)), Box::new(bits64(u64::from(*byte), 8)));
++        }
++        Self { memory: solver.define_const(contents, SourceLoc::unknown()) }
++    }
++}
+diff --git a/isla-lib/src/sequential_memory/read.rs b/isla-lib/src/sequential_memory/read.rs
+new file mode 100644
+index 0000000..1b65bbb
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/read.rs
+@@ -0,0 +1,28 @@
++// Reads concatenate array bytes in little-endian order.
++// Only value equality enters the solver, never address assumptions.
++use super::validate;
++use crate::bitvector::BV;
++use crate::error::ExecError;
++use crate::ir::Val;
++use crate::smt::smtlib::{bits64, Exp};
++use crate::smt::{Solver, Sym};
++
++pub(super) fn constrain<B: BV>(
++    memory: Sym,
++    solver: &mut Solver<B>,
++    value: &Val<B>,
++    address: &Val<B>,
++    bytes: u32,
++) -> Result<(), ExecError> {
++    let width = validate::width(bytes)?;
++    let address = validate::bits(address, 64, solver)?;
++    let value = validate::bits(value, width, solver)?;
++    let mut read = Exp::Select(Box::new(Exp::Var(memory)), Box::new(address.clone()));
++    for offset in 1..bytes {
++        let location = Exp::Bvadd(Box::new(address.clone()), Box::new(bits64(u64::from(offset), 64)));
++        let byte = Exp::Select(Box::new(Exp::Var(memory)), Box::new(location));
++        read = Exp::Concat(Box::new(byte), Box::new(read));
++    }
++    solver.assert_eq(value, read);
++    Ok(())
++}
+diff --git a/isla-lib/src/sequential_memory/tests/mod.rs b/isla-lib/src/sequential_memory/tests/mod.rs
+new file mode 100644
+index 0000000..498211e
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/tests/mod.rs
+@@ -0,0 +1,57 @@
++// Public memory operations provide solver evidence for the byte-array backend.
++// Every equality needs a satisfiable model before a rejected mutation.
++use super::SequentialMemory;
++use crate::bitvector::b64::B64;
++use crate::bitvector::BV;
++use crate::ir::Val;
++use crate::memory::Memory;
++use crate::primop_util::smt_value;
++use crate::smt::smtlib::{bits64, Exp, Ty};
++use crate::smt::{Config, Context, ReadOpts, SmtResult, Solver, WriteOpts};
++use crate::source_loc::SourceLoc;
++use std::collections::BTreeMap;
++
++mod pointer;
++mod read_evidence;
++mod rejected_store;
++mod resolution;
++mod state;
++mod unsupported;
++
++fn memory(solver: &mut Solver<B64>, initial: BTreeMap<u64, u8>) -> Memory<B64> {
++    let mut memory = Memory::new();
++    memory.set_client_info(Box::new(SequentialMemory::new(&initial, solver)));
++    memory
++}
++
++fn store(
++    memory: &mut Memory<B64>,
++    solver: &mut Solver<B64>,
++    address: Val<B64>,
++    data: Val<B64>,
++    primitive_status: bool,
++) -> Result<(), Box<dyn std::error::Error>> {
++    let result = memory.write(Val::Unit, address, data, solver, None, WriteOpts::default())?;
++    solver.assert_eq(smt_value(&result, SourceLoc::unknown())?, Exp::Bool(primitive_status));
++    Ok(())
++}
++
++fn load(
++    memory: &Memory<B64>,
++    solver: &mut Solver<B64>,
++    address: Val<B64>,
++    bytes: u32,
++) -> Result<Val<B64>, Box<dyn std::error::Error>> {
++    Ok(memory.read(Val::Unit, address, Val::I128(i128::from(bytes)), solver, false, ReadOpts::default())?)
++}
++
++fn equal(
++    solver: &mut Solver<B64>,
++    actual: &Val<B64>,
++    expected: Exp<crate::smt::Sym>,
++) -> Result<(), Box<dyn std::error::Error>> {
++    assert!(matches!(solver.check_sat(SourceLoc::unknown()), SmtResult::Sat));
++    let mutation = Exp::Neq(Box::new(smt_value(actual, SourceLoc::unknown())?), Box::new(expected));
++    assert!(matches!(solver.check_sat_with(&mutation, SourceLoc::unknown()), SmtResult::Unsat));
++    Ok(())
++}
+diff --git a/isla-lib/src/sequential_memory/tests/pointer.rs b/isla-lib/src/sequential_memory/tests/pointer.rs
+new file mode 100644
+index 0000000..fb54d92
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/tests/pointer.rs
+@@ -0,0 +1,49 @@
++// Stored pointers constrain later addresses through the same generic array.
++// No address restriction or pointer constant can stand in for this identity.
++use super::*;
++
++#[test]
++fn sequential_memory_symbolic_pointer_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    let address = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    let pointer = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    store(&mut memory, &mut solver, Val::Symbolic(address), Val::Symbolic(pointer), true)?;
++    let result = load(&memory, &mut solver, Val::Symbolic(address), 8)?;
++    equal(&mut solver, &result, Exp::Var(pointer))?;
++    for location in [0, u64::MAX] {
++        let equality = Exp::Eq(Box::new(Exp::Var(address)), Box::new(bits64(location, 64)));
++        assert!(matches!(solver.check_sat_with(&equality, SourceLoc::unknown()), SmtResult::Sat));
++    }
++    Ok(())
++}
++
++#[test]
++fn sequential_memory_read_pointer_selects_the_stored_object() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    let slot = Val::Bits(B64::from_u64(0x1000));
++    let target = Val::Bits(B64::from_u64(0x2000));
++    store(&mut memory, &mut solver, slot.clone(), target.clone(), true)?;
++    store(&mut memory, &mut solver, target, Val::Bits(B64::from_u64(0x1234)), true)?;
++    let pointer = load(&memory, &mut solver, slot, 8)?;
++    let result = load(&memory, &mut solver, pointer, 8)?;
++    equal(&mut solver, &result, bits64(0x1234, 64))
++}
++
++#[test]
++fn sequential_memory_wide_symbolic_values_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    let address = Val::Bits(B64::from_u64(0x1000));
++    for bytes in [1, 2, 3, 4, 8, 16, 32] {
++        let data = solver.declare_const(Ty::BitVec(bytes * 8), SourceLoc::unknown());
++        store(&mut memory, &mut solver, address.clone(), Val::Symbolic(data), true)?;
++        let result = load(&memory, &mut solver, address.clone(), bytes)?;
++        equal(&mut solver, &result, Exp::Var(data))?;
++    }
++    Ok(())
++}
+diff --git a/isla-lib/src/sequential_memory/tests/read_evidence.rs b/isla-lib/src/sequential_memory/tests/read_evidence.rs
+new file mode 100644
+index 0000000..f3f0020
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/tests/read_evidence.rs
+@@ -0,0 +1,41 @@
++// Read resolution must retain symbolic evidence and the default memory behavior.
++// A concrete execution value must not remove the constraint from replay.
++use super::*;
++use crate::smt::{checkpoint, Event};
++
++#[test]
++fn concrete_read_retains_replayable_symbolic_evidence() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    let address = Val::Bits(B64::from_u64(0x1000));
++    let value = B64::from_u64(0x2000);
++    store(&mut memory, &mut solver, address.clone(), Val::Bits(value), true)?;
++    let result = load(&memory, &mut solver, address, 8)?;
++    assert!(matches!(result, Val::Bits(bits) if bits == value));
++    let event_value = solver.trace().to_vec().into_iter().find_map(|event| match event {
++        Event::ReadMem { value, .. } => Some(value.clone()),
++        _ => None,
++    });
++    let event_value = event_value.ok_or("Resolved read has no memory event")?;
++    assert!(matches!(event_value, Val::Symbolic(_)));
++    let saved = checkpoint(&mut solver);
++    let mut replay = Solver::from_checkpoint(&context, saved);
++    equal(&mut replay, &event_value, bits64(0x2000, 64))
++}
++
++#[test]
++fn default_memory_read_retains_symbolic_representation() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    let mut memory = Memory::new();
++    let address = Val::Bits(B64::from_u64(0x1000));
++    store(&mut memory, &mut solver, address.clone(), Val::Bits(B64::from_u64(0x2000)), true)?;
++    let result = load(&memory, &mut solver, address, 8)?;
++    assert!(matches!(result, Val::Symbolic(_)));
++    for value in [0, u64::MAX] {
++        let condition = Exp::Eq(Box::new(smt_value(&result, SourceLoc::unknown())?), Box::new(bits64(value, 64)));
++        assert!(solver.check_sat_with(&condition, SourceLoc::unknown()).is_sat()?);
++    }
++    Ok(())
++}
+diff --git a/isla-lib/src/sequential_memory/tests/rejected_store.rs b/isla-lib/src/sequential_memory/tests/rejected_store.rs
+new file mode 100644
+index 0000000..c39b24d
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/tests/rejected_store.rs
+@@ -0,0 +1,24 @@
++// Actual memory errors preserve the prior sequential state.
++// The primitive Boolean must not replace an error result.
++use super::*;
++
++#[test]
++fn sequential_memory_rejected_write_preserves_initial_bytes() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::from([(0x1000, 0x12), (0x1001, 0x34)]));
++    let address = Val::Bits(B64::from_u64(0x1000));
++    let initial = load(&memory, &mut solver, address.clone(), 2)?;
++    equal(&mut solver, &initial, bits64(0x3412, 16))?;
++    let invalid = memory.write(
++        Val::Unit,
++        Val::Bits(B64::new(0x1000, 16)),
++        Val::Bits(B64::new(0x7788, 16)),
++        &mut solver,
++        None,
++        WriteOpts::default(),
++    );
++    assert!(invalid.is_err());
++    let result = load(&memory, &mut solver, address, 2)?;
++    equal(&mut solver, &result, bits64(0x3412, 16))
++}
+diff --git a/isla-lib/src/sequential_memory/tests/resolution.rs b/isla-lib/src/sequential_memory/tests/resolution.rs
+new file mode 100644
+index 0000000..e16a7b6
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/tests/resolution.rs
+@@ -0,0 +1,47 @@
++// Public memory reads return concrete values only after uniqueness proof.
++// Stored contents and later mutations must determine each read independently.
++use super::*;
++
++#[test]
++fn stored_pointer_reads_become_concrete() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    let address = Val::Bits(B64::from_u64(0x1000));
++    for pointer in [0x2000, 0x3000] {
++        let value = B64::from_u64(pointer);
++        store(&mut memory, &mut solver, address.clone(), Val::Bits(value), true)?;
++        let result = load(&memory, &mut solver, address.clone(), 8)?;
++        assert!(matches!(result, Val::Bits(bits) if bits == value));
++    }
++    Ok(())
++}
++
++#[test]
++fn symbolic_store_retains_each_feasible_value() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    let address = Val::Bits(B64::from_u64(0x1000));
++    let value = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    store(&mut memory, &mut solver, address.clone(), Val::Symbolic(value), true)?;
++    let result = load(&memory, &mut solver, address, 8)?;
++    assert!(matches!(result, Val::Symbolic(_)));
++    equal(&mut solver, &result, Exp::Var(value))?;
++    for alternative in [0, u64::MAX] {
++        let condition = Exp::Eq(Box::new(Exp::Var(value)), Box::new(bits64(alternative, 64)));
++        assert!(solver.check_sat_with(&condition, SourceLoc::unknown()).is_sat()?);
++    }
++    Ok(())
++}
++
++#[test]
++fn inconsistent_memory_read_returns_an_error() {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let memory = memory(&mut solver, BTreeMap::new());
++    solver.assert(Exp::Bool(false));
++    let result =
++        memory.read(Val::Unit, Val::Bits(B64::from_u64(0x1000)), Val::I128(8), &mut solver, false, ReadOpts::default());
++    assert!(matches!(result, Err(crate::error::ExecError::NoModel)));
++}
+diff --git a/isla-lib/src/sequential_memory/tests/state.rs b/isla-lib/src/sequential_memory/tests/state.rs
+new file mode 100644
+index 0000000..3ffd4e2
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/tests/state.rs
+@@ -0,0 +1,67 @@
++// State tests distinguish initial bytes, ordinary stores, overlap, and branch copies.
++// Unspecified bytes and the unused primitive Boolean must remain symbolic.
++use super::*;
++
++#[test]
++fn sequential_memory_ordinary_store_ignores_primitive_status() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::from([(0x1000, 0x12), (0x1001, 0x34)]));
++    let address = Val::Bits(B64::from_u64(0x1000));
++    let initial = load(&memory, &mut solver, address.clone(), 2)?;
++    equal(&mut solver, &initial, bits64(0x3412, 16))?;
++    let status = memory.write(
++        Val::Unit,
++        address.clone(),
++        Val::Bits(B64::new(0x7788, 16)),
++        &mut solver,
++        None,
++        WriteOpts::default(),
++    )?;
++    let result = load(&memory, &mut solver, address, 2)?;
++    equal(&mut solver, &result, bits64(0x7788, 16))?;
++    for status_value in [false, true] {
++        let condition = Exp::Eq(Box::new(smt_value(&status, SourceLoc::unknown())?), Box::new(Exp::Bool(status_value)));
++        assert!(matches!(solver.check_sat_with(&condition, SourceLoc::unknown()), SmtResult::Sat));
++    }
++    Ok(())
++}
++
++#[test]
++fn sequential_memory_overlapping_store_replaces_only_its_bytes() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    let address = Val::Bits(B64::from_u64(0x1000));
++    store(&mut memory, &mut solver, address.clone(), Val::Bits(B64::new(0x44332211, 32)), true)?;
++    store(&mut memory, &mut solver, Val::Bits(B64::from_u64(0x1001)), Val::Bits(B64::new(0x9988, 16)), true)?;
++    let result = load(&memory, &mut solver, address, 4)?;
++    equal(&mut solver, &result, bits64(0x44998811, 32))
++}
++
++#[test]
++fn sequential_memory_fork_clones_preserve_separate_state() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let original = memory(&mut solver, BTreeMap::from([(0x1000, 0x12)]));
++    let mut branch = original.clone();
++    let address = Val::Bits(B64::from_u64(0x1000));
++    store(&mut branch, &mut solver, address.clone(), Val::Bits(B64::new(0x77, 8)), true)?;
++    let unchanged = load(&original, &mut solver, address.clone(), 1)?;
++    equal(&mut solver, &unchanged, bits64(0x12, 8))?;
++    let changed = load(&branch, &mut solver, address, 1)?;
++    equal(&mut solver, &changed, bits64(0x77, 8))
++}
++
++#[test]
++fn sequential_memory_unspecified_bytes_remain_symbolic() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let memory = memory(&mut solver, BTreeMap::new());
++    let result = load(&memory, &mut solver, Val::Bits(B64::from_u64(0x1000)), 1)?;
++    for value in [0, 0xff] {
++        let equality = Exp::Eq(Box::new(smt_value(&result, SourceLoc::unknown())?), Box::new(bits64(value, 8)));
++        assert!(matches!(solver.check_sat_with(&equality, SourceLoc::unknown()), SmtResult::Sat));
++    }
++    Ok(())
++}
+diff --git a/isla-lib/src/sequential_memory/tests/unsupported.rs b/isla-lib/src/sequential_memory/tests/unsupported.rs
+new file mode 100644
+index 0000000..e207bad
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/tests/unsupported.rs
+@@ -0,0 +1,57 @@
++// Unsupported operations return errors through the public memory API.
++// Error paths must not remove the current execution with false assumptions.
++use super::*;
++
++#[test]
++fn sequential_memory_rejects_exclusive_tag_and_symbolic_fetch() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    memory.add_symbolic_code_region(0x1000..0x2000);
++    let address = Val::Bits(B64::from_u64(0x1000));
++    for (options, tag) in [(ReadOpts::exclusive(), false), (ReadOpts::default(), true), (ReadOpts::ifetch(), false)] {
++        assert!(memory.read(Val::Unit, address.clone(), Val::I128(1), &mut solver, tag, options).is_err());
++    }
++    assert!(memory
++        .write(Val::Unit, address.clone(), Val::Bits(B64::new(1, 8)), &mut solver, None, WriteOpts::exclusive())
++        .is_err());
++    assert!(memory.write_tag(Val::Unit, address, Val::Bits(B64::new(1, 1)), &mut solver).is_err());
++    assert!(matches!(solver.check_sat(SourceLoc::unknown()), SmtResult::Sat));
++    Ok(())
++}
++
++#[test]
++fn sequential_memory_rejects_incorrect_address_width() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let memory = memory(&mut solver, BTreeMap::new());
++    let result = load(&memory, &mut solver, Val::Bits(B64::new(0x1000, 16)), 1);
++    assert!(result.is_err());
++    assert!(matches!(solver.check_sat(SourceLoc::unknown()), SmtResult::Sat));
++    Ok(())
++}
++
++#[test]
++fn sequential_memory_concrete_regions_do_not_bypass_access_errors() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let mut memory = memory(&mut solver, BTreeMap::new());
++    memory.initialize_section(0x1000, &[0x12], false)?;
++    let address = Val::Bits(B64::from_u64(0x1000));
++    let result = memory.read(Val::Unit, address, Val::I128(1), &mut solver, false, ReadOpts::exclusive());
++    assert!(result.is_err());
++    assert!(matches!(solver.check_sat(SourceLoc::unknown()), SmtResult::Sat));
++    Ok(())
++}
++
++#[test]
++fn sequential_memory_invalid_widths_return_errors() -> Result<(), Box<dyn std::error::Error>> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::new(&context);
++    let memory = memory(&mut solver, BTreeMap::new());
++    for bytes in [0, u32::MAX] {
++        assert!(load(&memory, &mut solver, Val::Bits(B64::from_u64(0x1000)), bytes).is_err());
++    }
++    assert!(matches!(solver.check_sat(SourceLoc::unknown()), SmtResult::Sat));
++    Ok(())
++}
+diff --git a/isla-lib/src/sequential_memory/validate.rs b/isla-lib/src/sequential_memory/validate.rs
+new file mode 100644
+index 0000000..0a71908
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/validate.rs
+@@ -0,0 +1,34 @@
++// Array widths and unsupported access modes produce errors.
++// Validation must not assert a restricted address set.
++use crate::bitvector::BV;
++use crate::error::ExecError;
++use crate::ir::Val;
++use crate::primop_util::{length_bits, mixed_bits_to_smt};
++use crate::smt::smtlib::Exp;
++use crate::smt::{Solver, Sym};
++use crate::source_loc::SourceLoc;
++
++pub(super) fn access(exclusive: bool, tagged: bool) -> Result<(), ExecError> {
++    if exclusive {
++        return Err(ExecError::BadRead("Sequential memory does not support exclusive accesses"));
++    }
++    if tagged {
++        return Err(ExecError::BadRead("Sequential memory does not support memory tags"));
++    }
++    Ok(())
++}
++
++pub(super) fn bits<B: BV>(value: &Val<B>, width: u32, solver: &mut Solver<B>) -> Result<Exp<Sym>, ExecError> {
++    if width == 0 || length_bits(value, solver, SourceLoc::unknown())? != width {
++        return Err(ExecError::Type("Sequential memory bitvector width mismatch".to_string(), SourceLoc::unknown()));
++    }
++    mixed_bits_to_smt(value.clone(), solver, SourceLoc::unknown())
++}
++
++pub(super) fn width(bytes: u32) -> Result<u32, ExecError> {
++    let width = bytes.checked_mul(8).ok_or(ExecError::BadRead("Sequential memory byte width overflow"))?;
++    if width == 0 {
++        return Err(ExecError::BadRead("Sequential memory access has zero bytes"));
++    }
++    Ok(width)
++}
+diff --git a/isla-lib/src/sequential_memory/write.rs b/isla-lib/src/sequential_memory/write.rs
+new file mode 100644
+index 0000000..444c964
+--- /dev/null
++++ b/isla-lib/src/sequential_memory/write.rs
+@@ -0,0 +1,28 @@
++// Ordinary RISC-V RAM stores update the byte array after validation.
++// The primitive Boolean is not an ordinary-store fault result.
++use super::validate;
++use crate::bitvector::BV;
++use crate::error::ExecError;
++use crate::ir::Val;
++use crate::smt::smtlib::{bits64, Exp};
++use crate::smt::{Solver, Sym};
++use crate::source_loc::SourceLoc;
++
++pub(super) fn update<B: BV>(
++    memory: Sym,
++    solver: &mut Solver<B>,
++    address: &Val<B>,
++    data: &Val<B>,
++    bytes: u32,
++) -> Result<Sym, ExecError> {
++    let width = validate::width(bytes)?;
++    let address = validate::bits(address, 64, solver)?;
++    let data = validate::bits(data, width, solver)?;
++    let mut contents = Exp::Var(memory);
++    for offset in 0..bytes {
++        let location = Exp::Bvadd(Box::new(address.clone()), Box::new(bits64(u64::from(offset), 64)));
++        let byte = Exp::Extract(offset * 8 + 7, offset * 8, Box::new(data.clone()));
++        contents = Exp::Store(Box::new(contents), Box::new(location), Box::new(byte));
++    }
++    Ok(solver.define_const(contents, SourceLoc::unknown()))
++}
+diff --git a/isla-lib/src/smt.rs b/isla-lib/src/smt.rs
+index a1e1a09..7b4bdc2 100644
+--- a/isla-lib/src/smt.rs
++++ b/isla-lib/src/smt.rs
+@@ -189,6 +189,10 @@ pub struct WriteOpts {
+ }
+ 
+ impl WriteOpts {
++    pub fn is_exclusive(&self) -> bool {
++        self.is_exclusive
++    }
++
+     pub fn exclusive() -> Self {
+         WriteOpts { is_exclusive: true }
+     }
+diff --git a/isla-lib/src/unique_overlap_tests.rs b/isla-lib/src/unique_overlap_tests.rs
+new file mode 100644
+index 0000000..85c60f3
+--- /dev/null
++++ b/isla-lib/src/unique_overlap_tests.rs
+@@ -0,0 +1,41 @@
++// Public memory reads exercise both unique and ambiguous concrete-region overlap.
++// A region-constrained sample must never remove a valid address outside the region.
++use crate::bitvector::{b64::B64, BV};
++use crate::error::ExecError;
++use crate::ir::Val;
++use crate::memory::Memory;
++use crate::smt::smtlib::{bits64, Exp, Ty};
++use crate::smt::{Config, Context, ReadOpts, Solver};
++use crate::source_loc::SourceLoc;
++
++#[test]
++fn unique_address_reads_declared_concrete_byte() -> Result<(), ExecError> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    let mut memory = Memory::new();
++    memory.add_concrete_region(0x1000..0x1001, [(0x1000, 0x77)].into_iter().collect());
++    let address = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    solver.assert_eq(Exp::Var(address), bits64(0x1000, 64));
++    let result =
++        memory.read(Val::Unit, Val::Symbolic(address), Val::I128(1), &mut solver, false, ReadOpts::default())?;
++    assert!(matches!(result, Val::Bits(value) if value == B64::new(0x77, 8)));
++    assert!(solver.check_sat(SourceLoc::unknown()).is_sat()?);
++    Ok(())
++}
++
++#[test]
++fn ambiguous_overlap_retains_inside_and_outside_addresses() -> Result<(), ExecError> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    let mut memory = Memory::new();
++    memory.add_concrete_region(0x1000..0x1001, [(0x1000, 0x77)].into_iter().collect());
++    let address = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    let inside = Exp::Eq(Box::new(Exp::Var(address)), Box::new(bits64(0x1000, 64)));
++    let outside = Exp::Eq(Box::new(Exp::Var(address)), Box::new(bits64(0x2000, 64)));
++    solver.assert(Exp::Or(Box::new(inside.clone()), Box::new(outside.clone())));
++    let result = memory.read(Val::Unit, Val::Symbolic(address), Val::I128(1), &mut solver, false, ReadOpts::default());
++    assert!(matches!(result, Err(ExecError::BadRead("Possible symbolic address overlap"))));
++    assert!(solver.check_sat_with(&inside, SourceLoc::unknown()).is_sat()?);
++    assert!(solver.check_sat_with(&outside, SourceLoc::unknown()).is_sat()?);
++    Ok(())
++}
+diff --git a/isla-lib/src/unique_value.rs b/isla-lib/src/unique_value.rs
+new file mode 100644
+index 0000000..aadbe75
+--- /dev/null
++++ b/isla-lib/src/unique_value.rs
+@@ -0,0 +1,42 @@
++// Reuse the memory-overlap uniqueness proof for concrete bitvector values.
++// A model sample alone must never replace a symbolic value.
++use crate::bitvector::{b64::B64, BV};
++use crate::error::ExecError;
++use crate::smt::smtlib::Exp;
++use crate::smt::{Model, ModelVal, Solver, Sym};
++use crate::source_loc::SourceLoc;
++
++pub(crate) fn bitvector<B: BV>(solver: &mut Solver<B>, symbol: Sym) -> Result<Option<B>, ExecError> {
++    let location = SourceLoc::unknown();
++    let width =
++        solver.length(symbol).ok_or_else(|| ExecError::Type("Unique value is not a bitvector".into(), location))?;
++    if width > B64::MAX_WIDTH || width > B::MAX_WIDTH {
++        return Ok(None);
++    }
++    if !solver.check_sat(location).is_sat()? {
++        return Err(ExecError::NoModel);
++    }
++    let value = {
++        let mut model = Model::new(solver);
++        match model.get_var(symbol)? {
++            ModelVal::Exp(Exp::Bits64(value)) => value,
++            ModelVal::Arbitrary(_) => return Ok(None),
++            ModelVal::Exp(_) => {
++                return Err(ExecError::Type("Model value is not a concrete bitvector".into(), location))
++            }
++        }
++    };
++    let different = Exp::Neq(Box::new(Exp::Var(symbol)), Box::new(Exp::Bits64(value)));
++    if solver.check_sat_with(&different, location).is_unsat()? {
++        return Ok(Some(B::new(value.lower_u64(), value.len())));
++    }
++    Ok(None)
++}
++
++#[cfg(test)]
++#[path = "unique_value_tests.rs"]
++mod tests;
++
++#[cfg(test)]
++#[path = "unique_overlap_tests.rs"]
++mod overlap_tests;
+diff --git a/isla-lib/src/unique_value_tests.rs b/isla-lib/src/unique_value_tests.rs
+new file mode 100644
+index 0000000..dfa5249
+--- /dev/null
++++ b/isla-lib/src/unique_value_tests.rs
+@@ -0,0 +1,62 @@
++// Solver-backed uniqueness tests retain alternatives and reject vacuous models.
++// Successful solver sampling alone is not a uniqueness assertion.
++use super::*;
++use crate::smt::smtlib::{bits64, Ty};
++use crate::smt::{Config, Context, SmtResult};
++
++#[test]
++fn unique_bitvector_preserves_declared_values() -> Result<(), ExecError> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    for value in [0, u64::MAX] {
++        let symbol = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++        solver.assert_eq(Exp::Var(symbol), bits64(value, 64));
++        assert_eq!(bitvector(&mut solver, symbol)?, Some(B64::from_u64(value)));
++        assert!(solver.check_sat(SourceLoc::unknown()).is_sat()?);
++    }
++    Ok(())
++}
++
++#[test]
++fn multiple_values_remain_possible() -> Result<(), ExecError> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    let symbol = solver.declare_const(Ty::BitVec(8), SourceLoc::unknown());
++    let first = Exp::Eq(Box::new(Exp::Var(symbol)), Box::new(bits64(0, 8)));
++    let second = Exp::Eq(Box::new(Exp::Var(symbol)), Box::new(bits64(1, 8)));
++    solver.assert(Exp::Or(Box::new(first.clone()), Box::new(second.clone())));
++    assert_eq!(bitvector(&mut solver, symbol)?, None);
++    assert!(solver.check_sat_with(&first, SourceLoc::unknown()).is_sat()?);
++    assert!(solver.check_sat_with(&second, SourceLoc::unknown()).is_sat()?);
++    Ok(())
++}
++
++#[test]
++fn unconstrained_and_wide_values_remain_symbolic() -> Result<(), ExecError> {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    for width in [8, 64, 128] {
++        let symbol = solver.declare_const(Ty::BitVec(width), SourceLoc::unknown());
++        assert_eq!(bitvector(&mut solver, symbol)?, None);
++    }
++    Ok(())
++}
++
++#[test]
++fn inconsistent_constraints_cannot_prove_uniqueness() {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    let symbol = solver.declare_const(Ty::BitVec(64), SourceLoc::unknown());
++    solver.assert(Exp::Bool(false));
++    assert!(matches!(bitvector(&mut solver, symbol), Err(ExecError::NoModel)));
++}
++
++#[test]
++fn unsupported_type_and_unknown_result_are_errors() {
++    let context = Context::new(Config::new());
++    let mut solver = Solver::<B64>::new(&context);
++    let symbol = solver.declare_const(Ty::Bool, SourceLoc::unknown());
++    assert!(matches!(bitvector(&mut solver, symbol), Err(ExecError::Type(_, _))));
++    assert!(matches!(SmtResult::Unknown.is_sat(), Err(ExecError::Z3Unknown)));
++    assert!(matches!(SmtResult::Unknown.is_unsat(), Err(ExecError::Z3Unknown)));
++}
+diff --git a/src/axiomatic.rs b/src/axiomatic.rs
+index 6991fa6..240ea5a 100644
+--- a/src/axiomatic.rs
++++ b/src/axiomatic.rs
+@@ -154,6 +154,7 @@ fn make_cmdline_opts() -> getopts::Options {
+     let mut opts = opts::common_opts();
+ 
+     opts.optflag("", "herd7", "Output in a herd7-compatible way");
++    opts.optflag("", "candidate-status", "Label each Herd state with its candidate status");
+     opts.optopt("", "isla-litmus", "Path to isla-litmus binary", "<path>");
+     opts.optopt(
+         "",
+@@ -364,6 +365,7 @@ fn isla_main() -> i32 {
+ 
+     let view = matches.opt_present("view");
+     let print_like_herd7 = matches.opt_present("herd7");
++    let print_candidate_status = matches.opt_present("candidate-status");
+ 
+     let graph_mode = match graph_mode {
+         None => GraphMode::Disabled,
+@@ -846,6 +848,7 @@ fn isla_main() -> i32 {
+                             now,
+                             &[Error(None, "".to_string())],
+                             ref_result,
++                            print_candidate_status,
+                         );
+                         continue;
+                     }
+@@ -855,7 +858,7 @@ fn isla_main() -> i32 {
+                         results.push(result)
+                     }
+ 
+-                    print_results(print_like_herd7, &litmus, shared_state, now, &results, ref_result);
++                    print_results(print_like_herd7, &litmus, shared_state, now, &results, ref_result, print_candidate_status);
+ 
+                     for (i, allowed) in results.iter().enumerate() {
+                         let (maybe_graph, state) = match allowed {
+@@ -1021,6 +1024,7 @@ fn print_results_herd7<'ir>(
+     start_time: Instant,
+     results: &[AxResult],
+     expected: Option<&AxResult>,
++    candidate_status: bool,
+ ) {
+     let positive = results.iter().filter(|r| r.is_allowed()).count();
+     let negative = results.iter().filter(|r| r.is_forbidden()).count();
+@@ -1048,6 +1052,9 @@ fn print_results_herd7<'ir>(
+     println!("States {}", results.len());
+ 
+     for r in results {
++        if candidate_status {
++            print!("{} ", r.short_name());
++        }
+         match r.final_state() {
+             Some(state) => {
+                 for (r, v) in state {
+@@ -1143,9 +1150,10 @@ fn print_results<'ir>(
+     start_time: Instant,
+     results: &[AxResult],
+     expected: Option<&AxResult>,
++    candidate_status: bool,
+ ) {
+     if herd_style {
+-        print_results_herd7(litmus, shared_state, start_time, results, expected)
++        print_results_herd7(litmus, shared_state, start_time, results, expected, candidate_status)
+     } else {
+         print_results_legacy(&litmus.name, start_time, results, expected)
+     }
+diff --git a/src/litmus-dump.rs b/src/litmus-dump.rs
+index 66eb7b9..9d964bb 100644
+--- a/src/litmus-dump.rs
++++ b/src/litmus-dump.rs
+@@ -234,7 +234,13 @@ fn isla_main() -> i32 {
+         pc_limit_mode: PCLimitMode::Error,
+     };
+ 
+-    let setup = run_litmus::run_litmus_setup::<B64, _, ()>(&opts, &litmus, &iarch_config, |_| true).unwrap();
++    let setup = match run_litmus::run_litmus_setup::<B64, _, ()>(&opts, &litmus, &iarch_config, |_| true) {
++        Ok(setup) => setup,
++        Err(error) => {
++            eprintln!("Error during trace setup: {:?}", error);
++            return 1;
++        }
++    };
+ 
+     if let Some(file) = matches.opt_str("archsem-initial") {
+         let mut file: File = File::create(file.as_str()).unwrap_or_else(|err| {
+@@ -285,8 +291,8 @@ fn isla_main() -> i32 {
+                 start = false;
+             }
+             writeln!(file, "  isla_init_regs").unwrap();
+-            if let Assembled(AssembledThread { address, .. }) = thread {
+-                writeln!(file, "  |> reg_insert PC $ {:#010x}%bv", address).unwrap();
++            if let Assembled(AssembledThread { entry, .. }) = thread {
++                writeln!(file, "  |> reg_insert PC $ {:#010x}%bv", entry).unwrap();
+             }
+             let mut remaining_footprint = thread_registers(&fiarch_config, &setup.threads[i]);
+             for (reg, value) in thread.inits() {
+diff --git a/src/opts.rs b/src/opts.rs
+index a4d26df..3c9ab5a 100644
+--- a/src/opts.rs
++++ b/src/opts.rs
+@@ -75,7 +75,7 @@ pub fn print_usage(opts: &Options, free: &str, code: i32) -> ! {
+ const VERSION: &str = env!("CARGO_PKG_VERSION");
+ 
+ pub fn print_version() -> ! {
+-    eprintln!("v{}/z3-{}", VERSION, z3_version());
++    eprintln!("v{}/z3-{}/candidate-status-v1/executable-entry-v1/initialized-memory-v1/sequential-memory-v1/typed-initial-state-v1", VERSION, z3_version());
+     exit(0)
+ }
+ 
+@@ -106,6 +106,10 @@ pub fn common_opts() -> Options {
+     opts.optmulti("", "fun-assumption", "add an assumption about the behaviour of a Sail function", "<assumption>");
+     opts.optflag("", "no-model-reg-init", "don't use register initializers from the model");
+     opts.optflag("", "version", "print out version and stop.");
++    opts.optflag("", "executable-entry", "Require support for an explicit executable entry");
++    opts.optflag("", "initialized-memory", "Require support for initialized writable sections");
++    opts.optflag("", "sequential-memory", "Require support for an explicit sequential memory profile");
++    opts.optflag("", "typed-initial-state", "Require model-typed initial state support");
+     opts
+ }
+ 

@@ -8,24 +8,26 @@ import "fmt"
 type ErrorCode string
 
 const (
-	InvalidInput     ErrorCode = "invalid_input"
-	ArtifactChanged  ErrorCode = "artifact_changed"
-	ToolNotFound     ErrorCode = "tool_not_found"
-	ToolIdentityFail ErrorCode = "tool_identity_error"
-	ToolChanged      ErrorCode = "tool_changed"
-	ReleaseMismatch  ErrorCode = "release_mismatch"
-	CoverageMismatch ErrorCode = "coverage_mismatch"
-	ProcessFail      ErrorCode = "process_error"
-	ResourceLimit    ErrorCode = "resource_limit"
-	ResultError      ErrorCode = "result_error"
-	ProtocolError    ErrorCode = "protocol_error"
+	InvalidInput       ErrorCode = "invalid_input"
+	ArtifactChanged    ErrorCode = "artifact_changed"
+	ToolNotFound       ErrorCode = "tool_not_found"
+	ToolIdentityFail   ErrorCode = "tool_identity_error"
+	ToolChanged        ErrorCode = "tool_changed"
+	ReleaseMismatch    ErrorCode = "release_mismatch"
+	CoverageMismatch   ErrorCode = "coverage_mismatch"
+	UnsupportedProfile ErrorCode = "unsupported_profile"
+	ProcessFail        ErrorCode = "process_error"
+	ResourceLimit      ErrorCode = "resource_limit"
+	ResultError        ErrorCode = "result_error"
+	ProtocolError      ErrorCode = "protocol_error"
 )
 
 // Error gives callers a stable code and the exact failure context.
 type Error struct {
-	Code    ErrorCode
-	Subject string
-	Detail  string
+	Code          ErrorCode
+	Subject       string
+	Detail        string
+	ResourceLimit *ResourceLimitDetail
 }
 
 func (failure *Error) Error() string {
@@ -34,4 +36,10 @@ func (failure *Error) Error() string {
 
 func engineError(code ErrorCode, subject string, detail string) error {
 	return &Error{Code: code, Subject: subject, Detail: detail}
+}
+
+func resourceLimitError(subject string, detail *ResourceLimitDetail) error {
+	return &Error{
+		Code: ResourceLimit, Subject: subject, Detail: detail.summary(), ResourceLimit: detail,
+	}
 }

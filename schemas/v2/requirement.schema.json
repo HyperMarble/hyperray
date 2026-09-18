@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hyperray.dev/schemas/v2/requirement.schema.json",
+  "title": "Hyperray version 2 proof requirement",
+  "description": "This schema defines a finite monitor and its symbolic observation contract. Shape validation does not prove the monitor or observation function.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_type", "schema_version", "artifact_id", "requirement_id", "property", "monitor", "observation_alphabet", "observation_function", "query_roots", "fairness", "contract_provenance"],
+  "properties": {
+    "artifact_type": { "const": "hyperray_requirement" },
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "common.schema.json#/$defs/identifier" },
+    "requirement_id": { "$ref": "common.schema.json#/$defs/identifier" },
+    "property": { "$ref": "#/$defs/property" },
+    "monitor": { "$ref": "#/$defs/monitor" },
+    "observation_alphabet": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/observationSymbol" } },
+    "observation_function": { "$ref": "#/$defs/observationFunction" },
+    "query_roots": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/queryRoots" } },
+    "fairness": { "type": "array", "items": { "$ref": "#/$defs/fairnessConstraint" } },
+    "contract_provenance": { "$ref": "#/$defs/contractProvenance" }
+  },
+  "$defs": {
+    "safetyProperty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "state_predicate_ids", "transition_predicate_ids"],
+      "properties": {
+        "kind": { "const": "safety" },
+        "state_predicate_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "transition_predicate_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      },
+      "anyOf": [
+        { "properties": { "state_predicate_ids": { "minItems": 1 } } },
+        { "properties": { "transition_predicate_ids": { "minItems": 1 } } }
+      ]
+    },
+    "omegaProperty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "acceptance_set_ids", "violation_automaton_artifact"],
+      "properties": {
+        "kind": { "const": "omega_regular" },
+        "acceptance_set_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "violation_automaton_artifact": { "$ref": "common.schema.json#/$defs/artifactRef" }
+      }
+    },
+    "terminationProperty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "terminal_outcomes", "progress_predicate_id", "deadlock_policy"],
+      "properties": {
+        "kind": { "const": "termination" },
+        "terminal_outcomes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["normal_termination", "trap", "abort", "undefined_behavior", "capacity_error"] } },
+        "progress_predicate_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "deadlock_policy": { "const": "nonterminal_deadlock_is_violation" }
+      }
+    },
+    "property": {
+      "oneOf": [
+        { "$ref": "#/$defs/safetyProperty" },
+        { "$ref": "#/$defs/omegaProperty" },
+        { "$ref": "#/$defs/terminationProperty" }
+      ]
+    },
+    "monitorState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["monitor_state_id", "accepting", "rejecting"],
+      "properties": {
+        "monitor_state_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "accepting": { "type": "boolean" },
+        "rejecting": { "type": "boolean" }
+      }
+    },
+    "monitorStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["monitor_step_id", "source_monitor_state_id", "symbol_id", "target_monitor_state_id"],
+      "properties": {
+        "monitor_step_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "source_monitor_state_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "symbol_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "target_monitor_state_id": { "$ref": "common.schema.json#/$defs/identifier" }
+      }
+    },
+    "monitor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "monitor_id", "exact_state_count", "exact_step_count", "initial_monitor_state_id", "states", "steps", "determinism_proof", "totality_proof"],
+      "properties": {
+        "kind": { "const": "explicit_finite_monitor" },
+        "monitor_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "exact_state_count": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "exact_step_count": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "initial_monitor_state_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "states": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/monitorState" } },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/monitorStep" } },
+        "determinism_proof": { "$ref": "common.schema.json#/$defs/proofArtifactRef" },
+        "totality_proof": { "$ref": "common.schema.json#/$defs/proofArtifactRef" }
+      }
+    },
+    "payloadField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field_id", "bit_width", "finite_domain_id"],
+      "properties": {
+        "field_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "bit_width": { "type": "integer", "minimum": 1 },
+        "finite_domain_id": { "$ref": "common.schema.json#/$defs/identifier" }
+      }
+    },
+    "observationSymbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol_id", "payload_fields"],
+      "properties": {
+        "symbol_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "payload_fields": { "type": "array", "items": { "$ref": "#/$defs/payloadField" } }
+      }
+    },
+    "symbolBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol_id", "present_port_role", "payload_port_role", "payload_bit_width"],
+      "properties": {
+        "symbol_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "present_port_role": { "const": "observation_present" },
+        "payload_port_role": { "const": "observation_payload" },
+        "payload_bit_width": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "observationFunction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "function_artifact", "input_roles", "symbol_bindings"],
+      "properties": {
+        "kind": { "const": "circuit_observation_function" },
+        "function_artifact": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "input_roles": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["current_state", "nondeterministic_choice", "next_state"] } },
+        "symbol_bindings": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/symbolBinding" } }
+      }
+    },
+    "queryRoots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "selected_root_ids"],
+      "properties": {
+        "query_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "selected_root_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "justiceFairness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "fairness_id", "scope", "predicate_id"],
+      "properties": {
+        "kind": { "const": "justice" },
+        "fairness_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "scope": { "enum": ["scheduler", "environment", "program"] },
+        "predicate_id": { "$ref": "common.schema.json#/$defs/identifier" }
+      }
+    },
+    "compassionFairness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "fairness_id", "scope", "premise_predicate_id", "consequence_predicate_id"],
+      "properties": {
+        "kind": { "const": "compassion" },
+        "fairness_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "scope": { "enum": ["scheduler", "environment", "program"] },
+        "premise_predicate_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "consequence_predicate_id": { "$ref": "common.schema.json#/$defs/identifier" }
+      }
+    },
+    "fairnessConstraint": {
+      "oneOf": [
+        { "$ref": "#/$defs/justiceFairness" },
+        { "$ref": "#/$defs/compassionFairness" }
+      ]
+    },
+    "contractProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_contract", "formalization_artifact", "producer", "review_proof", "dependency_hashes"],
+      "properties": {
+        "source_contract": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "formalization_artifact": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "producer": { "$ref": "common.schema.json#/$defs/toolIdentity" },
+        "review_proof": { "$ref": "common.schema.json#/$defs/proofArtifactRef" },
+        "dependency_hashes": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/artifactRef" } }
+      }
+    }
+  }
+}

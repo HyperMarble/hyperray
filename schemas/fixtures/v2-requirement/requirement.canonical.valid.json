@@ -1,0 +1,40 @@
+{
+  "artifact_type": "hyperray_requirement",
+  "schema_version": 2,
+  "artifact_id": "requirement.safety.fixture",
+  "requirement_id": "requirement.safety",
+  "property": {
+    "kind": "safety",
+    "state_predicate_ids": ["predicate.state.safe"],
+    "transition_predicate_ids": ["predicate.step.safe"]
+  },
+  "monitor": {
+    "kind": "explicit_finite_monitor",
+    "monitor_id": "monitor.safety",
+    "exact_state_count": "1",
+    "exact_step_count": "1",
+    "initial_monitor_state_id": "monitor.ok",
+    "states": [{ "monitor_state_id": "monitor.ok", "accepting": true, "rejecting": false }],
+    "steps": [{ "monitor_step_id": "monitor.step.ok", "source_monitor_state_id": "monitor.ok", "symbol_id": "observation.return", "target_monitor_state_id": "monitor.ok" }],
+    "determinism_proof": { "artifact_id": "proof.monitor.determinism", "artifact_type": "proof_evidence", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "totality_proof": { "artifact_id": "proof.monitor.totality", "artifact_type": "proof_evidence", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }
+  },
+  "observation_alphabet": [
+    { "symbol_id": "observation.return", "payload_fields": [{ "field_id": "return.value", "bit_width": 8, "finite_domain_id": "byte" }] }
+  ],
+  "observation_function": {
+    "kind": "circuit_observation_function",
+    "function_artifact": { "artifact_id": "observation.function", "artifact_type": "formal_spec", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "input_roles": ["current_state", "nondeterministic_choice", "next_state"],
+    "symbol_bindings": [{ "symbol_id": "observation.return", "present_port_role": "observation_present", "payload_port_role": "observation_payload", "payload_bit_width": 8 }]
+  },
+  "query_roots": [{ "query_id": "query.safety", "selected_root_ids": ["root.main"] }],
+  "fairness": [{ "kind": "justice", "fairness_id": "fairness.scheduler", "scope": "scheduler", "predicate_id": "predicate.scheduler.fair" }],
+  "contract_provenance": {
+    "source_contract": { "artifact_id": "contract.source", "artifact_type": "source_contract", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "formalization_artifact": { "artifact_id": "contract.formal", "artifact_type": "formal_spec", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "producer": { "name": "requirement-compiler", "version": "1.0", "executable_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "arguments": ["--strict"] },
+    "review_proof": { "artifact_id": "proof.contract.review", "artifact_type": "proof_evidence", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "dependency_hashes": [{ "artifact_id": "dependency.types", "artifact_type": "formal_spec", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }]
+  }
+}

@@ -17,10 +17,15 @@ func TestParseHerdResultErrors(t *testing.T) {
 	for index := range cases {
 		testCase := cases[index]
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := parseHerdResult(testCase.output, "")
-			if err == nil {
-				t.Errorf("parseHerdResult() = %#v, nil error", result)
-			}
+			assertHerdResultError(t, testCase.output)
 		})
+	}
+}
+
+func assertHerdResultError(t *testing.T, output string) {
+	t.Helper()
+	result, err := parseHerdResult(output, "")
+	if err == nil {
+		t.Errorf("parseHerdResult() = %#v, nil error", result)
 	}
 }

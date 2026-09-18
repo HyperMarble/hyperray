@@ -9,9 +9,12 @@ import (
 )
 
 type commandOutput struct {
-	stdout      string
-	diagnostics string
-	elapsed     time.Duration
+	stdout              string
+	diagnostics         string
+	elapsed             time.Duration
+	exitCode            int
+	stdoutExceeded      bool
+	diagnosticsExceeded bool
 }
 
 func rawOutputDigest(output commandOutput) string {

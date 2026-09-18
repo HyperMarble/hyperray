@@ -1,0 +1,3 @@
+(lang dune 3.24)
+; Pin the temporary plug-in build to one Dune language version.
+(name hyperray_sail_jib)

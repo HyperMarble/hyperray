@@ -1,0 +1,31 @@
+{
+  "artifact_type": "hyperray_result",
+  "schema_version": 2,
+  "artifact_id": "result.deadlock.fixture",
+  "result_id": "result.deadlock",
+  "result_kind": "DISPROVED.termination_deadlock",
+  "verdict": "DISPROVED",
+  "claim": {
+    "requirement": { "artifact_id": "requirement", "artifact_type": "hyperray_requirement", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "boundary": { "artifact_id": "boundary", "artifact_type": "hyperray_boundary", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "model": { "artifact_id": "model", "artifact_type": "hyperray_model", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "model_encoding": "sequential_circuit",
+    "executable_image": { "artifact_id": "image", "artifact_type": "executable_image", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "compiler_inventory": { "artifact_id": "inventory", "artifact_type": "compiler_inventory", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "semantics": [{ "artifact_id": "semantics", "artifact_type": "semantic_spec", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }],
+    "coverage": { "artifact_id": "coverage", "artifact_type": "hyperray_semantic_coverage", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "trust_assumptions": [],
+    "query_id": "query.termination",
+    "selected_root_ids": ["root.main"]
+  },
+  "witness": {
+    "kind": "termination_deadlock",
+    "selected_root_id": "root.main",
+    "path": { "kind": "circuit_trace", "initial_state": { "encoding": "binary_msb_first", "width": 2, "value": "11" }, "steps": [] },
+    "applicable_state": { "encoding": "binary_msb_first", "width": 2, "value": "11" },
+    "deadlock_state": { "encoding": "binary_msb_first", "width": 2, "value": "11" },
+    "choice_domain_artifact": { "artifact_id": "choice.domain", "artifact_type": "finite_domain", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "cause": { "predicate_id": "predicate.progress", "monitor_state_id": "monitor.running", "message": "No valid choice enables a step in the nonterminal state." },
+    "validated_replay_certificate": { "artifact_id": "certificate.replay.deadlock", "artifact_type": "hyperray_validated_certificate", "schema_version": 2, "certificate_kind": "witness_replay", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hyperray.dev/schemas/v2/model.schema.json",
+  "title": "Hyperray version 2 symbolic finite transition model",
+  "description": "This schema defines a closed sequential-circuit interface. A lowering certificate must prove its meaning. Schema validation alone does not prove semantics or finiteness.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_type", "schema_version", "artifact_id", "model_id", "boundary_artifact", "executable_image", "semantics", "requirement_artifacts", "encoding"],
+  "properties": {
+    "artifact_type": { "const": "hyperray_model" },
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "common.schema.json#/$defs/identifier" },
+    "model_id": { "$ref": "common.schema.json#/$defs/identifier" },
+    "boundary_artifact": { "$ref": "common.schema.json#/$defs/artifactRef" },
+    "executable_image": { "$ref": "common.schema.json#/$defs/artifactRef" },
+    "semantics": { "$ref": "#/$defs/semanticsRefs" },
+    "requirement_artifacts": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/v2RequirementRef" } },
+    "encoding": { "$ref": "#/$defs/sequentialCircuit" }
+  },
+  "$defs": {
+    "semanticsRefs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_instruction", "memory_model", "runtime", "scheduler", "environment"],
+      "properties": {
+        "target_instruction": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "memory_model": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "runtime": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "scheduler": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "environment": { "$ref": "common.schema.json#/$defs/artifactRef" }
+      }
+    },
+    "networkRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "format_version", "artifact", "entry_symbol", "interface_sha256"],
+      "properties": {
+        "format": { "enum": ["hyperray_boolean_network", "btor2"] },
+        "format_version": { "type": "string", "minLength": 1 },
+        "artifact": { "$ref": "common.schema.json#/$defs/modelIrRef" },
+        "entry_symbol": { "$ref": "common.schema.json#/$defs/identifier" },
+        "interface_sha256": { "$ref": "common.schema.json#/$defs/sha256" }
+      }
+    },
+    "terminalPorts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normal_termination", "nonterminal_deadlock", "trap", "abort", "undefined_behavior", "capacity_error"],
+      "properties": {
+        "normal_termination": { "$ref": "common.schema.json#/$defs/identifier" },
+        "nonterminal_deadlock": { "$ref": "common.schema.json#/$defs/identifier" },
+        "trap": { "$ref": "common.schema.json#/$defs/identifier" },
+        "abort": { "$ref": "common.schema.json#/$defs/identifier" },
+        "undefined_behavior": { "$ref": "common.schema.json#/$defs/identifier" },
+        "capacity_error": { "$ref": "common.schema.json#/$defs/identifier" }
+      }
+    },
+    "rootPort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root_id", "root_kind", "predicate_port_id"],
+      "properties": {
+        "root_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "root_kind": { "enum": ["program_root", "function_root"] },
+        "predicate_port_id": { "$ref": "common.schema.json#/$defs/identifier" }
+      }
+    },
+    "queryRoots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "requirement_id", "selected_root_ids"],
+      "properties": {
+        "query_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "requirement_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "selected_root_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "observationPorts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol_id", "present_port_id", "payload_port_ids"],
+      "properties": {
+        "symbol_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "present_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "payload_port_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "requirementPorts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement_id", "state_label_port_ids", "step_label_port_ids", "acceptance_port_ids", "fairness_port_ids"],
+      "properties": {
+        "requirement_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "state_label_port_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "step_label_port_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "acceptance_port_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "fairness_port_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "portBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current_state_port_id", "choice_port_id", "next_state_port_id", "initial_predicate_port_id", "choice_valid_predicate_port_id", "step_enabled_predicate_port_id", "terminal_ports", "effects", "roots", "query_roots", "observations", "requirements"],
+      "properties": {
+        "current_state_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "choice_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "next_state_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "initial_predicate_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "choice_valid_predicate_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "step_enabled_predicate_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "terminal_ports": { "$ref": "#/$defs/terminalPorts" },
+        "effects": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/modelEffect" } },
+        "roots": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rootPort" } },
+        "query_roots": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/queryRoots" } },
+        "observations": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/observationPorts" } },
+        "requirements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/requirementPorts" } }
+      }
+    },
+    "sequentialCircuit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "encoding_version", "state_bits", "choice_bits", "state_layout", "choice_layout", "network", "ports", "bindings", "validated_lowering_certificate"],
+      "properties": {
+        "kind": { "const": "sequential_circuit" },
+        "encoding_version": { "const": 2 },
+        "state_bits": { "type": "integer", "minimum": 1 },
+        "choice_bits": { "type": "integer", "minimum": 1 },
+        "state_layout": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/bitRange" } },
+        "choice_layout": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/bitRange" } },
+        "network": { "$ref": "#/$defs/networkRef" },
+        "ports": {
+          "type": "array",
+          "minItems": 13,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/circuitPort" },
+          "allOf": [
+            { "contains": { "properties": { "direction": { "const": "input" }, "role": { "const": "current_state" } }, "required": ["direction", "role"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "input" }, "role": { "const": "nondeterministic_choice" } }, "required": ["direction", "role"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "next_state" } }, "required": ["direction", "role"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "initial_predicate" }, "bit_width": { "const": 1 } }, "required": ["direction", "role", "bit_width"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "choice_valid_predicate" }, "bit_width": { "const": 1 } }, "required": ["direction", "role", "bit_width"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "step_enabled_predicate" }, "bit_width": { "const": 1 } }, "required": ["direction", "role", "bit_width"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "effect_predicate" }, "bit_width": { "const": 1 } }, "required": ["direction", "role", "bit_width"] }, "minContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "terminal_predicate" }, "bit_width": { "const": 1 } }, "required": ["direction", "role", "bit_width"] }, "minContains": 6, "maxContains": 6 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "root_predicate" }, "bit_width": { "const": 1 } }, "required": ["direction", "role", "bit_width"] }, "minContains": 1 },
+            { "contains": { "properties": { "direction": { "const": "output" }, "role": { "const": "observation_present" }, "bit_width": { "const": 1 } }, "required": ["direction", "role", "bit_width"] }, "minContains": 1 }
+          ]
+        },
+        "bindings": { "$ref": "#/$defs/portBindings" },
+        "validated_lowering_certificate": {
+          "allOf": [
+            { "$ref": "common.schema.json#/$defs/validatedCertificateRef" },
+            { "properties": { "certificate_kind": { "const": "circuit_lowering_equivalence" } }, "required": ["certificate_kind"] }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "artifact_type": "hyperray_certificate_proposal",
+  "schema_version": 2,
+  "artifact_id": "certificate.replay.fixture",
+  "certificate_id": "certificate.replay",
+  "certificate_kind": "witness_replay",
+  "subject_artifacts": [
+    {
+      "artifact_id": "result",
+      "artifact_type": "hyperray_result",
+      "schema_version": 2,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "producer": {
+    "name": "witness-checker",
+    "version": "1",
+    "executable_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "arguments": []
+  },
+  "evidence": {
+    "model_encoding": "sequential_circuit",
+    "result_artifact": {
+      "artifact_id": "result",
+      "artifact_type": "hyperray_result",
+      "schema_version": 2,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "replay": {
+      "kind": "safety",
+      "path": {
+        "obligation_id": "path.replay",
+        "statement_artifact": {
+          "artifact_id": "obligation.path.replay",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.path",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "violation": {
+        "obligation_id": "violation.replay",
+        "statement_artifact": {
+          "artifact_id": "obligation.violation.replay",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.violation",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    }
+  }
+}

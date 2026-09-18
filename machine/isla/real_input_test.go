@@ -16,15 +16,24 @@ import (
 
 func realRequest(t *testing.T, fixture string) isla.Request {
 	t.Helper()
-	architecture := realArtifact(t, "HYPERRAY_SAIL_IR")
-	configuration := realArtifact(t, "HYPERRAY_ISLA_CONFIG")
-	memoryModel := realArtifact(t, "HYPERRAY_MEMORY_MODEL")
 	programPath, err := filepath.Abs(filepath.Join("../../fixtures/isla", fixture))
 	if err != nil {
 		t.Fatalf("filepath.Abs() error = %v", err)
 	}
+	return realRequestPath(t, programPath)
+}
+
+func realRequestPath(t *testing.T, programPath string) isla.Request {
+	return realRequestPathWithLimits(t, programPath, 2)
+}
+
+func realRequestPathWithLimits(t *testing.T, programPath string, pcVisitLimit uint64) isla.Request {
+	t.Helper()
+	architecture := realArtifact(t, "HYPERRAY_SAIL_IR")
+	configuration := realArtifact(t, "HYPERRAY_ISLA_CONFIG")
+	memoryModel := realArtifact(t, "HYPERRAY_MEMORY_MODEL")
 	program := identifiedArtifact(t, programPath)
-	request, err := isla.NewRequest(architecture, configuration, memoryModel, program, 2, 10)
+	request, err := isla.NewRequest(architecture, configuration, memoryModel, program, pcVisitLimit, 10, 16<<20)
 	if err != nil {
 		t.Fatalf("NewRequest() error = %v", err)
 	}

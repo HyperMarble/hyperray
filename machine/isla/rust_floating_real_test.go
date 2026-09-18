@@ -1,52 +1,38 @@
 //go:build isla_integration
 
-// This test distinguishes model-load diagnostics from reachable operations.
-// A reachable unavailable primitive must return an explicit process error.
+// This test proves that model-load diagnostics do not block supported add.
+// It does not change or cover the separate trap_callback execution path.
 package isla_test
 
 import (
-	"errors"
-	"os"
-	"path/filepath"
+	"math"
 	"strings"
 	"testing"
 
 	"github.com/HyperMarble/hyperray/machine/isla"
 )
 
-func TestRealRustFloatingPointSeparatesLoadAndReachability(t *testing.T) {
+func TestRealRustFloatingPointLoadWarningsDoNotBlockSupportedAdd(t *testing.T) {
 	content := compileRustExecutable(t, "floating.rs")
-	boundary := rustProgramBoundary(t, content, 0, 0)
-	boundary.InitialRegisters[1] = isla.RegisterValue{Name: "f10", Value: "0"}
-	boundary.InitialRegisters = append(boundary.InitialRegisters, isla.RegisterValue{Name: "f11", Value: "0"})
-	boundary.InitialState = []isla.RegisterValue{
-		{Name: "misa", Value: "{ bits = 0x000000000000112d }"},
-		{Name: "mstatus", Value: "{ bits = 0x0000000000006000 }"},
+	boundary := floatingBoundary(t, content, math.Float64bits(1), math.Float64bits(2), 0, math.Float64bits(3), 0)
+	proof := verifyRustBoundary(t, content, boundary)
+	if proof.Verification.Status != isla.Proved {
+		t.Fatalf("supported add relation: %#v", proof.Verification)
 	}
-	program, err := isla.BuildProgram(content, uint64(len(content)), boundary)
-	if err != nil {
-		t.Fatal(err)
+	coverage := proof.StaticCoverage
+	if !coverage.Complete || coverage.CoveredInstructions == 0 || coverage.TotalInstructions == 0 {
+		t.Fatalf("supported add coverage = %#v", coverage)
 	}
-	path := filepath.Join(t.TempDir(), "floating.toml")
-	if err := os.WriteFile(path, program.Content(), 0o600); err != nil {
-		t.Fatal(err)
+	for _, instruction := range proof.Footprints.Instructions {
+		if strings.Contains(instruction.Diagnostics, "softfloat_f64add") {
+			t.Fatalf("supported add has an unavailable-primitive warning: %s", instruction.Diagnostics)
+		}
 	}
-	request, err := isla.NewVerificationRequest(realRequestPath(t, path), 2, 2048)
-	if err != nil {
-		t.Fatal(err)
+
+	boundary.NegatedAssertion = floatingAssertion(math.Float64bits(4), 0, floatingDirtyMstatus())
+	counterexample := verifyRustBoundary(t, content, boundary)
+	if counterexample.Verification.Status != isla.Disproved {
+		t.Fatalf("wrong add result status: %#v", counterexample.Verification)
 	}
-	verifier := realExecutableVerifier(t)
-	limits := isla.ExecutableLimits{ThreadLimit: 2, TimeLimitSeconds: 60, MaximumOutputBytes: realELFOutputLimitBytes}
-	result, err := verifier.VerifyProgram(t.Context(), request, program, limits)
-	var failure *isla.Error
-	if err == nil || result.Program.ProgramDigest != "" || !errors.As(err, &failure) {
-		t.Fatalf("floating operation result = %#v, error = %v", result, err)
-	}
-	if failure.Code != isla.ProcessFail || !strings.Contains(failure.Detail, `NoFunction("extern_f64Add"`) {
-		t.Fatalf("floating operation error = %v, want reachable extern_f64Add", failure)
-	}
-	if !strings.Contains(failure.Detail, "No primop softfloat_f64add") {
-		t.Fatalf("floating operation error = %v, missing load-time softfloat diagnostic", failure)
-	}
-	t.Logf("load-time diagnostic and reachable softfloat wrapper: %v", failure)
+	assertFloatingCounterexampleResult(t, counterexample, math.Float64bits(3))
 }

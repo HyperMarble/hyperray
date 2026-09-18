@@ -11,10 +11,10 @@ linker=$rust_tool_bin/rust-lld
 
 trap 'rm -rf "$fixture_build_directory"' EXIT
 
-"$llc" -filetype=obj -mtriple=riscv64-unknown-linux-gnu -mattr=+m,+a,+f,+d,+c -target-abi=lp64d "$fixture_directory/canonical.ll" -o "$fixture_build_directory/lp64d.o"
-"$llc" -filetype=obj -mtriple=riscv64-unknown-linux-gnu -mattr=+m,+a,+c -target-abi=lp64 "$fixture_directory/canonical.ll" -o "$fixture_build_directory/lp64.o"
+"$llc" -filetype=obj -mtriple=riscv64-unknown-linux-gnu -mattr=+m,+a,+f,+d,+c -target-abi=lp64d --code-model=medium "$fixture_directory/canonical.ll" -o "$fixture_build_directory/lp64d.o"
+"$llc" -filetype=obj -mtriple=riscv64-unknown-linux-gnu -mattr=+m,+a,+c -target-abi=lp64 --code-model=medium "$fixture_directory/canonical.ll" -o "$fixture_build_directory/lp64.o"
 "$llc" -filetype=obj -mtriple=riscv32-unknown-linux-gnu -mattr=+m,+a,+f,+d,+c -target-abi=ilp32d "$fixture_directory/canonical.ll" -o "$fixture_build_directory/rv32.o"
-"$llc" -filetype=obj -mtriple=riscv64-unknown-linux-gnu -mattr=+m,+a,+f,+d,-c -target-abi=lp64d "$fixture_directory/canonical.ll" -o "$fixture_build_directory/no-rvc.o"
+"$llc" -filetype=obj -mtriple=riscv64-unknown-linux-gnu -mattr=+m,+a,+f,+d,-c -target-abi=lp64d --code-model=medium "$fixture_directory/canonical.ll" -o "$fixture_build_directory/no-rvc.o"
 
 for name in truncated long odd; do
 	"$llc" -filetype=obj -mtriple=riscv64-unknown-linux-gnu -mattr=+m,+a,+f,+d,+c -target-abi=lp64d "$fixture_directory/$name.ll" -o "$fixture_build_directory/$name.o"

@@ -29,8 +29,8 @@ Scope: Record every retained Isla event before generic circuit translation.
 
 - [x] G6: One real loaded ELF produces a complete event inventory for every instruction.
   CHECK: go test -count=1 -tags isla_integration ./machine/isla -run TestRealLoadedELFHasEveryInstructionTrace -v
-  EXPECT: elf_traces=18 elf_events=15501 event_complete=true
-  EVIDENCE: Four real instructions produced 18 traces and 15,501 inventoried events.
+  EXPECT: elf_traces=16 elf_events=20350 event_complete=true
+  EVIDENCE: Four real instructions produced 16 traces and 20,350 inventoried events in three repeated isolated runs.
 
 - [x] G7: Tests, formatting, static analysis, and source limits pass.
   CHECK: go test -count=1 -race -cover ./machine/isla && go test -count=1 ./... && go vet ./...

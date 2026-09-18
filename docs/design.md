@@ -1,238 +1,350 @@
 # Hyperray design
 
-Status: ACCEPTED 2026-09-02. This file replaces `pipeline-six-stages.md`,
-`rust_adapter_plan.md`, and `docs/specs/{finalarchitecture,whole flow,
-proof-requirements}.md`. `docs/specs/evidence-rule.md` stays. Per-language
-measurements stay in `docs/<lang>_adapter.md`.
+Status: ACCEPTED TARGET ARCHITECTURE 2026-09-04. The implementation is not
+complete.
 
-A stage is built from this file. It is done when its listed test passes on
-every fixture. One passing case is not done (AGENTS.md rule 12).
+This file replaces the former Stage 3 proof design. The detailed reference
+proof is in `docs/proof-machine.md`.
+
+`docs/specs/evidence-rule.md` remains in force. The language adapter documents
+retain measured tool facts, but they do not define proof coverage.
 
 ## 1. What Hyperray does
 
-Input: one `solution.patch` (the unified diff GitHub shows), the base
-checkout it applies to, and the task text. One patch is one complete finite
-bounded work. Many small bounded works sum into an open-ended system.
+Hyperray receives the base source, a solution patch, task text, named
+requirements, and a closed finite boundary.
 
-Output: `instruction.md` and a test file, written from one list of rows so
-they cannot disagree.
+The task text supplies the contract. Each formal requirement links to its
+contract source and has finite-state semantics.
 
-Between them, seven stages. Stages 1-5 are per language, each adapter in its
-own language. Stages 6-7 are one Go program shared by all four.
+The source and runtime supply the implementation. The finite boundary supplies
+the exact proof scope.
 
-```
-solution.patch + base + task text
-  -> [1] EXTRACT   manifest.json      every changed function, placed by the compiler
-  -> [2] SHAPE     shaped.patch       split under the rules; old = new proved per function
-  -> [3] BOUND     manifest + bounds  one invariant per loop, each citing a constant
-  -> [4] PROVE     proof.json         per function: proved, or one exact counterexample
-  -> [5] ADEQUACY  proof.json + rows  mutate, re-prove; a survivor is a missing row
-  -> [6] PLAN      plan.json          TTF partition rows from proof.json
-  -> [7] EMIT      instruction.md + tests, from plan.json, in one pass
-```
+For each named requirement in an accepted closed boundary, Hyperray returns one
+of two logic verdicts:
 
-## 2. Rules every stage obeys
+- `PROVED` means that no allowed execution violates the requirement.
+- `DISPROVED` includes the requirement, applicable state, path, and cause.
 
-- **The tool tells us; we never guess.** Every fact about code comes from a
-  compiler or a prover. An adapter holds no rule about how a language names
-  or lays out things. (`rust_adapter.md` §3, measured: three hand-written
-  naming rules failed on the second crate.)
-- **Every number cites its line.** A bound, a domain, a constant carries
-  `declared_by: file:line`. An invented number is refused.
-- **A stage answers every row. `blocked` is not an answer.** When a tool
-  refuses, that is Hyperray's job to route, not a result to print: hand the
-  tool what it lacks, or send the row to a tool that can read it, and record
-  which one answered. A refusal reaching the output is a Hyperray bug.
-- **`fail` means the code under test is wrong, and nothing else.** A tool
-  that cannot build an input, read a body, or finish in time is our gap, not
-  the patch's. The two are never mixed in one field.
-- **Compiling is not verifying.** Both are reported, separately.
-- **A `false` invariant is a translation bug, never a result.**
-- **Evidence rule.** A row derived only by running the reference is
-  inadmissible. The contract gives the row; the code gives its shape.
-  (`evidence-rule.md`)
-- **The task text is read in one place**: stage 5, at a surviving mutant,
-  to name the row it reveals. Nowhere else.
-- **Fixtures are tests.** They live outside the repository
-  (`HYPERRAY_FIXTURES`, `HYPERRAY_FIXTURE_SRC`). No adapter knows a fixture
-  name. A test asserts the rule, never the fixture's number.
-- **Trusted base, stated.** The compiler and the prover are trusted. Every
-  `proof.json` names both with versions. (Apple corecrypto states the same
-  assumption; we copy the honesty, not the spec.)
+A model, coverage, compiler, tool, or resource problem returns an engine error.
+An engine error is not a logic verdict.
 
-## 3. Stage 1 — EXTRACT
+After the proof, Hyperray can derive test rows and emit `instruction.md` with a
+test file. These artifacts do not strengthen the proof verdict.
 
-Two passes.
+## 2. Seven stages
 
-**Pass 1** reads the patch text and nothing else: files, hunks, added and
-removed ranges, the `fn` names the patch defines.
+The seven stages use this route:
 
-**Pass 2** opens only the files the patch names, takes the whole function
-behind each hunk, then runs the language's own front end over the crate and
-joins by file and line. Every file opened is recorded with its reason.
-
-| language | front end | measured |
-|---|---|---|
-| Rust | Charon, whole crate, all features | noodles 4 crates 37 s; 5 async refused, named |
-| C++ | libclang Python bindings (`cpp_adapter.md` §3.2) | 3 blind spots listed there |
-| Go | `go/ast` + `go/types` + `x/tools/go/ssa` (`go_adapter.md` §3) | built and run |
-| Python | `ast` + `dis` + `typing.get_type_hints` (`python_adapter.md` §3) | measured |
-
-Output `manifest.json`: per function `{path, name, start_line, end_line,
-text, status}` where status is `Extracted | Refused(reason) | Missing |
-FileNotSeen`; per global `{path, line, source_text}`; `opened: [{path,
-reason}]`.
-
-**Test:** on every fixture with a source tree, every patched function has a
-status, every refusal has a reason, no patched file is `FileNotSeen`, every
-opened file is a patched file.
-
-## 4. Stage 2 — SHAPE
-
-Measure every changed function against the ten rules (nesting 3,
-function 40 lines, no `unwrap`/`expect`/`panic`/`unreachable`) and
-report every break with its file and line. Nothing is split or rewritten:
-code that breaks the rules is the author's fault and is reported as such.
-
-The compiler measures. Clippy's `too_many_lines`, `excessive_nesting`,
-`unwrap_used`, `expect_used`, `panic`, `unreachable` lints carry the rules;
-thresholds go in a `clippy.toml` the stage writes (Clippy book,
-lint_configuration). Findings are read from cargo's JSON lines (Cargo book,
-external-tools; rustc book, json.html). The adapter judges no source text.
-
-Decided 2026-09-03: no splitting, by anyone. A split was measured once by
-hand (noodles: nesting 6 -> 2, Kani 9 min -> 3 s) and made the proof
-faster, not more correct; Kani found the bug in the unsplit function too.
-
-Output: the manifest with a `findings` column, each entry
-`{lint, path, line_start, line_end, message}` verbatim from the tool.
-
-**Test:** on every fixture, every finding inside a changed function sits
-within that function's span, and every finding names a shape lint.
-
-## 5. Stage 3 — BOUND
-
-For every loop, one invariant that holds every turn, so the proof never
-unrolls forever. Tool: LoopInvGen (SyGuS), language-independent, fed from
-the front end's loop form (MIR for Rust, SSA for Go, libclang for C++, `ast`
-for Python; `<lang>_adapter.md` §4 each).
-
-A bound must be proved sufficient, not asserted: the prover's own unwinding
-assertion, or k-induction where the loop is data-bounded.
-
-Output: the manifest with an `invariants` column, each entry
-`{loop_at: file:line, invariant, declared_by, tool, time_s}`.
-
-**Test:** every loop in every changed function has an invariant or is
-`blocked` with LoopInvGen's line; no invariant is `false`; no invariant
-merely restates the loop guard.
-
-## 6. Stage 4 — PROVE
-
-Per function: proved, or one exact counterexample. Bounded model checking
-against the safety obligations the compiler inserts (overflow, bounds,
-unwrap, panic) plus every stage-3 invariant.
-
-| language | tool | route on refusal |
-|---|---|---|
-| Rust | Kani autoharness + contracts | Charon `Coroutines are not supported` -> Kani `-Z async-lib` + `block_on`; anything else -> `blocked` |
-| C++ | ESBMC 8.4.0, k-induction, contracts (`cpp_adapter.md` §5.13 flags) | no `<coroutine>` model -> `blocked` |
-| Go | exhaustive enumeration over stage-1 finite domains; Gobra `--overflow` only for `forall` rows (`go_adapter.md` §5.7) | fuzz and `-race` are witnesses, never verdicts |
-| Python | CrossHair (Z3); Nagini where annotated (`python_adapter.md` §5) | "Confirmed over all paths" is the verdict, and it is budgeted |
-
-The four obligations, kept from the frozen v0.10 (`finalarchitecture.md` §5):
-
-```
-EXISTS x,o: C(x,o) AND NOT R(x,o)              = UNSAT   reference is right
-EXISTS F: T(F) AND EXISTS x: NOT R(x,F(x))     = UNSAT   no false positive
-EXISTS F: (FORALL x: R(x,F(x))) AND NOT T(F)   = UNSAT   no false negative
-T(C)                                           = true    reference is accepted
+```text
+base + solution.patch + task text + finite boundary
+  -> [1] EXTRACT   manifest.json       changed functions placed by the compiler
+  -> [2] SHAPE     findings.json       target-policy lint findings
+  -> [3] MODEL     model + coverage    executable image, provenance, transitions
+  -> [4] PROVE     result.json         fixed-point and accepting-cycle result
+  -> [5] ADEQUACY  adequacy.json       mutation evidence for test rows
+  -> [6] PLAN      plan.json           contract-backed test rows
+  -> [7] EMIT      instruction + tests one ordered source of emitted rows
 ```
 
-Output `proof.json`: header `{patch, base, compiler, prover, versions}`;
-`facts: [{id, kind: bound|proved|counterexample|assumed, function, tool,
-time_s, unwind, declared_by, inputs?}]`.
+Stages 1 and 2 give source reports. They do not establish semantic coverage or
+a logic verdict.
 
-**Test:** on every fixture, every function has at least one fact; every
-counterexample carries concrete inputs; every fact carries `tool` and
-`declared_by`; the noodles fixture's known overflow appears as a
-counterexample with its inputs (the one number a test may pin, because the
-rule "a real defect is found" needs one real defect to check).
+Stages 3 and 4 implement the reference proof route. Stages 5 through 7 create
+test artifacts after that route.
 
-## 7. Stage 5 — ADEQUACY
+## 3. Semantic coverage, Reachability, and Verdict
 
-Mutate the changed lines, re-run stage 4. A mutant the proof still passes
-is live: nothing pinned that line. A live mutant is a question, not always
-a hole — first prove equivalence (`go_adapter.md` §6.2: four of four
-survivors were equivalent); if not equivalent, read the task text for that
-line and write the row it reveals.
+These values are separate. No tool output can substitute one value for
+another.
 
-| language | mutation tool |
-|---|---|
-| Rust | cargo-mutants |
-| C++ | source mutation + re-run ESBMC (70-line harness, `cpp_adapter.md` §6.2) |
-| Go | gremlins + equivalence check |
-| Python | mutmut, `crosshair diffbehavior` for triage |
+### Semantic coverage
 
-Output: `proof.json` extended with `mutants: [{line, operator, status:
-killed|equivalent|survived, row?}]`. Mutation never supplies the all-clear;
-it supplies rows.
+Semantic coverage states whether the finite transition model represents every
+declared operation and environment action.
 
-**Test:** on every fixture, every mutant on a changed line has a status;
-every `survived` carries a row with a `declared_by`; no `survived` row was
-derived by running the reference.
+Every compiler-inventoried operation remains in provenance. Each surviving
+operation maps through compiler output and machine instructions to model
+transitions.
 
-## 8. Stage 6 — PLAN (shared, Go)
+An eliminated operation requires a checked proof to equivalent surviving
+transitions. Every executable instruction maps back to an inventoried or
+declared synthetic operation.
 
-Test Template Framework (Stocks & Carrington 1996), the method z-spec's
-`partition` uses, fed from `proof.json` instead of a hand-written Z schema.
-Nobody writes a spec; the rows are derived.
+Coverage records `mapped` or `eliminated_with_proof`. A query can refine a
+mapped operation to `unreachable_with_proof` without removing its mapping.
 
-Per function: DNF over its branches, standard partitions and boundary
-analysis on each stage-4 fact and stage-5 row. Row shape, from z-spec:
+Every in-scope function instance has exact standalone entry information. A
+query selects only the roots that apply to its named requirement.
 
+A function normally has a nonempty valid entry set. An impossible precondition
+requires a checked proof instead of a fabricated or silently empty root.
+
+Unreachable operations stay in the coverage map. Reachability cannot remove
+them from the coverage denominator.
+
+Only a complete semantic coverage certificate can enter Stage 4. An incomplete
+certificate returns an engine error.
+
+### Reachability
+
+Reachability starts from the roots that the named requirement selects. It is
+the least fixed point of the complete transition relation.
+
+Reachability marks mapped transitions that occur on allowed executions. It
+does not decide whether an unmapped item is safe.
+
+### Verdict
+
+A verdict answers one named requirement over the reachable states and
+transitions. `PROVED` and `DISPROVED` are the only logic verdicts.
+
+`PROVED` requires complete semantic coverage and a completed proof.
+`DISPROVED` requires a replayable violating execution in the reference model.
+
+## 4. Rules for every stage
+
+Every stage obeys these rules:
+
+- Tools supply code facts. Hyperray does not guess language syntax or tool
+  behavior.
+- Every boundary value names its source. Hyperray does not invent a proof
+  limit.
+- Compilation, semantic coverage, reachability, and verdict remain separate
+  result fields.
+- A `DISPROVED` result means that code behavior violates a named requirement.
+- An unsupported construct, incomplete artifact, timeout, or malformed result
+  is an engine error.
+- A stage never changes an engine error into a verdict.
+- The contract gives each requirement. The code gives its exact mechanism and
+  finite shape.
+- A row learned only by operating the reference implementation is not contract
+  evidence.
+- Each tool invocation records the executable identity, version, arguments,
+  inputs, and outputs.
+- Fixtures stay outside adapter logic. No adapter contains a fixture name.
+
+The compiler, linker, machine semantics, environment semantics, coverage
+checker, and proof-certificate checker form the stated trust boundary. Section
+11 gives the detailed rule.
+
+## 5. Stage 1 — EXTRACT
+
+Stage 1 reports every function that the patch changes. It does not define the
+operation inventory for semantic coverage.
+
+The first pass reads only the patch text. It records files, hunks, changed
+ranges, and function names that a hunk defines.
+
+The source locator opens only patch-named files. It records whole function spans
+and the reason for each file read.
+
+The compiler pass reads item names, parents, spans, values, input types, and MIR
+bodies. The current schema is analysis input, not complete proof semantics.
+
+The current adapter joins functions by path, span containment, and name. It
+keeps the compiler item path in the joined row.
+
+For Rust, the current route uses the pinned `rustc_public` driver. The driver
+uses a fresh wrapper path and a Hyperray-owned target directory.
+
+Existing project artifacts cannot supply a cached result from a different
+compiler invocation. The source locator records every file it opens and its
+reason.
+
+The source manifest keeps these facts:
+
+```text
+function: path, source name, start line, end line, text
+hunk:     path and line for a hunk outside all functions
+opened:   path and reason
 ```
-{id, class, branch, status: accepted|rejected, inputs, preState, postState,
- notes, declared_by}
+
+The compiler join adds `item_path` and one status. The current status values are
+`Extracted`, `Missing`, and `FileNotSeen`.
+
+The Stage 1 acceptance tests compare patch hunks with compiler joins. They also
+examine file access and stale-artifact isolation.
+
+These facts preserve the existing Rust extraction design. They do not claim
+that the current driver inventories every runtime operation.
+
+## 6. Stage 2 — SHAPE
+
+Stage 2 reports the target repository lint policy. It does not rewrite source
+and does not create `shaped.patch`.
+
+For Rust, Cargo and Clippy read the target crate lint levels, source attributes,
+and Clippy configuration. Hyperray does not inject its own lint policy.
+
+The adapter Clippy configuration applies only to Hyperray source. It never
+changes the target policy.
+
+Cargo JSON output supplies each finding. A finding contains the lint, path,
+primary span, and original message.
+
+Style is not proof evidence. A long or unconventional function continues to
+the same compiler and proof stages.
+
+The Stage 2 acceptance tests require these facts:
+
+- A target without a lint policy does not receive the Hyperray policy.
+- Each retained finding has a Clippy name and a primary source span.
+- Each finding in a changed function stays inside that function span.
+
+These facts preserve the existing Rust Stage 2 behavior. They do not establish
+semantic coverage.
+
+## 7. Stage 3 — MODEL
+
+Stage 3 consumes the compiler inventory, executable, finite boundary,
+requirements, and build identity.
+
+The stage produces these connected artifacts:
+
+- The compiler operation inventory
+- The compiler operation catalog, executable image, and provenance
+- The typed machine semantic IR and finite external contracts
+- The root catalog and each query-specific root set
+- The complete semantic coverage certificate.
+
+The transition model includes machine state and each declared external-contract
+state. Unknown semantics cause an engine error.
+
+Rust, C, C++, and Go compile into the same machine model. The Python route
+includes the pinned interpreter and bytecode.
+
+The first machine adapter uses a static RV64 executable and pinned Sail
+semantics. Compiler-level adapters can accelerate analysis only after they are
+proved equivalent to this machine route.
+
+Kani and other language-specific provers are accelerators only. A Kani harness
+or GOTO loop inventory is not a coverage authority.
+
+Stage 3 keeps unreachable compiler operations mapped. It does not classify an
+operation as absent because no query root reaches it.
+
+An independent checker must accept the coverage certificate. Otherwise,
+Stage 3 returns an engine error.
+
+The former Kani and CBMC loop-inventory design is replaced. `docs/stage3.md`
+records the replacement and the current gaps.
+
+## 8. Stage 4 — PROVE
+
+Stage 4 accepts only a model with a complete semantic coverage certificate. It
+first calculates the least reachable-state fixed point.
+
+For a safety requirement, Stage 4 examines every reachable state and
+transition. A reachable violation returns `DISPROVED` with an exact replay
+path.
+
+An omega-regular temporal requirement uses a generalized Büchi monitor for its
+negation. Stage 4 examines all reachable accepting cycles in the product.
+
+A reachable accepting cycle returns `DISPROVED` with a prefix and repeatable
+cycle. A nonterminal deadlock is a separate finite termination violation.
+
+The `DISPROVED` witness is a tagged union. Safety, temporal-cycle, and
+termination-deadlock witnesses keep their different state and path forms.
+
+The finite-state induction and accepting-cycle arguments are in
+`docs/proof-machine.md`. A sampled run or guessed unwind limit cannot replace
+them.
+
+The proof result includes the requirement, boundary, executable image,
+inventory, semantics, coverage, proof, and trust identities. Each requirement
+gets a separate verdict.
+
+Any proof-model, certificate, tool, replay, or resource problem returns an
+engine error. Stage 4 does not emit a verdict for that requirement.
+
+## 9. Stage 5 — ADEQUACY
+
+Stage 5 measures whether the generated tests notice changes to patched lines.
+Mutation results are test evidence, not semantic coverage.
+
+A surviving mutant can identify a missing contract-backed test row. It cannot
+invalidate or strengthen a machine proof by itself.
+
+If a survivor exposes an omitted contract requirement, Stage 4 proves that
+named requirement before later stages use its verdict.
+
+An equivalent mutant stays recorded as equivalent. A tool or resource problem
+returns an engine error instead of a mutation judgment.
+
+## 10. Stages 6 and 7 — PLAN and EMIT
+
+Stage 6 partitions contract-backed rows from proof and adequacy artifacts. Each
+row names its requirement and evidence source.
+
+Stage 7 writes `instruction.md` and the test file from the same ordered row
+list. Both outputs keep the same row identifiers and order.
+
+Generated tests can replay `DISPROVED` paths and protect required behavior.
+Passing tests do not change `PROVED` and do not establish coverage.
+
+## 11. Language routes and trust
+
+Language-specific source stays in five separate directories:
+
+```text
+adapters/rust/
+adapters/c/
+adapters/cpp/
+adapters/go/
+adapters/python/
 ```
 
-Then the evidence rule filters: a row stays only if the contract owes it.
+An adapter identifies source operations, invokes its language toolchain, and
+records provenance. It does not contain machine semantics, circuit rules,
+coverage policy, or proof logic. Those shared parts stay in `machine/`,
+`semantic/`, `circuit/`, `coverage/`, and `proof/`.
 
-Output `plan.json`. **Test:** every row has a `declared_by` pointing into
-the patch or a stage-5 row; no two rows share `inputs` and `branch`; every
-counterexample from stage 4 became a rejected row.
+C and C++ can use the same compiler infrastructure, but their adapters do not
+share production source files. This separation keeps language rules and
+failure reports local to the language that owns them.
 
-## 9. Stage 7 — EMIT (shared, Go)
+The adapter binary is program-independent. A new source program, executable,
+or finite boundary changes generated artifacts only. It does not require a
+fixture rule, a source-pattern rule, or a Hyperray source change.
 
-One pass over `plan.json` writes both files. Each row becomes one test in
-the language's own test form and one sentence in `instruction.md`, in the
-same order, with the same id. Neither file is edited after.
+The selected build identity includes the compiler, linker, flags, target,
+libraries, runtime, and artifact digests. Each different identity gets a
+different proof.
 
-**Test:** the test file and `instruction.md` have the same row ids in the
-same order; the emitted tests fail on every `survived` mutant from stage 5
-and pass on the reference; the reference's own tests still pass.
+The binary-level claim uses the recorded executable image and target instruction
+semantics. Without checked trace preservation, source fidelity is conditional
+on compiler and linker trust.
 
-## 10. Adapters
+The environment claim trusts the declared machine, memory, scheduler, and
+external-service semantics. Behavior outside that boundary is outside the
+claim.
 
-Each adapter is one binary in its own language, `adapters/<lang>/`, with
-the same file names: `extract`, `shape`, `bound`, `prove`, `adequacy`. It
-reads one JSON request on stdin and writes one JSON response on stdout;
-`{"status":"blocked","blockers":[...]}` when it cannot finish. Tools are
-found once at startup, version printed, pinned in the response.
+The coverage checker and proof-certificate checker are trusted. The application
+and runtime behavior are not assumed correct because their transitions are
+explored.
 
-The Go CLI runs the five per-language stages in order, then stages 6-7.
+An accelerator result requires equivalence with the reference transitions or
+replay in them. The accelerator does not become a coverage authority.
 
-## 11. Status
+Each source-language query includes `NO_UNDEFINED_BEHAVIOR`. Hyperray must prove
+this requirement before another source-level `PROVED` result.
 
-| stage | Rust | C++ | Go | Python |
-|---|---|---|---|---|
-| 1 EXTRACT | done | not started | not started | not started |
-| 2 SHAPE | done | not started | not started | not started |
-| 3 BOUND | not started | | | |
-| 4 PROVE | not started | | | |
-| 5 ADEQUACY | not started | | | |
-| 6 PLAN | shared, not started | | | |
-| 7 EMIT | shared, not started | | | |
+A component summary requires contextual trace equality with its reference
+component. Without that checked theorem, Hyperray uses the monolithic model or
+returns an engine error.
 
-Fixtures: Rust has four. The other three languages have none yet; each
-needs two real upstream patches before "every fixture" means anything.
+## 12. Implementation status
+
+The current implementation does not satisfy this entire architecture. This
+document makes no complete-coverage claim for Rust or another language.
+
+Stage 1 Rust extraction and Stage 2 Rust lint reporting have implemented
+components. Their local facts do not imply proof completion.
+
+Stage 3 has status `REPLACED` and `NOT COMPLETE`. Its former Kani/GOTO coverage
+route cannot issue a semantic coverage certificate.
+
+The gates under `gates/` define implementation completion. Only measured gate
+evidence can change this status.

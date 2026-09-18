@@ -19,6 +19,7 @@ func TestOperationErrorsCannotReturnProposal(t *testing.T) {
 		{program: "tool-error", code: isla.ResultError},
 		{program: "visit-limit", code: isla.ResultError},
 		{program: "malformed", code: isla.ProtocolError},
+		{program: "change-program", code: isla.ArtifactChanged},
 	}
 	for index := range cases {
 		testCase := cases[index]
@@ -33,6 +34,15 @@ func TestCanceledContextCannotReturnProposal(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 	proposal, err := testEngine(t).Propose(ctx, testRequest(t, "proof"))
+	assertProposalError(t, proposal, err, isla.ResourceLimit)
+}
+
+func TestSolverResourceLimitsCannotReturnProposal(t *testing.T) {
+	outputRequest := testRequestWithLimits(t, "proof", 3, 20)
+	proposal, err := testEngine(t).Propose(t.Context(), outputRequest)
+	assertProposalError(t, proposal, err, isla.ResourceLimit)
+	timeRequest := testRequestWithLimits(t, "solver-timeout", 1, 4096)
+	proposal, err = testEngine(t).Propose(t.Context(), timeRequest)
 	assertProposalError(t, proposal, err, isla.ResourceLimit)
 }
 

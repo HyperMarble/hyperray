@@ -34,6 +34,21 @@ visit-limit)
 malformed)
 	printf '%s\n' 'not a Herd result'
 	;;
+proposal-warning)
+	printf '%s\n' 'Test warning Forbidden' 'States 1'
+	printf '%s\n' '???;' 'No' 'Witnesses' 'Positive: 0 Negative: 1'
+	printf '%s\n' 'unexpected warning' >&2
+	;;
+solver-timeout)
+	sleep 2
+	printf '%s\n' 'Test timeout Forbidden' 'States 1'
+	printf '%s\n' '???;' 'No' 'Witnesses' 'Positive: 0 Negative: 1'
+	;;
+change-program)
+	printf '%s\n' 'Test changed Forbidden' 'States 1'
+	printf '%s\n' '???;' 'No' 'Witnesses' 'Positive: 0 Negative: 1'
+	printf '%s\n' 'changed' > "$program"
+	;;
 process-error)
 	printf '%s\n' 'process stopped' >&2
 	exit 3

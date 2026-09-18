@@ -1,0 +1,17 @@
+{
+  "artifact_type": "hyperray_result",
+  "schema_version": 2,
+  "artifact_id": "result.error.fixture",
+  "result_id": "result.error",
+  "result_kind": "engine_error",
+  "status": "engine_error",
+  "stage": "proof",
+  "cause": {
+    "code": "proof_engine_timeout",
+    "message": "The proof engine reached its time limit.",
+    "resource": { "kind": "proof_engine_timeout", "limit": 1000, "unit": "milliseconds" }
+  },
+  "missing_references": [],
+  "artifact_references": [{ "artifact_id": "model", "artifact_type": "hyperray_model", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }],
+  "applicable_tools": [{ "name": "proof-engine", "version": "1", "executable_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "arguments": [] }]
+}

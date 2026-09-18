@@ -1,0 +1,93 @@
+{
+  "artifact_type": "hyperray_certificate_proposal",
+  "schema_version": 2,
+  "artifact_id": "certificate.symbolic-fixed.fixture",
+  "certificate_id": "certificate.symbolic-fixed",
+  "certificate_kind": "symbolic_reachable_fixed_point",
+  "subject_artifacts": [
+    {
+      "artifact_id": "model",
+      "artifact_type": "hyperray_model",
+      "schema_version": 2,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "producer": {
+    "name": "fixed-point-checker",
+    "version": "1",
+    "executable_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "arguments": []
+  },
+  "evidence": {
+    "property_kind": "omega_regular",
+    "model_encoding": "sequential_circuit",
+    "fixed_point_artifact": {
+      "artifact_id": "proof.symbolic-fixed-point",
+      "artifact_type": "proof_evidence",
+      "schema_version": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "proof_records": {
+      "initial_inclusion": {
+        "obligation_id": "initial.inclusion",
+        "statement_artifact": {
+          "artifact_id": "obligation.initial.inclusion",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.initial",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "successor_closure": {
+        "obligation_id": "successor.closure",
+        "statement_artifact": {
+          "artifact_id": "obligation.successor.closure",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.successor",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "convergence": {
+        "obligation_id": "convergence",
+        "statement_artifact": {
+          "artifact_id": "obligation.convergence",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.convergence",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "property": {
+        "obligation_id": "property",
+        "statement_artifact": {
+          "artifact_id": "obligation.property",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.property",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    }
+  }
+}

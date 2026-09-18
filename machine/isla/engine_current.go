@@ -10,6 +10,10 @@ func (engine FootprintEngine) current() error {
 	return toolCurrent(engine.identity)
 }
 
+func (engine SemanticEngine) current() error {
+	return toolCurrent(engine.identity)
+}
+
 func toolCurrent(identity ToolIdentity) error {
 	if identity.Path == "" || identity.Digest == "" {
 		return engineError(ToolIdentityFail, "engine", "unidentified tool")

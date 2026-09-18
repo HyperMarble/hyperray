@@ -38,6 +38,9 @@ func TestCorrectProgramHasNoCounterexample(t *testing.T) {
 	if proposal.Evidence.PCVisitLimit != 2 || proposal.Evidence.TimeLimitSeconds != 3 {
 		t.Errorf("Evidence = %#v", proposal.Evidence)
 	}
+	if proposal.Evidence.MaximumOutputBytes != 4096 {
+		t.Errorf("MaximumOutputBytes = %d", proposal.Evidence.MaximumOutputBytes)
+	}
 	digests := []string{
 		proposal.Evidence.ArchitectureDigest,
 		proposal.Evidence.ConfigurationDigest,

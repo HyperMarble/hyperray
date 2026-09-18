@@ -10,10 +10,10 @@ PHDRS
 
 SECTIONS
 {
-  . = 0x10000;
+  . = 0x80100000;
   .text : ALIGN(2) { *(.text .text.*) } :text
 
-  . = 0x20000;
+  . = 0x80200000;
   .data : { *(.sdata .sdata.*) *(.data .data.*) } :data
   .bss : { *(.sbss .sbss.*) *(.bss .bss.*) } :data
 

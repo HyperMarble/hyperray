@@ -1,0 +1,671 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hyperray.dev/schemas/v1/boundary.schema.json",
+  "title": "Hyperray closed finite boundary",
+  "description": "This schema validates the boundary artifact shape. Independent boundary and coverage checkers must prove closure, finiteness, and reference consistency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "artifact_id",
+    "boundary_id",
+    "contract_sources",
+    "requirement_artifacts",
+    "code_closure",
+    "semantic_capacities",
+    "proof_engine_resources",
+    "semantics",
+    "environment",
+    "outcome_policies",
+    "observations",
+    "root_catalog",
+    "queries"
+  ],
+  "properties": {
+    "artifact_type": { "const": "hyperray_boundary" },
+    "schema_version": { "const": 1 },
+    "artifact_id": { "$ref": "#/$defs/identifier" },
+    "boundary_id": { "$ref": "#/$defs/identifier" },
+    "contract_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/provenance" }
+    },
+    "requirement_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifactRef" }
+    },
+    "code_closure": { "$ref": "#/$defs/codeClosure" },
+    "semantic_capacities": { "$ref": "#/$defs/semanticCapacities" },
+    "proof_engine_resources": { "$ref": "#/$defs/proofEngineResources" },
+    "semantics": { "$ref": "#/$defs/semantics" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "outcome_policies": { "$ref": "#/$defs/outcomePolicies" },
+    "observations": { "$ref": "#/$defs/observations" },
+    "root_catalog": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/root" }
+    },
+    "queries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/query" }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "sha256"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/identifier" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "media_type": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_artifact", "locator"],
+      "properties": {
+        "source_artifact": { "$ref": "#/$defs/artifactRef" },
+        "locator": { "type": "string", "minLength": 1 },
+        "quoted_text_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "toolIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "executable_sha256", "arguments"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "executable_sha256": { "$ref": "#/$defs/sha256" },
+        "arguments": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "buildIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "compiler", "linker", "build_flags", "output_image"],
+      "properties": {
+        "target": { "type": "string", "minLength": 1 },
+        "compiler": { "$ref": "#/$defs/toolIdentity" },
+        "linker": { "$ref": "#/$defs/toolIdentity" },
+        "build_flags": { "type": "array", "items": { "type": "string" } },
+        "output_image": { "$ref": "#/$defs/artifactRef" }
+      }
+    },
+    "dynamicCodeClosure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "provenance"],
+          "properties": {
+            "kind": { "const": "disabled" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "generator_model", "permitted_results", "closure_proof", "provenance"],
+          "properties": {
+            "kind": { "const": "finite_generator" },
+            "generator_model": { "$ref": "#/$defs/artifactRef" },
+            "permitted_results": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/artifactRef" }
+            },
+            "closure_proof": { "$ref": "#/$defs/artifactRef" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        }
+      ]
+    },
+    "codeClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "runtime", "libraries", "dynamic_code", "build"],
+      "properties": {
+        "source": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifactRef" } },
+        "runtime": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifactRef" } },
+        "libraries": { "type": "array", "items": { "$ref": "#/$defs/artifactRef" } },
+        "dynamic_code": { "$ref": "#/$defs/dynamicCodeClosure" },
+        "build": { "$ref": "#/$defs/buildIdentity" }
+      }
+    },
+    "finiteRepresentation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "values"],
+          "properties": {
+            "kind": { "const": "explicit_values" },
+            "values": { "type": "array", "minItems": 1, "uniqueItems": true, "items": true }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "minimum", "maximum", "step"],
+          "properties": {
+            "kind": { "const": "integer_range" },
+            "minimum": { "type": "integer" },
+            "maximum": { "type": "integer" },
+            "step": { "type": "integer", "minimum": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "enumeration_artifact", "enumeration_proof"],
+          "properties": {
+            "kind": { "const": "proved_enumerator" },
+            "enumeration_artifact": { "$ref": "#/$defs/artifactRef" },
+            "enumeration_proof": { "$ref": "#/$defs/artifactRef" }
+          }
+        }
+      ]
+    },
+    "finiteDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain_id", "cardinality", "representation", "provenance"],
+      "properties": {
+        "domain_id": { "$ref": "#/$defs/identifier" },
+        "cardinality": { "type": "integer", "minimum": 1 },
+        "representation": { "$ref": "#/$defs/finiteRepresentation" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "semanticRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantics_artifact", "rule_id", "provenance"],
+      "properties": {
+        "semantics_artifact": { "$ref": "#/$defs/artifactRef" },
+        "rule_id": { "$ref": "#/$defs/identifier" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "memoryRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum_bytes",
+        "maximum_allocations",
+        "allocation",
+        "free",
+        "address_reuse",
+        "pointer_provenance",
+        "uninitialized_data",
+        "garbage_collection",
+        "capacity_outcome",
+        "provenance"
+      ],
+      "properties": {
+        "maximum_bytes": { "type": "integer", "minimum": 0 },
+        "maximum_allocations": { "type": "integer", "minimum": 0 },
+        "allocation": { "$ref": "#/$defs/semanticRule" },
+        "free": { "$ref": "#/$defs/semanticRule" },
+        "address_reuse": { "$ref": "#/$defs/semanticRule" },
+        "pointer_provenance": { "$ref": "#/$defs/semanticRule" },
+        "uninitialized_data": { "$ref": "#/$defs/semanticRule" },
+        "garbage_collection": { "$ref": "#/$defs/semanticRule" },
+        "capacity_outcome": { "$ref": "#/$defs/semanticRule" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "stackRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_recursion_depth", "maximum_stack_bytes_per_thread", "recursion", "stack_exhaustion", "provenance"],
+      "properties": {
+        "maximum_recursion_depth": { "type": "integer", "minimum": 0 },
+        "maximum_stack_bytes_per_thread": { "type": "integer", "minimum": 0 },
+        "recursion": { "$ref": "#/$defs/semanticRule" },
+        "stack_exhaustion": { "$ref": "#/$defs/semanticRule" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "concurrencyRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum_threads",
+        "maximum_tasks",
+        "thread_creation",
+        "task_creation",
+        "joining",
+        "cancellation",
+        "data_races",
+        "atomic_operations",
+        "capacity_outcome",
+        "provenance"
+      ],
+      "properties": {
+        "maximum_threads": { "type": "integer", "minimum": 1 },
+        "maximum_tasks": { "type": "integer", "minimum": 0 },
+        "thread_creation": { "$ref": "#/$defs/semanticRule" },
+        "task_creation": { "$ref": "#/$defs/semanticRule" },
+        "joining": { "$ref": "#/$defs/semanticRule" },
+        "cancellation": { "$ref": "#/$defs/semanticRule" },
+        "data_races": { "$ref": "#/$defs/semanticRule" },
+        "atomic_operations": { "$ref": "#/$defs/semanticRule" },
+        "capacity_outcome": { "$ref": "#/$defs/semanticRule" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "objectCapacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_kind", "maximum_count", "capacity_outcome", "provenance"],
+      "properties": {
+        "object_kind": { "$ref": "#/$defs/identifier" },
+        "maximum_count": { "type": "integer", "minimum": 0 },
+        "capacity_outcome": { "$ref": "#/$defs/semanticRule" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "semanticCapacities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exact_state_cardinality",
+        "argument_domains",
+        "persistent_state_domains",
+        "external_input_domains",
+        "memory",
+        "stack",
+        "concurrency",
+        "history_closure",
+        "object_capacities"
+      ],
+      "properties": {
+        "exact_state_cardinality": { "type": "integer", "minimum": 1 },
+        "argument_domains": { "type": "array", "items": { "$ref": "#/$defs/finiteDomain" } },
+        "persistent_state_domains": { "type": "array", "items": { "$ref": "#/$defs/finiteDomain" } },
+        "external_input_domains": { "type": "array", "items": { "$ref": "#/$defs/finiteDomain" } },
+        "memory": { "$ref": "#/$defs/memoryRules" },
+        "stack": { "$ref": "#/$defs/stackRules" },
+        "concurrency": { "$ref": "#/$defs/concurrencyRules" },
+        "history_closure": { "$ref": "#/$defs/historyClosure" },
+        "object_capacities": { "type": "array", "items": { "$ref": "#/$defs/objectCapacity" } }
+      }
+    },
+    "historyClosure": {
+      "description": "Finite values and addresses do not prove finite history state. This tagged value closes memory, scheduler, and environment histories.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "exact_history_state_count",
+            "pending_memory_events",
+            "memory_history_capacity",
+            "scheduler_history",
+            "scheduler_history_capacity",
+            "environment_history",
+            "environment_history_capacity",
+            "exact_capacity_behavior",
+            "provenance"
+          ],
+          "properties": {
+            "kind": { "const": "finite_operational_state" },
+            "exact_history_state_count": { "type": "integer", "minimum": 1 },
+            "pending_memory_events": { "$ref": "#/$defs/finiteDomain" },
+            "memory_history_capacity": { "type": "integer", "minimum": 0 },
+            "scheduler_history": { "$ref": "#/$defs/finiteDomain" },
+            "scheduler_history_capacity": { "type": "integer", "minimum": 0 },
+            "environment_history": { "$ref": "#/$defs/finiteDomain" },
+            "environment_history_capacity": { "type": "integer", "minimum": 0 },
+            "exact_capacity_behavior": { "$ref": "#/$defs/semanticRule" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "concrete_memory_history_semantics",
+            "concrete_scheduler_history_semantics",
+            "concrete_environment_history_semantics",
+            "finite_quotient_domain",
+            "abstraction_relation",
+            "transition_congruence_proof",
+            "observation_preservation_proof",
+            "exact_capacity_behavior",
+            "provenance"
+          ],
+          "properties": {
+            "kind": { "const": "proved_finite_quotient" },
+            "concrete_memory_history_semantics": { "$ref": "#/$defs/artifactRef" },
+            "concrete_scheduler_history_semantics": { "$ref": "#/$defs/artifactRef" },
+            "concrete_environment_history_semantics": { "$ref": "#/$defs/artifactRef" },
+            "finite_quotient_domain": { "$ref": "#/$defs/finiteDomain" },
+            "abstraction_relation": { "$ref": "#/$defs/artifactRef" },
+            "transition_congruence_proof": { "$ref": "#/$defs/artifactRef" },
+            "observation_preservation_proof": { "$ref": "#/$defs/artifactRef" },
+            "exact_capacity_behavior": { "$ref": "#/$defs/semanticRule" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        }
+      ]
+    },
+    "engineLimit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value", "unit"],
+          "properties": {
+            "kind": { "const": "bounded" },
+            "value": { "type": "integer", "minimum": 1 },
+            "unit": { "enum": ["milliseconds", "bytes", "workers"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "unit"],
+          "properties": {
+            "kind": { "const": "unbounded" },
+            "unit": { "enum": ["milliseconds", "bytes", "workers"] }
+          }
+        }
+      ]
+    },
+    "proofEngineResources": {
+      "description": "These limits control the proof engine. They do not change program behavior and cannot justify a logic verdict.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic_effect", "time", "memory", "parallelism"],
+      "properties": {
+        "semantic_effect": { "const": "none" },
+        "time": {
+          "allOf": [
+            { "$ref": "#/$defs/engineLimit" },
+            { "properties": { "unit": { "const": "milliseconds" } } }
+          ]
+        },
+        "memory": {
+          "allOf": [
+            { "$ref": "#/$defs/engineLimit" },
+            { "properties": { "unit": { "const": "bytes" } } }
+          ]
+        },
+        "parallelism": {
+          "allOf": [
+            { "$ref": "#/$defs/engineLimit" },
+            { "properties": { "unit": { "const": "workers" } } }
+          ]
+        }
+      }
+    },
+    "fairnessClause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fairness_id", "kind", "subject_ids", "formal_rule", "provenance"],
+      "properties": {
+        "fairness_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["weak", "strong", "justice", "compassion", "none"] },
+        "subject_ids": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
+        "formal_rule": { "$ref": "#/$defs/semanticRule" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_instruction", "memory_model", "runtime", "scheduler", "fairness", "progress", "unknown_operation_policy"],
+      "properties": {
+        "target_instruction": { "$ref": "#/$defs/artifactRef" },
+        "memory_model": { "$ref": "#/$defs/artifactRef" },
+        "runtime": { "$ref": "#/$defs/artifactRef" },
+        "scheduler": { "$ref": "#/$defs/artifactRef" },
+        "fairness": { "type": "array", "items": { "$ref": "#/$defs/fairnessClause" } },
+        "progress": { "type": "array", "items": { "$ref": "#/$defs/semanticRule" } },
+        "unknown_operation_policy": { "const": "engine_error" }
+      }
+    },
+    "environmentOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome_id", "result_value", "state_effect", "observation_symbols"],
+      "properties": {
+        "outcome_id": { "$ref": "#/$defs/identifier" },
+        "result_value": true,
+        "state_effect": { "$ref": "#/$defs/semanticRule" },
+        "observation_symbols": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
+        "exception_id": { "$ref": "#/$defs/identifier" },
+        "callback_root_id": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "environmentAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "kind", "enabled_rule", "outcomes", "provenance"],
+      "properties": {
+        "action_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["clock", "random", "file", "network", "signal", "callback", "system_call", "foreign_call"] },
+        "enabled_rule": { "$ref": "#/$defs/semanticRule" },
+        "outcomes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/environmentOutcome" }
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actions", "undeclared_action_policy"],
+      "properties": {
+        "actions": { "type": "array", "items": { "$ref": "#/$defs/environmentAction" } },
+        "undeclared_action_policy": { "const": "engine_error" }
+      }
+    },
+    "outcomePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "state_label", "terminal_classification", "maximal_execution_rule", "requirement_effect", "observation_symbol", "provenance"],
+      "properties": {
+        "kind": { "enum": ["normal_termination", "nonterminal_deadlock", "trap", "abort", "undefined_behavior", "capacity_error"] },
+        "state_label": { "$ref": "#/$defs/identifier" },
+        "terminal_classification": { "enum": ["terminal", "nonterminal"] },
+        "maximal_execution_rule": { "$ref": "#/$defs/semanticRule" },
+        "requirement_effect": { "$ref": "#/$defs/semanticRule" },
+        "observation_symbol": { "$ref": "#/$defs/identifier" },
+        "requirement_id": { "$ref": "#/$defs/identifier" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "outcomePolicies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normal_termination", "nonterminal_deadlock", "trap", "abort", "undefined_behavior", "capacity_error"],
+      "properties": {
+        "normal_termination": {
+          "allOf": [
+            { "$ref": "#/$defs/outcomePolicy" },
+            { "properties": { "kind": { "const": "normal_termination" }, "terminal_classification": { "const": "terminal" } } }
+          ]
+        },
+        "nonterminal_deadlock": {
+          "allOf": [
+            { "$ref": "#/$defs/outcomePolicy" },
+            { "properties": { "kind": { "const": "nonterminal_deadlock" }, "terminal_classification": { "const": "nonterminal" } } }
+          ]
+        },
+        "trap": {
+          "allOf": [
+            { "$ref": "#/$defs/outcomePolicy" },
+            { "properties": { "kind": { "const": "trap" } } }
+          ]
+        },
+        "abort": {
+          "allOf": [
+            { "$ref": "#/$defs/outcomePolicy" },
+            { "properties": { "kind": { "const": "abort" } } }
+          ]
+        },
+        "undefined_behavior": {
+          "allOf": [
+            { "$ref": "#/$defs/outcomePolicy" },
+            {
+              "properties": {
+                "kind": { "const": "undefined_behavior" },
+                "requirement_id": { "const": "NO_UNDEFINED_BEHAVIOR" }
+              },
+              "required": ["requirement_id"]
+            }
+          ]
+        },
+        "capacity_error": {
+          "allOf": [
+            { "$ref": "#/$defs/outcomePolicy" },
+            { "properties": { "kind": { "const": "capacity_error" } } }
+          ]
+        }
+      }
+    },
+    "observationSymbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbol_id", "payload_domain_ids"],
+      "properties": {
+        "symbol_id": { "$ref": "#/$defs/identifier" },
+        "payload_domain_ids": { "type": "array", "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "formalFunction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["encoding", "table_artifact", "totality_proof"],
+          "properties": {
+            "encoding": { "const": "explicit_table.v1" },
+            "table_artifact": { "$ref": "#/$defs/artifactRef" },
+            "totality_proof": { "$ref": "#/$defs/artifactRef" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["encoding", "decision_artifact", "format_version", "totality_proof"],
+          "properties": {
+            "encoding": { "const": "decision_diagram.v1" },
+            "decision_artifact": { "$ref": "#/$defs/artifactRef" },
+            "format_version": { "const": 1 },
+            "totality_proof": { "$ref": "#/$defs/artifactRef" }
+          }
+        }
+      ]
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alphabet", "step_function", "terminal_function"],
+      "properties": {
+        "alphabet": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/observationSymbol" } },
+        "step_function": { "$ref": "#/$defs/formalFunction" },
+        "terminal_function": { "$ref": "#/$defs/formalFunction" }
+      }
+    },
+    "entryDefinition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "state_ids", "provenance"],
+          "properties": {
+            "kind": { "const": "explicit_states" },
+            "state_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "generator", "exact_domain_proof", "provenance"],
+          "properties": {
+            "kind": { "const": "generator_with_proof" },
+            "generator": { "$ref": "#/$defs/artifactRef" },
+            "exact_domain_proof": { "$ref": "#/$defs/artifactRef" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "impossible_precondition_proof", "provenance"],
+          "properties": {
+            "kind": { "const": "impossible_precondition_with_proof" },
+            "impossible_precondition_proof": { "$ref": "#/$defs/artifactRef" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        }
+      ]
+    },
+    "root": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "root_id", "entry", "provenance"],
+          "properties": {
+            "kind": { "const": "program_root" },
+            "root_id": { "$ref": "#/$defs/identifier" },
+            "entry": { "$ref": "#/$defs/entryDefinition" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "root_id", "function_instance_id", "arguments_domain_ids", "entry", "provenance"],
+          "properties": {
+            "kind": { "const": "function_root" },
+            "root_id": { "$ref": "#/$defs/identifier" },
+            "function_instance_id": { "$ref": "#/$defs/identifier" },
+            "arguments_domain_ids": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
+            "entry": { "$ref": "#/$defs/entryDefinition" },
+            "provenance": { "$ref": "#/$defs/provenance" }
+          }
+        }
+      ]
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "requirement_id", "selected_root_ids", "fairness_ids", "provenance"],
+      "properties": {
+        "query_id": { "$ref": "#/$defs/identifier" },
+        "requirement_id": { "$ref": "#/$defs/identifier" },
+        "selected_root_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "fairness_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    }
+  }
+}

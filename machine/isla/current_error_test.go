@@ -47,7 +47,7 @@ func TestChangedProgramCannotOperate(t *testing.T) {
 		t.Fatalf("NewArtifact() error = %v", err)
 	}
 	input := testArtifact(t, "input")
-	request, err := isla.NewRequest(input, input, input, program, 1, 1)
+	request, err := isla.NewRequest(input, input, input, program, 1, 1, 4096)
 	if err != nil {
 		t.Fatalf("NewRequest() error = %v", err)
 	}

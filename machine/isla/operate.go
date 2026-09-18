@@ -3,7 +3,6 @@
 package isla
 
 import (
-	"bytes"
 	"context"
 	"os/exec"
 	"strings"
@@ -29,20 +28,33 @@ func (engine Engine) Propose(ctx context.Context, request Request) (Proposal, er
 	if err != nil {
 		return Proposal{}, err
 	}
-	return proposalFromResult(engine, request, output, parsed), nil
+	dispositions, err := classifyDiagnostics(output, "proposal diagnostic")
+	if err != nil {
+		return Proposal{}, err
+	}
+	if err := request.current(); err != nil {
+		return Proposal{}, err
+	}
+	return proposalFromResult(engine, request, output, parsed, dispositions), nil
 }
 
 func (engine Engine) operate(ctx context.Context, request Request) (commandOutput, error) {
-	stdout := &bytes.Buffer{}
-	diagnostics := &bytes.Buffer{}
-	command := exec.CommandContext(ctx, engine.identity.Path, request.arguments()...)
+	duration, err := boundedDuration(request.timeLimit)
+	if err != nil {
+		return commandOutput{}, err
+	}
+	limitedContext, cancel := context.WithTimeout(ctx, duration)
+	defer cancel()
+	stdout := newLimitedBuffer(request.maximumOutputSize)
+	diagnostics := newLimitedBuffer(request.maximumOutputSize)
+	command := exec.CommandContext(limitedContext, engine.identity.Path, proposalArguments(engine.identity, request)...)
 	command.Stdout = stdout
 	command.Stderr = diagnostics
 	start := time.Now()
-	err := command.Run()
+	err = command.Run()
 	output := commandOutput{stdout: stdout.String(), diagnostics: diagnostics.String(), elapsed: time.Since(start)}
-	if ctx.Err() != nil {
-		return commandOutput{}, engineError(ResourceLimit, request.program.path, ctx.Err().Error())
+	if limitedContext.Err() != nil || stdout.exceeded || diagnostics.exceeded {
+		return commandOutput{}, engineError(ResourceLimit, request.program.path, "solver resource limit reached")
 	}
 	if err != nil {
 		detail := strings.TrimSpace(output.diagnostics + "\n" + output.stdout)

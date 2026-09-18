@@ -1,0 +1,5 @@
+# Supply a path dependency that Cargo must compile and link.
+[package]
+name = "fixture-arithmetic"
+version.workspace = true
+edition.workspace = true

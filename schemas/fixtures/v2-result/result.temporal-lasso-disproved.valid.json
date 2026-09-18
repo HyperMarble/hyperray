@@ -1,0 +1,49 @@
+{
+  "artifact_type": "hyperray_result",
+  "schema_version": 2,
+  "artifact_id": "result.temporal.fixture",
+  "result_id": "result.temporal",
+  "result_kind": "DISPROVED.temporal_lasso",
+  "verdict": "DISPROVED",
+  "claim": {
+    "requirement": { "artifact_id": "requirement", "artifact_type": "hyperray_requirement", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "boundary": { "artifact_id": "boundary", "artifact_type": "hyperray_boundary", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "model": { "artifact_id": "model", "artifact_type": "hyperray_model", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "model_encoding": "sequential_circuit",
+    "executable_image": { "artifact_id": "image", "artifact_type": "executable_image", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "compiler_inventory": { "artifact_id": "inventory", "artifact_type": "compiler_inventory", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "semantics": [{ "artifact_id": "semantics", "artifact_type": "semantic_spec", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }],
+    "coverage": { "artifact_id": "coverage", "artifact_type": "hyperray_semantic_coverage", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "trust_assumptions": [],
+    "query_id": "query.temporal",
+    "selected_root_ids": ["root.main"]
+  },
+  "witness": {
+    "kind": "temporal_lasso",
+    "selected_root_id": "root.main",
+    "prefix": { "kind": "circuit_trace", "initial_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" }, "steps": [] },
+    "cycle": {
+      "kind": "circuit_trace",
+      "initial_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" },
+      "steps": [
+        {
+          "step_index": 0,
+          "current_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" },
+          "choice": { "encoding": "binary_msb_first", "width": 1, "value": "0" },
+          "choice_valid": true,
+          "step_enabled": true,
+          "next_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" },
+          "active_effects": [{ "kind": "machine_step_effect", "effect_id": "effect.loop", "semantic_case_ids": ["case.loop"] }],
+          "observations": []
+        }
+      ]
+    },
+    "loop_entry_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" },
+    "loop_closing_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" },
+    "applicable_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" },
+    "acceptance_ids": ["acceptance.violation"],
+    "fairness_ids": ["fairness.scheduler"],
+    "cause": { "predicate_id": "predicate.eventually", "monitor_state_id": "monitor.wait", "message": "The fair cycle violates the temporal requirement." },
+    "validated_replay_certificate": { "artifact_id": "certificate.replay.temporal", "artifact_type": "hyperray_validated_certificate", "schema_version": 2, "certificate_kind": "witness_replay", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }
+  }
+}

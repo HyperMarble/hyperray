@@ -19,6 +19,13 @@ func TestWitnessCountErrors(t *testing.T) {
 		{"none"},
 		{"Positive: bad Negative: 0"},
 		{"Positive: 0 Negative: bad"},
+		{"Positive: 0 Negative: 0"},
+		{"Positive: 18446744073709551615 Negative: 1"},
+		{"Positive: 1 Negative: 0", "Positive: 0 Negative: 1"},
+		{"Positive: +1 Negative: 0"},
+		{"Positive: 01 Negative: 0"},
+		{"Positive:\t1 Negative: 0"},
+		{" Positive: 1 Negative: 0"},
 	}
 	for index := range cases {
 		positive, negative, err := witnessCounts(cases[index])

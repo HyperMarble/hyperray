@@ -1,0 +1,11 @@
+{
+  "width": 8,
+  "reference_comparison": "unsigned_less_than",
+  "candidate_comparison": "unsigned_less_or_equal",
+  "expected_status": "difference_found",
+  "different_pairs": 256,
+  "expected_balance": "#x00",
+  "expected_cost": "#x00",
+  "expected_reference": "false",
+  "expected_candidate": "true"
+}

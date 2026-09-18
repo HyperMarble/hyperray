@@ -23,13 +23,18 @@ func TestResultHeaderErrors(t *testing.T) {
 	for index := range cases {
 		testCase := cases[index]
 		t.Run(testCase.name, func(t *testing.T) {
-			name, status, err := resultHeader(testCase.lines, testCase.diagnostics)
-			if err == nil {
-				t.Errorf("resultHeader() = %q, %q, nil", name, status)
-			}
-			assertInternalCode(t, err, testCase.code)
+			assertHeaderError(t, testCase.lines, testCase.diagnostics, testCase.code)
 		})
 	}
+}
+
+func assertHeaderError(t *testing.T, lines []string, diagnostics string, code ErrorCode) {
+	t.Helper()
+	name, status, err := resultHeader(lines, diagnostics)
+	if err == nil {
+		t.Errorf("resultHeader() = %q, %q, nil", name, status)
+	}
+	assertInternalCode(t, err, code)
 }
 
 func assertInternalCode(t *testing.T, err error, code ErrorCode) {

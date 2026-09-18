@@ -25,7 +25,7 @@ func TestResultStateErrors(t *testing.T) {
 		negative uint64
 		code     ErrorCode
 	}{
-		{lines: nil, positive: 1, negative: 1, code: ResultError},
+		{lines: nil, positive: 1, negative: 1, code: ProtocolError},
 		{lines: nil, positive: 1, code: ProtocolError},
 		{lines: []string{"States 1", "???;"}, positive: 1, code: ProtocolError},
 		{lines: []string{"States 1", ""}, positive: 1, code: ProtocolError},

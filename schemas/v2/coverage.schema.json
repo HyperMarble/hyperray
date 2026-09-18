@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hyperray.dev/schemas/v2/coverage.schema.json",
+  "title": "Hyperray version 2 symbolic semantic coverage",
+  "description": "This schema records bidirectional reconciliation with tagged circuit effects. An independent checker must validate all equalities and references.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_type", "schema_version", "artifact_id", "coverage_id", "boundary_artifact", "model_artifact", "artifact_digests", "exact_counts", "compiler_inventory", "forward_reconciliation", "reverse_reconciliation", "root_coverage", "query_root_selections", "query_operation_dispositions", "validated_certificate"],
+  "properties": {
+    "artifact_type": { "const": "hyperray_semantic_coverage" },
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "common.schema.json#/$defs/identifier" },
+    "coverage_id": { "$ref": "common.schema.json#/$defs/identifier" },
+    "boundary_artifact": { "$ref": "common.schema.json#/$defs/artifactRef" },
+    "model_artifact": { "$ref": "common.schema.json#/$defs/v2ModelRef" },
+    "artifact_digests": { "$ref": "#/$defs/artifactDigests" },
+    "exact_counts": { "$ref": "#/$defs/exactCounts" },
+    "compiler_inventory": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/inventoryOperation" } },
+    "forward_reconciliation": { "$ref": "#/$defs/forwardReconciliation" },
+    "reverse_reconciliation": { "$ref": "#/$defs/reverseReconciliation" },
+    "root_coverage": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rootCoverage" } },
+    "query_root_selections": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/queryRootSelection" } },
+    "query_operation_dispositions": { "type": "array", "items": { "$ref": "#/$defs/queryDisposition" } },
+    "validated_certificate": { "$ref": "#/$defs/validatedCoverageCertificateRef" }
+  },
+  "$defs": {
+    "artifactDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundary", "model", "compiler_inventory", "compiler_output", "executable_image", "target_semantics", "environment_semantics", "root_catalog", "requirements"],
+      "properties": {
+        "boundary": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "model": { "$ref": "common.schema.json#/$defs/v2ModelRef" },
+        "compiler_inventory": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "compiler_output": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "executable_image": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "target_semantics": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "environment_semantics": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "root_catalog": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "requirements": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/v2RequirementRef" } }
+      }
+    },
+    "exactCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler_inventory_operations", "mapped_operations", "eliminated_operations", "compiler_output_records", "image_instructions", "semantic_cases", "model_effects", "circuit_nodes", "circuit_ports", "environment_actions", "roots", "query_root_selections", "query_reachability_annotations", "concrete_enabled_step_assignments"],
+      "properties": {
+        "compiler_inventory_operations": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "mapped_operations": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "eliminated_operations": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "compiler_output_records": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "image_instructions": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "semantic_cases": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "model_effects": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "circuit_nodes": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "circuit_ports": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "environment_actions": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "roots": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "query_root_selections": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "query_reachability_annotations": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "concrete_enabled_step_assignments": { "$ref": "#/$defs/exactEnabledStepCount" }
+      }
+    },
+    "exactEnabledStepCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "validated_certificate"],
+      "properties": {
+        "count": { "$ref": "common.schema.json#/$defs/exactCount" },
+        "validated_certificate": {
+          "allOf": [
+            { "$ref": "common.schema.json#/$defs/validatedCertificateRef" },
+            { "properties": { "certificate_kind": { "const": "symbolic_exact_count" } }, "required": ["certificate_kind"] }
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer", "source_artifact", "source_locator"],
+      "properties": {
+        "producer": { "$ref": "common.schema.json#/$defs/toolIdentity" },
+        "source_artifact": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "source_locator": { "type": "string", "minLength": 1 }
+      }
+    },
+    "inventoryOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "kind", "concrete_instance_id", "provenance"],
+      "properties": {
+        "operation_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "kind": { "enum": ["source", "runtime", "compiler_generated", "linker_generated", "startup", "declared_synthetic"] },
+        "concrete_instance_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler_output_ids", "image_instruction_ids", "semantic_case_ids", "model_effects", "provenance_edge_ids"],
+      "properties": {
+        "compiler_output_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "image_instruction_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "semantic_case_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "model_effects": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/modelEffect" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "mappedDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "operation_id", "mapping"],
+      "properties": {
+        "disposition": { "const": "mapped" },
+        "operation_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "mapping": { "$ref": "#/$defs/mapping" }
+      }
+    },
+    "eliminatedDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "operation_id", "elimination_record_id", "elimination_proof", "equivalent_model_effects", "provenance_edge_ids"],
+      "properties": {
+        "disposition": { "const": "eliminated_with_proof" },
+        "operation_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "elimination_record_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "elimination_proof": { "$ref": "common.schema.json#/$defs/proofArtifactRef" },
+        "equivalent_model_effects": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/modelEffect" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "baseDisposition": {
+      "oneOf": [
+        { "$ref": "#/$defs/mappedDisposition" },
+        { "$ref": "#/$defs/eliminatedDisposition" }
+      ]
+    },
+    "environmentPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment_action_id", "outcome_id", "semantic_case_ids", "model_effects", "provenance_edge_ids"],
+      "properties": {
+        "environment_action_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "outcome_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "semantic_case_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "model_effects": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/modelEffect" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "provenanceNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "node_id"],
+      "properties": {
+        "kind": { "enum": ["compiler_operation", "compiler_output", "image_instruction", "semantic_case", "model_effect", "environment_action", "scheduler_choice"] },
+        "node_id": { "$ref": "common.schema.json#/$defs/identifier" }
+      }
+    },
+    "provenanceEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edge_id", "from", "to", "producer"],
+      "properties": {
+        "edge_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "from": { "$ref": "#/$defs/provenanceNode" },
+        "to": { "$ref": "#/$defs/provenanceNode" },
+        "producer": { "$ref": "common.schema.json#/$defs/toolIdentity" }
+      }
+    },
+    "forwardReconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_dispositions", "environment_paths", "provenance_edges"],
+      "properties": {
+        "operation_dispositions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/baseDisposition" } },
+        "environment_paths": { "type": "array", "items": { "$ref": "#/$defs/environmentPath" } },
+        "provenance_edges": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/provenanceEdge" } }
+      }
+    },
+    "reverseRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "operation_ids", "semantic_case_ids", "model_effects", "provenance_edge_ids"],
+      "properties": {
+        "record_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "operation_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "semantic_case_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "model_effects": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/modelEffect" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "semanticCaseReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic_case_id", "origin", "model_effects", "semantics_artifact", "provenance_edge_ids"],
+      "properties": {
+        "semantic_case_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "origin": { "$ref": "common.schema.json#/$defs/semanticOrigin" },
+        "model_effects": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/modelEffect" } },
+        "semantics_artifact": { "$ref": "common.schema.json#/$defs/artifactRef" },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "modelEffectReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_effect", "origin", "operation_ids", "provenance_edge_ids"],
+      "properties": {
+        "model_effect": { "$ref": "common.schema.json#/$defs/modelEffect" },
+        "origin": { "$ref": "common.schema.json#/$defs/semanticOrigin" },
+        "operation_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } }
+      }
+    },
+    "reverseReconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler_outputs", "image_instructions", "semantic_cases", "model_effects"],
+      "properties": {
+        "compiler_outputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/reverseRecord" } },
+        "image_instructions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/reverseRecord" } },
+        "semantic_cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/semanticCaseReverse" } },
+        "model_effects": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/modelEffectReverse" } }
+      }
+    },
+    "circuitEntryCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "predicate_port_id", "nonempty_proof", "validated_exact_domain_certificate"],
+      "properties": {
+        "kind": { "const": "circuit_predicate" },
+        "predicate_port_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "nonempty_proof": { "$ref": "common.schema.json#/$defs/proofArtifactRef" },
+        "validated_exact_domain_certificate": { "$ref": "#/$defs/validatedCoverageCertificateRef" }
+      }
+    },
+    "impossibleEntryCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "impossible_precondition_proof"],
+      "properties": {
+        "kind": { "const": "impossible_precondition_with_proof" },
+        "impossible_precondition_proof": { "$ref": "common.schema.json#/$defs/proofArtifactRef" }
+      }
+    },
+    "rootCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root_id", "root_kind", "entry_coverage", "provenance"],
+      "properties": {
+        "root_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "root_kind": { "enum": ["program_root", "function_root"] },
+        "entry_coverage": { "oneOf": [{ "$ref": "#/$defs/circuitEntryCoverage" }, { "$ref": "#/$defs/impossibleEntryCoverage" }] },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "queryRootSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "requirement_id", "selected_root_ids", "selection_proof"],
+      "properties": {
+        "query_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "requirement_id": { "$ref": "common.schema.json#/$defs/identifier" },
+        "selected_root_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/identifier" } },
+        "selection_proof": { "$ref": "common.schema.json#/$defs/proofArtifactRef" }
+      }
+    },
+    "validatedReachabilityCertificateRef": {
+      "allOf": [
+        { "$ref": "common.schema.json#/$defs/validatedCertificateRef" },
+        { "properties": { "certificate_kind": { "enum": ["safety_inductive_invariant", "symbolic_reachable_fixed_point", "proved_completeness_threshold"] } }, "required": ["certificate_kind"] }
+      ]
+    },
+    "queryDisposition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["query_id", "operation_id", "disposition", "retained_mapping"],
+          "properties": {
+            "query_id": { "$ref": "common.schema.json#/$defs/identifier" },
+            "operation_id": { "$ref": "common.schema.json#/$defs/identifier" },
+            "disposition": { "const": "mapped" },
+            "retained_mapping": { "$ref": "#/$defs/mapping" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["query_id", "operation_id", "disposition", "base_disposition", "retained_mapping", "validated_reachability_certificate"],
+          "properties": {
+            "query_id": { "$ref": "common.schema.json#/$defs/identifier" },
+            "operation_id": { "$ref": "common.schema.json#/$defs/identifier" },
+            "disposition": { "const": "unreachable_with_proof" },
+            "base_disposition": { "const": "mapped" },
+            "retained_mapping": { "$ref": "#/$defs/mapping" },
+            "validated_reachability_certificate": { "$ref": "#/$defs/validatedReachabilityCertificateRef" }
+          }
+        }
+      ]
+    },
+    "validatedCoverageCertificateRef": {
+      "allOf": [
+        { "$ref": "common.schema.json#/$defs/validatedCertificateRef" },
+        { "properties": { "certificate_kind": { "const": "symbolic_coverage_equivalence" } }, "required": ["certificate_kind"] }
+      ]
+    }
+  }
+}

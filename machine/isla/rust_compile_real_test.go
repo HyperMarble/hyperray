@@ -34,6 +34,7 @@ func compileRustExecutable(t *testing.T, source string) []byte {
 	if err != nil {
 		t.Fatal(err)
 	}
+	captureRustELF(t, content)
 	return content
 }
 

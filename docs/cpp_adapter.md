@@ -11,10 +11,14 @@ Every measurement in this document was produced on 2026-09-02 on macOS 27.0
 Docker image `padhi/loopinvgen`. Nothing here is cited from memory. Where a
 claim is untested, it says so.
 
-The subject is `replay_reader.cpp` — a C++ transliteration of the noodles-296
-`ReplayReader` patch that `rust_adapter.md` measured, carrying the same defect
-(`prefix.size() - position` on unsigned types) so the two documents can be read
-against each other.
+The stored subject is `cpp/replay_reader.cpp` — a C++ transliteration of the
+noodles-296 `ReplayReader` patch that `rust_adapter.md` measured. It carries the
+same defect (`prefix.size() - position` on unsigned types), so the two documents
+can be read against each other.
+
+The `cpp_adapter_artifacts` directory separates stored source by language.
+The `cpp` directory contains C++ subjects. The `python` directory contains the
+research tools. The manifest, measured output, and SyGuS input remain data.
 
 ---
 

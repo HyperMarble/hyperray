@@ -14,8 +14,11 @@ only what is specific to Hyperray. Where the two disagree, `AGENTS.md` wins.
   folder with the same name.
 - No function over 40 lines. No nesting deeper than 3 levels. When either
   limit is hit, split the function. Never re-indent to dodge it.
-- Same file names in all four adapters. `shape.rs`, `shape.cpp`,
-  `shape.go`, `shape.py` do the same job.
+- The five language adapters use separate directories: `adapters/rust/`,
+  `adapters/c/`, `adapters/cpp/`, `adapters/go/`, and `adapters/python/`.
+  C and C++ do not share production source files.
+- Equivalent stage files do the same job in every adapter. Their file
+  extensions and surface syntax follow the language that owns the directory.
 - Names are full words. `prefix_len`, not `p`. A name says the job, so the
   body needs no comment.
 

@@ -93,8 +93,8 @@ The adapter holds no rule about Rust. Everything above is a call.
 (`compiler_interface.rs`: every query goes through thread-local state). It
 cannot be called from ordinary code. So stage 1 gains one small program.
 
-**D1 (needs your yes).** A new binary `mir-dump` lives in the Hyperray repo
-at `tools/mir-dump/`, with its own `rust-toolchain.toml` pinning
+**D1 (accepted).** A new binary `mir-dump` lives in the Rust adapter
+at `adapters/rust/tools/mir-dump/`, with its own `rust-toolchain.toml` pinning
 `nightly-2026-08-21` and components `rustc-dev, rust-src`. It is ~150 lines
 and it is *our* code, which is why it sits in the repo — unlike Kani and
 Charon, which stay outside it. It compiles the crate, walks
@@ -128,7 +128,7 @@ untouched by this change.
 
 Who knows: `rustc_public`.
 
-1. Build the crate with `RUSTC=mir-dump`, `--all-features`.
+1. Build the crate through the compiler wrapper with an explicit feature selection.
 2. In `after_analysis`, walk `all_local_items()`.
 3. For each item write: `name()`, `kind()`, `span().get_filename()`,
    `span().get_lines()`, and whether `body()` is `Some`.
@@ -140,6 +140,9 @@ Who knows: `rustc_public`.
 with `kind() == Fn` reports whether it has a body. No item is written twice.
 
 **Proof:** (not built)
+
+The current compiler selection contract is in `docs/compiler-selection.md`.
+Enabling every feature does not cover every build. Some features conflict.
 
 ### Phase C — join by file and line
 
@@ -180,7 +183,8 @@ inside its parent's span.
 
 ## 7. Build order
 
-1. `tools/mir-dump` — the 4 fields of Phase B, one JSON file. (D1 first.)
+1. `adapters/rust/tools/mir-dump` — the 4 fields of Phase B, one JSON file.
+   (D1 first.)
 2. `extract/mir.rs` — serde structs for that file, replacing `ullbc.rs`.
 3. `extract/seen.rs` — swap the reader; `join.rs` unchanged.
 4. Delete `extract/charon.rs`, `refusal.rs`, `ullbc.rs`; drop `Refused` from

@@ -33,15 +33,6 @@ func TestAdapterSourceOwnership(t *testing.T) {
 	}
 }
 
-func TestSailCatalogSourceOwnership(t *testing.T) {
-	failures, err := sourceOwnershipFailures("../tools/sail-catalog", sourceOwners)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(failures) != 0 {
-		t.Errorf("source ownership errors:\n%s", strings.Join(failures, "\n"))
-	}
-}
 
 func sourceOwnershipFailures(root string, owners map[string]map[string]bool) ([]string, error) {
 	var failures []string

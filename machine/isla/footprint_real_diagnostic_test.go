@@ -16,7 +16,7 @@ func TestRealFootprintRejectsUnclassifiedDiagnostic(t *testing.T) {
 		t.Fatalf("NewFootprintEngine() error = %v", err)
 	}
 	architecture := realArtifact(t, "HYPERRAY_SAIL_IR")
-	configuration := realArtifact(t, "HYPERRAY_ISLA_CONFIG")
+	configuration := realUnknownRegisterConfiguration(t)
 	release := footprintRelease(t, engine, architecture, configuration)
 	instructions := []machine.Instruction{
 		{Address: 0x1000, Bytes: []byte{0x93, 0x02, 0x30, 0x00}},

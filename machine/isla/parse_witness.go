@@ -2,46 +2,39 @@
 // It must reject a counterexample without a state.
 package isla
 
-import (
-	"strconv"
-	"strings"
-)
+import "strings"
 
 func witnessCounts(lines []string) (uint64, uint64, error) {
+	var positive, negative uint64
+	found := false
 	for index := range lines {
 		line := lines[index]
-		fields := strings.Fields(line)
-		if len(fields) != 4 || fields[0] != "Positive:" || fields[2] != "Negative:" {
+		if !strings.HasPrefix(line, "Positive:") {
 			continue
 		}
-		positive, firstError := strconv.ParseUint(fields[1], 10, 64)
-		negative, secondError := strconv.ParseUint(fields[3], 10, 64)
-		if firstError != nil || secondError != nil {
+		parsedPositive, parsedNegative, valid := canonicalCountLine(line)
+		if !valid || found {
 			return 0, 0, engineError(ProtocolError, "witnesses", line)
 		}
-		return positive, negative, nil
+		positive = parsedPositive
+		negative = parsedNegative
+		found = true
 	}
-	return 0, 0, engineError(ProtocolError, "witnesses", "missing counts")
+	if !found || positive > ^uint64(0)-negative || positive+negative == 0 {
+		return 0, 0, engineError(ProtocolError, "witnesses", "missing or invalid counts")
+	}
+	return positive, negative, nil
 }
 
 func resultState(lines []string, counterexamples uint64, otherCandidates uint64) (string, error) {
 	if counterexamples == 0 {
 		return "", nil
 	}
-	if otherCandidates != 0 {
-		return "", engineError(ResultError, "counterexample", "Herd output does not identify the allowed state")
+	rows, err := candidateRows(lines, counterexamples, otherCandidates)
+	if err != nil {
+		return "", err
 	}
-	for index, line := range lines {
-		if !strings.HasPrefix(line, "States ") || index+1 >= len(lines) {
-			continue
-		}
-		state := strings.TrimSpace(lines[index+1])
-		if state == "" || state == "???;" {
-			return "", engineError(ProtocolError, "counterexample", "missing state")
-		}
-		return state, nil
-	}
-	return "", engineError(ProtocolError, "counterexample", "missing states")
+	return identifiedCounterexample(rows, counterexamples, otherCandidates)
 }
 
 func consistentResult(status string, counterexamples uint64) error {

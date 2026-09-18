@@ -1,0 +1,14 @@
+{
+  "artifact_type": "hyperray_result",
+  "schema_version": 2,
+  "artifact_id": "result.error.verdict.fixture",
+  "result_id": "result.error.verdict",
+  "result_kind": "engine_error",
+  "status": "engine_error",
+  "verdict": "PROVED",
+  "stage": "proof",
+  "cause": { "code": "proof_engine_timeout", "message": "The proof engine reached its time limit." },
+  "missing_references": [],
+  "artifact_references": [],
+  "applicable_tools": []
+}

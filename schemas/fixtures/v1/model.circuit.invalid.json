@@ -1,0 +1,29 @@
+{
+  "artifact_type": "hyperray_model",
+  "schema_version": 1,
+  "artifact_id": "model.circuit.fixture",
+  "model_id": "model.circuit",
+  "boundary_artifact": { "artifact_id": "boundary", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+  "executable_image": { "artifact_id": "image", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+  "semantics": {
+    "target_instruction": { "artifact_id": "semantics.target", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "memory_model": { "artifact_id": "semantics.memory", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "runtime": { "artifact_id": "semantics.runtime", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "scheduler": { "artifact_id": "semantics.scheduler", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "environment": { "artifact_id": "semantics.environment", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }
+  },
+  "requirement_artifacts": [{ "artifact_id": "requirement", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }],
+  "encoding": {
+    "kind": "sequential_circuit",
+    "encoding_version": 1,
+    "state_bits": 1,
+    "nondeterministic_input_bits": 1,
+    "state_layout": [{ "component_id": "pc", "component_class": "machine_control", "first_bit": 0, "bit_count": 1, "finite_domain_id": "pc.domain" }],
+    "initial_state_circuit": { "circuit_kind": "initial_state", "format": "hyperray_boolean_network.v1", "artifact": { "artifact_id": "ir.initial", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }, "interface_sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "next_state_circuit": { "circuit_kind": "next_state", "format": "hyperray_boolean_network.v1", "artifact": { "artifact_id": "ir.next", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }, "interface_sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "label_circuit": { "circuit_kind": "labels", "format": "hyperray_boolean_network.v1", "artifact": { "artifact_id": "ir.labels", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }, "interface_sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "observation_circuit": { "circuit_kind": "observations", "format": "hyperray_boolean_network.v1", "artifact": { "artifact_id": "ir.observations", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }, "interface_sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "root_selection_circuit": { "circuit_kind": "root_selection", "format": "hyperray_boolean_network.v1", "artifact": { "artifact_id": "ir.roots", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }, "interface_sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "lowering_certificate": { "artifact_id": "certificate.lowering", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }
+  }
+}

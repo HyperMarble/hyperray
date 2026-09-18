@@ -9,6 +9,7 @@ type herdResult struct {
 	candidates          uint64
 	counterexamples     uint64
 	counterexampleState string
+	terminalEvidence    []TerminalEvidence
 }
 
 func parseHerdResult(output string, diagnostics string) (herdResult, error) {
@@ -21,6 +22,15 @@ func parseHerdResult(output string, diagnostics string) (herdResult, error) {
 	if err != nil {
 		return herdResult{}, err
 	}
+	rows, err := candidateRows(lines, positive, negative)
+	if err != nil {
+		return herdResult{}, err
+	}
+	if positive == 0 {
+		if err := forbiddenRows(rows); err != nil {
+			return herdResult{}, err
+		}
+	}
 	state, err := resultState(lines, positive, negative)
 	if err != nil {
 		return herdResult{}, err
@@ -28,7 +38,12 @@ func parseHerdResult(output string, diagnostics string) (herdResult, error) {
 	if err := consistentResult(status, positive); err != nil {
 		return herdResult{}, err
 	}
-	return herdResult{name: name, candidates: positive + negative, counterexamples: positive, counterexampleState: state}, nil
+	candidates := positive + negative
+	terminalEvidence, err := parseTerminalEvidence(lines, candidates)
+	if err != nil {
+		return herdResult{}, err
+	}
+	return herdResult{name: name, candidates: candidates, counterexamples: positive, counterexampleState: state, terminalEvidence: terminalEvidence}, nil
 }
 
 func resultHeader(lines []string, diagnostics string) (string, string, error) {

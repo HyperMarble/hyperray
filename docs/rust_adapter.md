@@ -554,10 +554,10 @@ formatting problem — plan must know the budget when it selects rows.
 Only the two ends are language-specific. The manifest and everything from
 stage 5 onward is shared.
 
-The other three adapters now exist and were measured the same way this one
-was: `cpp_adapter.md`, `go_adapter.md`, `python_adapter.md` (2026-09-02). This
-table is superseded by them wherever they disagree — two cells below were
-written here from reasoning and were **wrong**, corrected in place:
+The C, C++, Go, and Python design documents record prior measurements. Their
+production adapter directories do not exist yet. Each implementation will
+live in its own directory under `adapters/`. This table is historical adapter
+research. It does not establish implementation or proof coverage:
 
 | stage | Rust | Python | C++ | Go |
 |---|---|---|---|---|

@@ -1,0 +1,464 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hyperray.dev/schemas/v1/coverage.schema.json",
+  "title": "Hyperray semantic coverage certificate",
+  "description": "This schema validates coverage evidence shape. Only an independent coverage checker can prove the recorded equalities and reference consistency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "artifact_id",
+    "coverage_id",
+    "boundary_id",
+    "model_id",
+    "artifact_digests",
+    "exact_counts",
+    "compiler_inventory",
+    "forward_reconciliation",
+    "reverse_reconciliation",
+    "root_coverage",
+    "query_root_selections",
+    "query_operation_dispositions",
+    "certificate"
+  ],
+  "properties": {
+    "artifact_type": { "const": "hyperray_semantic_coverage" },
+    "schema_version": { "const": 1 },
+    "artifact_id": { "$ref": "#/$defs/identifier" },
+    "coverage_id": { "$ref": "#/$defs/identifier" },
+    "boundary_id": { "$ref": "#/$defs/identifier" },
+    "model_id": { "$ref": "#/$defs/identifier" },
+    "artifact_digests": { "$ref": "#/$defs/artifactDigests" },
+    "exact_counts": { "$ref": "#/$defs/exactCounts" },
+    "compiler_inventory": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/inventoryOperation" }
+    },
+    "forward_reconciliation": { "$ref": "#/$defs/forwardReconciliation" },
+    "reverse_reconciliation": { "$ref": "#/$defs/reverseReconciliation" },
+    "root_coverage": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/rootCoverage" }
+    },
+    "query_root_selections": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/queryRootSelection" }
+    },
+    "query_operation_dispositions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/queryOperationDisposition" }
+    },
+    "certificate": { "$ref": "#/$defs/certificate" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "sha256"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/identifier" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "artifactDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boundary",
+        "model",
+        "compiler_inventory",
+        "compiler_output",
+        "executable_image",
+        "target_semantics",
+        "environment_semantics",
+        "root_catalog",
+        "requirements"
+      ],
+      "properties": {
+        "boundary": { "$ref": "#/$defs/artifactRef" },
+        "model": { "$ref": "#/$defs/artifactRef" },
+        "compiler_inventory": { "$ref": "#/$defs/artifactRef" },
+        "compiler_output": { "$ref": "#/$defs/artifactRef" },
+        "executable_image": { "$ref": "#/$defs/artifactRef" },
+        "target_semantics": { "$ref": "#/$defs/artifactRef" },
+        "environment_semantics": { "$ref": "#/$defs/artifactRef" },
+        "root_catalog": { "$ref": "#/$defs/artifactRef" },
+        "requirements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifactRef" } }
+      }
+    },
+    "exactCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compiler_inventory_operations",
+        "mapped_operations",
+        "eliminated_operations",
+        "compiler_output_records",
+        "image_instructions",
+        "semantic_cases",
+        "model_transitions",
+        "environment_actions",
+        "roots",
+        "query_root_selections",
+        "query_reachability_annotations"
+      ],
+      "properties": {
+        "compiler_inventory_operations": { "$ref": "#/$defs/count" },
+        "mapped_operations": { "$ref": "#/$defs/count" },
+        "eliminated_operations": { "$ref": "#/$defs/count" },
+        "compiler_output_records": { "$ref": "#/$defs/count" },
+        "image_instructions": { "$ref": "#/$defs/count" },
+        "semantic_cases": { "$ref": "#/$defs/count" },
+        "model_transitions": { "$ref": "#/$defs/count" },
+        "environment_actions": { "$ref": "#/$defs/count" },
+        "roots": { "$ref": "#/$defs/count" },
+        "query_root_selections": { "$ref": "#/$defs/count" },
+        "query_reachability_annotations": { "$ref": "#/$defs/count" }
+      }
+    },
+    "count": { "type": "integer", "minimum": 0 },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer", "source_artifact", "source_locator"],
+      "properties": {
+        "producer": { "$ref": "#/$defs/toolIdentity" },
+        "source_artifact": { "$ref": "#/$defs/artifactRef" },
+        "source_locator": { "type": "string", "minLength": 1 }
+      }
+    },
+    "toolIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "executable_sha256", "arguments"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "executable_sha256": { "$ref": "#/$defs/sha256" },
+        "arguments": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "inventoryOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "kind", "concrete_instance_id", "provenance"],
+      "properties": {
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["source", "runtime", "compiler_generated", "linker_generated", "startup", "declared_synthetic"] },
+        "concrete_instance_id": { "$ref": "#/$defs/identifier" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "mappedPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler_output_ids", "image_instruction_ids", "semantic_case_ids", "transition_ids", "provenance_edge_ids"],
+      "properties": {
+        "compiler_output_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "image_instruction_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "semantic_case_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "transition_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "mappedDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "operation_id", "mapping"],
+      "properties": {
+        "disposition": { "const": "mapped" },
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "mapping": { "$ref": "#/$defs/mappedPath" }
+      }
+    },
+    "eliminatedDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "operation_id", "elimination_record_id", "elimination_proof", "equivalent_surviving_transition_ids", "provenance_edge_ids"],
+      "properties": {
+        "disposition": { "const": "eliminated_with_proof" },
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "elimination_record_id": { "$ref": "#/$defs/identifier" },
+        "elimination_proof": { "$ref": "#/$defs/artifactRef" },
+        "equivalent_surviving_transition_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "baseDisposition": {
+      "oneOf": [
+        { "$ref": "#/$defs/mappedDisposition" },
+        { "$ref": "#/$defs/eliminatedDisposition" }
+      ]
+    },
+    "environmentPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment_action_id", "outcome_id", "semantic_case_ids", "transition_ids", "provenance_edge_ids"],
+      "properties": {
+        "environment_action_id": { "$ref": "#/$defs/identifier" },
+        "outcome_id": { "$ref": "#/$defs/identifier" },
+        "semantic_case_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+        "transition_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "provenanceEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edge_id", "from", "to", "producer"],
+      "properties": {
+        "edge_id": { "$ref": "#/$defs/identifier" },
+        "from": { "$ref": "#/$defs/provenanceNode" },
+        "to": { "$ref": "#/$defs/provenanceNode" },
+        "producer": { "$ref": "#/$defs/toolIdentity" }
+      }
+    },
+    "provenanceNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "node_id"],
+      "properties": {
+        "kind": { "enum": ["compiler_operation", "compiler_output", "image_instruction", "semantic_case", "model_transition", "environment_action", "scheduler_choice"] },
+        "node_id": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "forwardReconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_dispositions", "environment_paths", "provenance_edges"],
+      "properties": {
+        "operation_dispositions": { "type": "array", "items": { "$ref": "#/$defs/baseDisposition" } },
+        "environment_paths": { "type": "array", "items": { "$ref": "#/$defs/environmentPath" } },
+        "provenance_edges": { "type": "array", "items": { "$ref": "#/$defs/provenanceEdge" } }
+      }
+    },
+    "compilerOutputReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler_output_id", "operation_ids", "provenance_edge_ids"],
+      "properties": {
+        "compiler_output_id": { "$ref": "#/$defs/identifier" },
+        "operation_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "imageInstructionReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["image_instruction_id", "operation_ids", "semantic_case_ids", "transition_ids", "provenance_edge_ids"],
+      "properties": {
+        "image_instruction_id": { "$ref": "#/$defs/identifier" },
+        "operation_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+        "semantic_case_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+        "transition_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "semanticCaseReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic_case_id", "origin", "transition_ids", "semantics_artifact", "provenance_edge_ids"],
+      "properties": {
+        "semantic_case_id": { "$ref": "#/$defs/identifier" },
+        "origin": { "$ref": "#/$defs/semanticOrigin" },
+        "transition_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+        "semantics_artifact": { "$ref": "#/$defs/artifactRef" },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "semanticOrigin": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "image_instruction_ids"],
+          "properties": {
+            "kind": { "const": "machine_instruction" },
+            "image_instruction_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "environment_action_id", "outcome_id"],
+          "properties": {
+            "kind": { "const": "environment_action" },
+            "environment_action_id": { "$ref": "#/$defs/identifier" },
+            "outcome_id": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scheduler_choice_id"],
+          "properties": {
+            "kind": { "const": "scheduler_choice" },
+            "scheduler_choice_id": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "synthetic_operation_id"],
+          "properties": {
+            "kind": { "const": "declared_synthetic" },
+            "synthetic_operation_id": { "$ref": "#/$defs/identifier" }
+          }
+        }
+      ]
+    },
+    "transitionReverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transition_id", "semantic_case_id", "origin", "provenance_edge_ids"],
+      "properties": {
+        "transition_id": { "$ref": "#/$defs/identifier" },
+        "semantic_case_id": { "$ref": "#/$defs/identifier" },
+        "origin": { "$ref": "#/$defs/semanticOrigin" },
+        "provenance_edge_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "reverseReconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler_outputs", "image_instructions", "semantic_cases", "transitions"],
+      "properties": {
+        "compiler_outputs": { "type": "array", "items": { "$ref": "#/$defs/compilerOutputReverse" } },
+        "image_instructions": { "type": "array", "items": { "$ref": "#/$defs/imageInstructionReverse" } },
+        "semantic_cases": { "type": "array", "items": { "$ref": "#/$defs/semanticCaseReverse" } },
+        "transitions": { "type": "array", "items": { "$ref": "#/$defs/transitionReverse" } }
+      }
+    },
+    "entryCoverage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "state_ids"],
+          "properties": {
+            "kind": { "const": "explicit_states" },
+            "state_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "entry_generator", "exact_domain_proof"],
+          "properties": {
+            "kind": { "const": "generator_with_proof" },
+            "entry_generator": { "$ref": "#/$defs/artifactRef" },
+            "exact_domain_proof": { "$ref": "#/$defs/artifactRef" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "impossible_precondition_proof"],
+          "properties": {
+            "kind": { "const": "impossible_precondition_with_proof" },
+            "impossible_precondition_proof": { "$ref": "#/$defs/artifactRef" }
+          }
+        }
+      ]
+    },
+    "rootCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root_id", "root_kind", "entry_coverage", "provenance"],
+      "properties": {
+        "root_id": { "$ref": "#/$defs/identifier" },
+        "root_kind": { "enum": ["program_root", "function_root"] },
+        "entry_coverage": { "$ref": "#/$defs/entryCoverage" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "queryRootSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "requirement_id", "selected_root_ids", "selection_proof"],
+      "properties": {
+        "query_id": { "$ref": "#/$defs/identifier" },
+        "requirement_id": { "$ref": "#/$defs/identifier" },
+        "selected_root_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "selection_proof": { "$ref": "#/$defs/artifactRef" }
+      }
+    },
+    "queryOperationDisposition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["query_id", "operation_id", "disposition", "retained_mapping"],
+          "properties": {
+            "query_id": { "$ref": "#/$defs/identifier" },
+            "operation_id": { "$ref": "#/$defs/identifier" },
+            "disposition": { "const": "mapped" },
+            "retained_mapping": { "$ref": "#/$defs/mappedPath" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["query_id", "operation_id", "disposition", "base_disposition", "retained_mapping", "reachability_proof"],
+          "properties": {
+            "query_id": { "$ref": "#/$defs/identifier" },
+            "operation_id": { "$ref": "#/$defs/identifier" },
+            "disposition": { "const": "unreachable_with_proof" },
+            "base_disposition": { "const": "mapped" },
+            "retained_mapping": { "$ref": "#/$defs/mappedPath" },
+            "reachability_proof": { "$ref": "#/$defs/artifactRef" }
+          }
+        }
+      ]
+    },
+    "certificate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checker", "checker_result", "status", "equalities"],
+      "properties": {
+        "checker": { "$ref": "#/$defs/toolIdentity" },
+        "checker_result": { "$ref": "#/$defs/artifactRef" },
+        "status": { "const": "accepted" },
+        "equalities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "inventory_dispositions",
+            "mapped_forward_paths",
+            "eliminated_equivalence",
+            "compiler_output_reverse_map",
+            "image_instruction_reverse_map",
+            "semantic_case_reverse_map",
+            "transition_reverse_map",
+            "exact_entry_roots",
+            "query_root_applicability",
+            "finite_domains",
+            "artifact_digest_resolution"
+          ],
+          "properties": {
+            "inventory_dispositions": { "const": "accepted" },
+            "mapped_forward_paths": { "const": "accepted" },
+            "eliminated_equivalence": { "const": "accepted" },
+            "compiler_output_reverse_map": { "const": "accepted" },
+            "image_instruction_reverse_map": { "const": "accepted" },
+            "semantic_case_reverse_map": { "const": "accepted" },
+            "transition_reverse_map": { "const": "accepted" },
+            "exact_entry_roots": { "const": "accepted" },
+            "query_root_applicability": { "const": "accepted" },
+            "finite_domains": { "const": "accepted" },
+            "artifact_digest_resolution": { "const": "accepted" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "artifact_type": "hyperray_result",
+  "schema_version": 2,
+  "artifact_id": "result.safety.fixture",
+  "result_id": "result.safety",
+  "result_kind": "DISPROVED.safety",
+  "verdict": "DISPROVED",
+  "claim": {
+    "requirement": { "artifact_id": "requirement", "artifact_type": "hyperray_requirement", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "boundary": { "artifact_id": "boundary", "artifact_type": "hyperray_boundary", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "model": { "artifact_id": "model", "artifact_type": "hyperray_model", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "model_encoding": "sequential_circuit",
+    "executable_image": { "artifact_id": "image", "artifact_type": "executable_image", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "compiler_inventory": { "artifact_id": "inventory", "artifact_type": "compiler_inventory", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "semantics": [{ "artifact_id": "semantics", "artifact_type": "semantic_spec", "schema_version": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }],
+    "coverage": { "artifact_id": "coverage", "artifact_type": "hyperray_semantic_coverage", "schema_version": 2, "sha256": "0000000000000000000000000000000000000000000000000000000000000000" },
+    "trust_assumptions": [],
+    "query_id": "query.safety",
+    "selected_root_ids": ["root.main"]
+  },
+  "witness": {
+    "kind": "safety",
+    "selected_root_id": "root.main",
+    "path": { "kind": "circuit_trace", "initial_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" }, "steps": [] },
+    "applicable_state": { "encoding": "binary_msb_first", "width": 2, "value": "00" },
+    "violation": { "kind": "state", "path_position": 0, "state": { "encoding": "binary_msb_first", "width": 2, "value": "00" } },
+    "cause": { "predicate_id": "predicate.safe", "monitor_state_id": "monitor.bad", "message": "The initial state violates the safety predicate." },
+    "validated_replay_certificate": { "artifact_id": "certificate.replay.safety", "artifact_type": "hyperray_validated_certificate", "schema_version": 2, "certificate_kind": "witness_replay", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }
+  }
+}

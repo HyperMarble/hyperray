@@ -42,7 +42,7 @@ func TestArtifactRemovalIsObservable(t *testing.T) {
 	if err := os.Remove(path); err != nil {
 		t.Fatalf("os.Remove() error = %v", err)
 	}
-	request, err := isla.NewRequest(artifact, artifact, artifact, artifact, 1, 1)
+	request, err := isla.NewRequest(artifact, artifact, artifact, artifact, 1, 1, 4096)
 	if err == nil {
 		t.Errorf("NewRequest() = %#v, nil error", request)
 	}

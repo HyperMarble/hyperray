@@ -17,19 +17,27 @@ func TestPublicRequest(t *testing.T) {
 
 func TestRequestRejectsZeroLimits(t *testing.T) {
 	artifact := testArtifact(t, "input")
-	request, err := isla.NewRequest(artifact, artifact, artifact, artifact, 0, 1)
+	request, err := isla.NewRequest(artifact, artifact, artifact, artifact, 0, 1, 1)
 	if err == nil {
 		t.Errorf("NewRequest() = %#v, nil error", request)
+	}
+	request, err = isla.NewRequest(artifact, artifact, artifact, artifact, 1, ^uint64(0), 1)
+	if err == nil {
+		t.Errorf("NewRequest() with excessive time = %#v, nil error", request)
 	}
 }
 
 func testRequest(t *testing.T, program string) isla.Request {
+	return testRequestWithLimits(t, program, 3, 4096)
+}
+
+func testRequestWithLimits(t *testing.T, program string, timeLimit uint64, outputLimit uint64) isla.Request {
 	t.Helper()
 	architecture := testArtifact(t, "architecture")
 	configuration := testArtifact(t, "configuration")
 	memoryModel := testArtifact(t, "memory-model")
 	programArtifact := testArtifact(t, program)
-	request, err := isla.NewRequest(architecture, configuration, memoryModel, programArtifact, 2, 3)
+	request, err := isla.NewRequest(architecture, configuration, memoryModel, programArtifact, 2, timeLimit, outputLimit)
 	if err != nil {
 		t.Fatalf("NewRequest() error = %v", err)
 	}

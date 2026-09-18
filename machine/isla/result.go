@@ -12,24 +12,27 @@ const (
 
 // Evidence binds a proposal to its engine, inputs, limits, and raw result.
 type Evidence struct {
-	Tool                ToolIdentity `json:"tool"`
-	ArchitectureDigest  string       `json:"architecture_sha256"`
-	ConfigurationDigest string       `json:"configuration_sha256"`
-	MemoryModelDigest   string       `json:"memory_model_sha256"`
-	ProgramDigest       string       `json:"program_sha256"`
-	OutputDigest        string       `json:"output_sha256"`
-	PCVisitLimit        uint64       `json:"pc_visit_limit"`
-	TimeLimitSeconds    uint64       `json:"time_limit_seconds"`
-	ElapsedMilliseconds int64        `json:"elapsed_milliseconds"`
-	Diagnostics         string       `json:"diagnostics,omitempty"`
+	Tool                ToolIdentity            `json:"tool"`
+	ArchitectureDigest  string                  `json:"architecture_sha256"`
+	ConfigurationDigest string                  `json:"configuration_sha256"`
+	MemoryModelDigest   string                  `json:"memory_model_sha256"`
+	ProgramDigest       string                  `json:"program_sha256"`
+	OutputDigest        string                  `json:"output_sha256"`
+	PCVisitLimit        uint64                  `json:"pc_visit_limit"`
+	TimeLimitSeconds    uint64                  `json:"time_limit_seconds"`
+	MaximumOutputBytes  uint64                  `json:"maximum_output_bytes"`
+	ElapsedMilliseconds int64                   `json:"elapsed_milliseconds"`
+	Diagnostics         string                  `json:"diagnostics,omitempty"`
+	Dispositions        []DiagnosticDisposition `json:"diagnostic_dispositions,omitempty"`
 }
 
 // Proposal is an Isla result that still requires Hyperray coverage evidence.
 type Proposal struct {
-	Status              ProposalStatus `json:"status"`
-	QueryName           string         `json:"query_name"`
-	CandidateCount      uint64         `json:"candidate_count"`
-	CounterexampleCount uint64         `json:"counterexample_count"`
-	CounterexampleState string         `json:"counterexample_state,omitempty"`
-	Evidence            Evidence       `json:"evidence"`
+	Status              ProposalStatus     `json:"status"`
+	QueryName           string             `json:"query_name"`
+	CandidateCount      uint64             `json:"candidate_count"`
+	CounterexampleCount uint64             `json:"counterexample_count"`
+	CounterexampleState string             `json:"counterexample_state,omitempty"`
+	TerminalEvidence    []TerminalEvidence `json:"terminal_evidence,omitempty"`
+	Evidence            Evidence           `json:"evidence"`
 }

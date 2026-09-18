@@ -1,0 +1,222 @@
+{
+  "artifact_type": "hyperray_certificate_proposal",
+  "schema_version": 2,
+  "artifact_id": "certificate.lowering.fixture",
+  "certificate_id": "certificate.lowering",
+  "certificate_kind": "circuit_lowering_equivalence",
+  "subject_artifacts": [
+    {
+      "artifact_id": "model",
+      "artifact_type": "hyperray_model",
+      "schema_version": 2,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "producer": {
+    "name": "proof-checker",
+    "version": "1.0",
+    "executable_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "arguments": [
+      "--strict"
+    ]
+  },
+  "evidence": {
+    "source_semantics": [
+      {
+        "artifact_id": "semantics",
+        "artifact_type": "semantic_spec",
+        "schema_version": 1,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ],
+    "target_model_ir": {
+      "artifact_id": "network.btor2",
+      "artifact_type": "model_ir",
+      "schema_version": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "interface_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "proof_records": {
+      "state_encoding": {
+        "obligation_id": "state.encoding",
+        "statement_artifact": {
+          "artifact_id": "obligation.state.encoding",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.state",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "initial": {
+        "obligation_id": "initial",
+        "statement_artifact": {
+          "artifact_id": "obligation.initial",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.initial",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "choice_validity": {
+        "obligation_id": "choice.validity",
+        "statement_artifact": {
+          "artifact_id": "obligation.choice.validity",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.choice",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "step_enabled": {
+        "obligation_id": "step.enabled",
+        "statement_artifact": {
+          "artifact_id": "obligation.step.enabled",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.enabled",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "next_state": {
+        "obligation_id": "next.state",
+        "statement_artifact": {
+          "artifact_id": "obligation.next.state",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.next",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "effects": {
+        "obligation_id": "effects",
+        "statement_artifact": {
+          "artifact_id": "obligation.effects",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.effects",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "terminal_labels": {
+        "obligation_id": "terminal.labels",
+        "statement_artifact": {
+          "artifact_id": "obligation.terminal.labels",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.terminals",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "observations": {
+        "obligation_id": "observations",
+        "statement_artifact": {
+          "artifact_id": "obligation.observations",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.observations",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "roots": {
+        "obligation_id": "roots",
+        "statement_artifact": {
+          "artifact_id": "obligation.roots",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.roots",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "requirement_labels": {
+        "obligation_id": "requirement.labels",
+        "statement_artifact": {
+          "artifact_id": "obligation.requirement.labels",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.requirement",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "acceptance": {
+        "obligation_id": "acceptance",
+        "statement_artifact": {
+          "artifact_id": "obligation.acceptance",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.acceptance",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "fairness": {
+        "obligation_id": "fairness",
+        "statement_artifact": {
+          "artifact_id": "obligation.fairness",
+          "artifact_type": "proof_obligation",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "proof_artifact": {
+          "artifact_id": "proof.fairness",
+          "artifact_type": "proof_evidence",
+          "schema_version": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    }
+  }
+}

@@ -2,11 +2,7 @@
 // They copy caller data before any external process starts.
 package isla
 
-import (
-	"fmt"
-
-	"github.com/HyperMarble/hyperray/machine"
-)
+import "github.com/HyperMarble/hyperray/machine"
 
 // FootprintRequest contains one bounded instruction-coverage operation.
 type FootprintRequest struct {
@@ -15,12 +11,20 @@ type FootprintRequest struct {
 	threadLimit       uint64
 	timeLimit         uint64
 	maximumOutputSize uint64
+	pcRegister        string
 }
 
 // NewFootprintRequest accepts identified model inputs and a finite inventory.
 func NewFootprintRequest(release FootprintRelease, instructions []machine.Instruction, threadLimit uint64, timeLimitSeconds uint64, maximumOutputBytes uint64) (FootprintRequest, error) {
+	return newFootprintRequest(release, instructions, threadLimit, timeLimitSeconds, maximumOutputBytes, "PC")
+}
+
+func newFootprintRequest(release FootprintRelease, instructions []machine.Instruction, threadLimit uint64, timeLimitSeconds uint64, maximumOutputBytes uint64, pcRegister string) (FootprintRequest, error) {
 	if threadLimit == 0 || timeLimitSeconds == 0 || maximumOutputBytes == 0 {
 		return FootprintRequest{}, engineError(InvalidInput, "footprint limits", "limits must be more than zero")
+	}
+	if pcRegister != "PC" && pcRegister != "_PC" {
+		return FootprintRequest{}, engineError(UnsupportedProfile, "footprint PC register", pcRegister)
 	}
 	copied, err := copyInstructions(instructions)
 	if err != nil {
@@ -28,7 +32,7 @@ func NewFootprintRequest(release FootprintRelease, instructions []machine.Instru
 	}
 	request := FootprintRequest{
 		release: release, instructions: copied, threadLimit: threadLimit,
-		timeLimit: timeLimitSeconds, maximumOutputSize: maximumOutputBytes,
+		timeLimit: timeLimitSeconds, maximumOutputSize: maximumOutputBytes, pcRegister: pcRegister,
 	}
 	if err := request.release.current(); err != nil {
 		return FootprintRequest{}, err
@@ -52,17 +56,4 @@ func copyInstructions(values []machine.Instruction) ([]machine.Instruction, erro
 		addresses[instruction.Address] = struct{}{}
 	}
 	return result, nil
-}
-
-func validateInstruction(instruction machine.Instruction, addresses map[uint64]struct{}) error {
-	if instruction.Address%2 != 0 {
-		return engineError(InvalidInput, "instruction", fmt.Sprintf("unaligned address %#x", instruction.Address))
-	}
-	if len(instruction.Bytes) != 2 && len(instruction.Bytes) != 4 {
-		return engineError(InvalidInput, "instruction", fmt.Sprintf("address %#x has %d bytes", instruction.Address, len(instruction.Bytes)))
-	}
-	if _, exists := addresses[instruction.Address]; exists {
-		return engineError(InvalidInput, "instruction", fmt.Sprintf("duplicate address %#x", instruction.Address))
-	}
-	return nil
 }

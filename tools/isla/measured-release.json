@@ -1,0 +1,13 @@
+{
+  "purpose": "Local measurement, not a trusted distribution manifest",
+  "date": "2026-09-05",
+  "upstream_commit": "7f6882b3f468fe34df38ae3ffc0aede5baa0e7d6",
+  "patch_sha256": "560e3916f6c2b8f5c4e4bc7d103a448f39eaab52bc09abcebeb48c0587a0b514",
+  "version": "v0.2.0/z3-5.1.0.0/candidate-status-v1",
+  "isla_axiomatic_sha256": "c5c6094848fe953f70e0af970fc6ecc142b0e934c2f762e6bdaa195a5992d3dd",
+  "isla_litmus_dump_sha256": "b488b7ef525b4fa285034a28f9d13ab2efc90dd74b6d6165be92115d1aa9528e",
+  "isla_footprint_sha256": "34b686076cc740bb3686ca8290fc5c111263dc106126fd00a59a1492f7041487",
+  "sail_ir_sha256": "f775491d50fd8cf3d8641545f3ac93bd7230899630be7534f59925fda4ba4113",
+  "configuration_sha256": "3a367ed417e668e558e0516a91823fe765d04ca4c0c38ae53dd65da2b2b0126a",
+  "memory_model_sha256": "34c8dea2e531f0e932f50d7638173f04f7df210122c143a761de94b0fb289995"
+}

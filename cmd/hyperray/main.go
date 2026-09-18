@@ -23,7 +23,6 @@ func newRootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
-	root.AddCommand(newProveCmd())
 	root.AddCommand(newObserveCmd())
 	root.AddCommand(newMachineCmd())
 	root.AddCommand(newVersionCmd())

@@ -13,7 +13,7 @@ import (
 	"github.com/HyperMarble/hyperray/machine/isla"
 )
 
-const realELFOutputLimitBytes = 8 * 1024 * 1024
+const realELFOutputLimitBytes = 16 * 1024 * 1024
 
 func TestRealLoadedELFHasEveryInstructionTrace(t *testing.T) {
 	image := realMachineImage(t)

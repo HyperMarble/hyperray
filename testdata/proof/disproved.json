@@ -1,0 +1,11 @@
+{
+  "coverage_path": "../../coverage/fixtures/complete.json",
+  "query": {
+    "root_ids": ["main-root"],
+    "requirement": {
+      "id": "no-work",
+      "kind": "safety",
+      "bad_state_ids": ["work"]
+    }
+  }
+}
