@@ -1,0 +1,421 @@
+{
+  "model": {
+    "states": [
+      {
+        "id": "start"
+      },
+      {
+        "id": "work"
+      },
+      {
+        "id": "environment"
+      }
+    ],
+    "transitions": [
+      {
+        "id": "compiled-step",
+        "from_state_id": "start",
+        "to_state_id": "work"
+      },
+      {
+        "id": "synthetic-step",
+        "from_state_id": "work",
+        "to_state_id": "work"
+      },
+      {
+        "id": "environment-step",
+        "from_state_id": "environment",
+        "to_state_id": "environment"
+      }
+    ]
+  },
+  "inventory": {
+    "functions": [
+      {
+        "id": "main"
+      },
+      {
+        "id": "worker"
+      }
+    ],
+    "roots": [
+      {
+        "id": "main-root",
+        "function_id": "main"
+      },
+      {
+        "id": "worker-root",
+        "function_id": "worker"
+      }
+    ],
+    "operations": [
+      {
+        "id": "compiled",
+        "function_id": "main",
+        "kind": "compiler",
+        "location": "main.go:10",
+        "disposition": "mapped"
+      },
+      {
+        "id": "synthetic",
+        "kind": "synthetic",
+        "location": "linker:startup",
+        "disposition": "mapped"
+      },
+      {
+        "id": "environment",
+        "function_id": "worker",
+        "kind": "environment",
+        "location": "clock:read",
+        "disposition": "mapped"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "artifact:compiler",
+        "sha256": "e996bb0ea465fae70d3e3c66b3b6e02d33d2f1eb76d5958720578b6cf359cc2e",
+        "content": "Y29tcGlsZXI="
+      },
+      {
+        "id": "artifact:image",
+        "sha256": "6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d",
+        "content": "aW1hZ2U="
+      },
+      {
+        "id": "artifact:semantics",
+        "sha256": "904b1fdcdeee067da93713d79673fe7cd3884165842e6eb3fb1855b0f4a4d1a9",
+        "content": "c2VtYW50aWNz"
+      },
+      {
+        "id": "artifact:root",
+        "sha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2",
+        "content": "cm9vdA=="
+      },
+      {
+        "id": "artifact:model",
+        "sha256": "9372c470eeadd5ecd9c3c74c2b3cb633f8e2f2fad799250a0f70d652b6b825e4",
+        "content": "bW9kZWw="
+      }
+    ],
+    "compiler_outputs": [
+      {
+        "id": "ssa:compiled",
+        "artifact": {
+          "artifact_id": "artifact:compiler",
+          "sha256": "e996bb0ea465fae70d3e3c66b3b6e02d33d2f1eb76d5958720578b6cf359cc2e"
+        }
+      }
+    ],
+    "image_instructions": [
+      {
+        "id": "instruction:1",
+        "artifact": {
+          "artifact_id": "artifact:image",
+          "sha256": "6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d"
+        }
+      }
+    ],
+    "semantic_rules": [
+      {
+        "id": "rule:add",
+        "artifact": {
+          "artifact_id": "artifact:semantics",
+          "sha256": "904b1fdcdeee067da93713d79673fe7cd3884165842e6eb3fb1855b0f4a4d1a9"
+        }
+      },
+      {
+        "id": "rule:startup",
+        "artifact": {
+          "artifact_id": "artifact:semantics",
+          "sha256": "904b1fdcdeee067da93713d79673fe7cd3884165842e6eb3fb1855b0f4a4d1a9"
+        }
+      },
+      {
+        "id": "rule:clock",
+        "artifact": {
+          "artifact_id": "artifact:semantics",
+          "sha256": "904b1fdcdeee067da93713d79673fe7cd3884165842e6eb3fb1855b0f4a4d1a9"
+        }
+      }
+    ],
+    "provenance_edges": [
+      {
+        "id": "edge:root-main-start",
+        "from": {
+          "kind": "root",
+          "id": "main-root"
+        },
+        "to": {
+          "kind": "model_state",
+          "id": "start"
+        },
+        "artifact": {
+          "artifact_id": "artifact:root",
+          "sha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2"
+        }
+      },
+      {
+        "id": "edge:root-main-work",
+        "from": {
+          "kind": "root",
+          "id": "main-root"
+        },
+        "to": {
+          "kind": "model_state",
+          "id": "work"
+        },
+        "artifact": {
+          "artifact_id": "artifact:root",
+          "sha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2"
+        }
+      },
+      {
+        "id": "edge:root-worker-environment",
+        "from": {
+          "kind": "root",
+          "id": "worker-root"
+        },
+        "to": {
+          "kind": "model_state",
+          "id": "environment"
+        },
+        "artifact": {
+          "artifact_id": "artifact:root",
+          "sha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2"
+        }
+      },
+      {
+        "id": "edge:compiled-output",
+        "from": {
+          "kind": "operation",
+          "id": "compiled"
+        },
+        "to": {
+          "kind": "compiler_output",
+          "id": "ssa:compiled"
+        },
+        "artifact": {
+          "artifact_id": "artifact:compiler",
+          "sha256": "e996bb0ea465fae70d3e3c66b3b6e02d33d2f1eb76d5958720578b6cf359cc2e"
+        }
+      },
+      {
+        "id": "edge:output-instruction",
+        "from": {
+          "kind": "compiler_output",
+          "id": "ssa:compiled"
+        },
+        "to": {
+          "kind": "image_instruction",
+          "id": "instruction:1"
+        },
+        "artifact": {
+          "artifact_id": "artifact:image",
+          "sha256": "6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d"
+        }
+      },
+      {
+        "id": "edge:instruction-add-rule",
+        "from": {
+          "kind": "image_instruction",
+          "id": "instruction:1"
+        },
+        "to": {
+          "kind": "semantic_rule",
+          "id": "rule:add"
+        },
+        "artifact": {
+          "artifact_id": "artifact:semantics",
+          "sha256": "904b1fdcdeee067da93713d79673fe7cd3884165842e6eb3fb1855b0f4a4d1a9"
+        }
+      },
+      {
+        "id": "edge:add-rule-transition",
+        "from": {
+          "kind": "semantic_rule",
+          "id": "rule:add"
+        },
+        "to": {
+          "kind": "model_transition",
+          "id": "compiled-step"
+        },
+        "artifact": {
+          "artifact_id": "artifact:model",
+          "sha256": "9372c470eeadd5ecd9c3c74c2b3cb633f8e2f2fad799250a0f70d652b6b825e4"
+        }
+      },
+      {
+        "id": "edge:synthetic-rule",
+        "from": {
+          "kind": "operation",
+          "id": "synthetic"
+        },
+        "to": {
+          "kind": "semantic_rule",
+          "id": "rule:startup"
+        },
+        "artifact": {
+          "artifact_id": "artifact:semantics",
+          "sha256": "904b1fdcdeee067da93713d79673fe7cd3884165842e6eb3fb1855b0f4a4d1a9"
+        }
+      },
+      {
+        "id": "edge:startup-rule-transition",
+        "from": {
+          "kind": "semantic_rule",
+          "id": "rule:startup"
+        },
+        "to": {
+          "kind": "model_transition",
+          "id": "synthetic-step"
+        },
+        "artifact": {
+          "artifact_id": "artifact:model",
+          "sha256": "9372c470eeadd5ecd9c3c74c2b3cb633f8e2f2fad799250a0f70d652b6b825e4"
+        }
+      },
+      {
+        "id": "edge:environment-rule",
+        "from": {
+          "kind": "operation",
+          "id": "environment"
+        },
+        "to": {
+          "kind": "semantic_rule",
+          "id": "rule:clock"
+        },
+        "artifact": {
+          "artifact_id": "artifact:semantics",
+          "sha256": "904b1fdcdeee067da93713d79673fe7cd3884165842e6eb3fb1855b0f4a4d1a9"
+        }
+      },
+      {
+        "id": "edge:clock-rule-transition",
+        "from": {
+          "kind": "semantic_rule",
+          "id": "rule:clock"
+        },
+        "to": {
+          "kind": "model_transition",
+          "id": "environment-step"
+        },
+        "artifact": {
+          "artifact_id": "artifact:model",
+          "sha256": "9372c470eeadd5ecd9c3c74c2b3cb633f8e2f2fad799250a0f70d652b6b825e4"
+        }
+      }
+    ],
+    "root_entries": [
+      {
+        "root_id": "main-root",
+        "state_ids": [
+          "start",
+          "work"
+        ],
+        "provenance_edge_ids": [
+          "edge:root-main-start",
+          "edge:root-main-work"
+        ]
+      },
+      {
+        "root_id": "worker-root",
+        "state_ids": [
+          "environment"
+        ],
+        "provenance_edge_ids": [
+          "edge:root-worker-environment"
+        ]
+      }
+    ],
+    "machine_bindings": [
+      {
+        "operation_id": "compiled",
+        "compiler_output_id": "ssa:compiled",
+        "instruction_id": "instruction:1",
+        "semantic_rule_id": "rule:add",
+        "transition_id": "compiled-step",
+        "operation_to_compiler_output_edge_id": "edge:compiled-output",
+        "compiler_output_to_instruction_edge_id": "edge:output-instruction",
+        "instruction_to_semantic_rule_edge_id": "edge:instruction-add-rule",
+        "semantic_rule_to_transition_edge_id": "edge:add-rule-transition"
+      }
+    ],
+    "semantic_bindings": [
+      {
+        "operation_id": "synthetic",
+        "kind": "synthetic",
+        "semantic_rule_id": "rule:startup",
+        "transition_id": "synthetic-step",
+        "operation_to_semantic_rule_edge_id": "edge:synthetic-rule",
+        "semantic_rule_to_transition_edge_id": "edge:startup-rule-transition"
+      },
+      {
+        "operation_id": "environment",
+        "kind": "environment",
+        "semantic_rule_id": "rule:clock",
+        "transition_id": "environment-step",
+        "operation_to_semantic_rule_edge_id": "edge:environment-rule",
+        "semantic_rule_to_transition_edge_id": "edge:clock-rule-transition"
+      }
+    ],
+    "impossible_precondition_proofs": [],
+    "elimination_proofs": [],
+    "elimination_records": []
+  },
+  "certificate": {
+    "roots": [
+      {
+        "root_id": "main-root",
+        "state_ids": [
+          "start",
+          "work"
+        ],
+        "provenance_edge_ids": [
+          "edge:root-main-start",
+          "edge:root-main-work"
+        ]
+      },
+      {
+        "root_id": "worker-root",
+        "state_ids": [
+          "environment"
+        ],
+        "provenance_edge_ids": [
+          "edge:root-worker-environment"
+        ]
+      }
+    ],
+    "machine": [
+      {
+        "operation_id": "compiled",
+        "compiler_output_id": "ssa:compiled",
+        "instruction_id": "instruction:1",
+        "semantic_rule_id": "rule:add",
+        "transition_id": "compiled-step",
+        "operation_to_compiler_output_edge_id": "edge:compiled-output",
+        "compiler_output_to_instruction_edge_id": "edge:output-instruction",
+        "instruction_to_semantic_rule_edge_id": "edge:instruction-add-rule",
+        "semantic_rule_to_transition_edge_id": "edge:add-rule-transition"
+      }
+    ],
+    "synthetic": [
+      {
+        "operation_id": "synthetic",
+        "semantic_rule_id": "rule:startup",
+        "transition_id": "synthetic-step",
+        "operation_to_semantic_rule_edge_id": "edge:synthetic-rule",
+        "semantic_rule_to_transition_edge_id": "edge:startup-rule-transition"
+      }
+    ],
+    "environment": [
+      {
+        "operation_id": "environment",
+        "semantic_rule_id": "rule:clock",
+        "transition_id": "environment-step",
+        "operation_to_semantic_rule_edge_id": "edge:environment-rule",
+        "semantic_rule_to_transition_edge_id": "edge:clock-rule-transition"
+      }
+    ],
+    "eliminated": []
+  }
+}
