@@ -11,10 +11,14 @@ import (
 )
 
 func (request FootprintRequest) arguments(instruction machine.Instruction) []string {
-	initialPC := fmt.Sprintf("PC=0x%016x", instruction.Address)
+	pcRegister := request.pcRegister
+	if pcRegister == "" {
+		pcRegister = "PC"
+	}
+	initialPC := fmt.Sprintf("%s=0x%016x", pcRegister, instruction.Address)
 	return []string{
 		"-T", strconv.FormatUint(request.threadLimit, 10),
-		"-A", request.release.architecture.path,
+		"-A", PreparsedArchitecture(request.release.architecture.path),
 		"-C", request.release.configuration.path,
 		"-I", initialPC,
 		"-x", "-i", hex.EncodeToString(instruction.Bytes),
