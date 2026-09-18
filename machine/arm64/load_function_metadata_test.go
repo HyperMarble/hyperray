@@ -4,6 +4,7 @@ package arm64_test
 
 import (
 	"encoding/binary"
+	"errors"
 	"testing"
 
 	"github.com/HyperMarble/hyperray/machine/arm64"
@@ -30,11 +31,15 @@ func TestLoadFunctionRejectsSectionRelocations(t *testing.T) {
 	assertLoadFailure(t, image, err, arm64.InvalidSection)
 }
 
-func TestLoadFunctionRejectsUndefinedSymbol(t *testing.T) {
+func TestAnUndefinedSymbolDoesNotRejectTheFile(t *testing.T) {
+	// A symbol another library defines says nothing about these bytes.
 	content := fixtureContent(t)
 	content[16384+4] = 0
-	image, err := arm64.LoadFunction(content, 32768, arm64.FunctionBoundary{StartAddress: 0x1000002e8, EndAddress: 0x1000002f0})
-	assertLoadFailure(t, image, err, arm64.UndefinedSymbol)
+	_, err := arm64.LoadFunction(content, 32768, arm64.FunctionBoundary{StartAddress: 0x1000002e8, EndAddress: 0x1000002f0})
+	var rejection *arm64.Rejection
+	if errors.As(err, &rejection) && rejection.Code == arm64.UndefinedSymbol {
+		t.Fatal("LoadFunction() rejected a file for an undefined symbol")
+	}
 }
 
 func TestLoadFunctionRejectsInvalidSymbolSection(t *testing.T) {

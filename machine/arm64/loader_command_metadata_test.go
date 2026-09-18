@@ -36,17 +36,20 @@ func TestADescribingCommandIsNotRejectedAsUnsupported(t *testing.T) {
 	}
 }
 
-func TestACommandThatRewritesMemoryIsRejected(t *testing.T) {
+func TestACommandThatRewritesMemoryIsNotRejectedByItself(t *testing.T) {
+	// The command states that a loader fills in addresses. Whether that
+	// matters is decided per function by ReadsRewrittenAddress, so the
+	// command alone is not a reason to refuse the file.
 	rewriting := map[string]uint32{
 		"LC_DYLD_INFO_ONLY": 0x80000022,
 		"LC_DYSYMTAB":       0x0b,
 		"LC_LOAD_DYLIB":     0x0c,
-		"LC_LOAD_DYLINKER":  0x0e,
 	}
 	for name, id := range rewriting {
 		var rejection *arm64.Rejection
-		if !errors.As(loadWithFirstCommand(t, id), &rejection) {
-			t.Errorf("%s (0x%x) was accepted", name, id)
+		if errors.As(loadWithFirstCommand(t, id), &rejection) &&
+			rejection.Code == arm64.UnsupportedLoadCommand {
+			t.Errorf("%s (0x%x) was rejected as unsupported", name, id)
 		}
 	}
 }

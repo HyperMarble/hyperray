@@ -10,7 +10,7 @@ import (
 
 func TestLoadFunctionAcceptsZeroFillInsideFileBackedRange(t *testing.T) {
 	content := mutatedLinkeditWithZeroFill(t, 0x100004010)
-	image, err := arm64.LoadFunction(content, 32768, mutatedTextBoundary(t, content))
+	image, err := arm64.LoadFunctionPages(content, 32768, mutatedTextBoundary(t, content), zeroFillPages(0x100004010))
 	if err != nil {
 		t.Fatalf("LoadFunction() error = %v", err)
 	}
@@ -19,7 +19,7 @@ func TestLoadFunctionAcceptsZeroFillInsideFileBackedRange(t *testing.T) {
 
 func TestLoadFunctionAcceptsZeroFillTail(t *testing.T) {
 	content := mutatedLinkeditWithZeroFill(t, 0x100004048)
-	image, err := arm64.LoadFunction(content, 32768, mutatedTextBoundary(t, content))
+	image, err := arm64.LoadFunctionPages(content, 32768, mutatedTextBoundary(t, content), zeroFillPages(0x100004048))
 	if err != nil {
 		t.Fatalf("LoadFunction() error = %v", err)
 	}
@@ -28,7 +28,7 @@ func TestLoadFunctionAcceptsZeroFillTail(t *testing.T) {
 
 func TestLoadFunctionAcceptsGreaterZeroFillTail(t *testing.T) {
 	content := mutatedLinkeditWithGreaterZeroFill(t, 0x100004048)
-	image, err := arm64.LoadFunction(content, 32768, mutatedTextBoundary(t, content))
+	image, err := arm64.LoadFunctionPages(content, 32768, mutatedTextBoundary(t, content), zeroFillPages(0x100004048))
 	if err != nil {
 		t.Fatalf("LoadFunction() error = %v", err)
 	}
@@ -46,4 +46,10 @@ func mutatedTextBoundary(t *testing.T, content []byte) arm64.FunctionBoundary {
 	file := openMachoContent(t, content)
 	text := arm64Text(t, file)
 	return arm64.FunctionBoundary{StartAddress: text.Addr, EndAddress: text.Addr + text.Size}
+}
+
+// zeroFillPages returns the pages of a zero-fill section, as the loader
+// would place them when a proof reaches that address.
+func zeroFillPages(address uint64) []uint64 {
+	return []uint64{address / arm64.PageSize}
 }

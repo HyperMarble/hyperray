@@ -4,17 +4,20 @@ package arm64
 
 import "github.com/HyperMarble/hyperray/machine"
 
-func materializeSegments(content []byte, segments []mappedSegment, blanks []ZeroFillRange) []machine.LoadedByte {
+func materializeSegments(content []byte, segments []mappedSegment, blanks []ZeroFillRange, pages []uint64) []machine.LoadedByte {
 	loaded := make([]machine.LoadedByte, 0)
 	for _, segment := range segments {
-		memory := make([]machine.LoadedByte, int(segment.header.Memsz))
-		for index := range memory {
+		memory := make([]machine.LoadedByte, 0, int(segment.header.Memsz))
+		for index := 0; index < int(segment.header.Memsz); index++ {
 			address := segment.header.Addr + uint64(index)
+			if len(pages) != 0 && !PageCovers(pages, address) {
+				continue
+			}
 			value := byte(0)
 			if uint64(index) < segment.header.Filesz && !anyCovers(blanks, address) {
 				value = content[int(segment.header.Offset)+index]
 			}
-			memory[index] = machine.LoadedByte{Address: address, Value: value, Permissions: segment.permissions}
+			memory = append(memory, machine.LoadedByte{Address: address, Value: value, Permissions: segment.permissions})
 		}
 		loaded = append(loaded, memory...)
 	}

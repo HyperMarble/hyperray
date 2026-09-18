@@ -12,7 +12,14 @@ import (
 )
 
 // LoadFunction validates and maps the complete static ARM64 Mach-O image.
+// LoadFunction places the pages the stated range can reach.
 func LoadFunction(content []byte, maximumLoadedBytes uint64, boundary FunctionBoundary) (machine.Image, error) {
+	return LoadFunctionPages(content, maximumLoadedBytes, boundary, nil)
+}
+
+// LoadFunctionPages places the given pages as well as the ones the range
+// reaches. An empty list places only what the range reaches.
+func LoadFunctionPages(content []byte, maximumLoadedBytes uint64, boundary FunctionBoundary, also []uint64) (machine.Image, error) {
 	if err := validateLoadCapacity(maximumLoadedBytes); err != nil {
 		return machine.Image{}, err
 	}
@@ -37,7 +44,8 @@ func LoadFunction(content []byte, maximumLoadedBytes uint64, boundary FunctionBo
 	if err := validateBoundary(boundary, codeRegions); err != nil {
 		return machine.Image{}, err
 	}
-	return acceptedImage(content, maximumLoadedBytes, boundary.StartAddress, segments, instructions), nil
+	pages := append(ReachablePages(instructions, boundary.StartAddress, boundary.EndAddress), also...)
+	return acceptedImage(content, maximumLoadedBytes, boundary.StartAddress, segments, instructions, pages), nil
 }
 
 func validateLoadCapacity(maximum uint64) error {
@@ -50,8 +58,8 @@ func validateLoadCapacity(maximum uint64) error {
 	return nil
 }
 
-func acceptedImage(content []byte, maximum, entry uint64, segments []mappedSegment, instructions []machine.Instruction) machine.Image {
+func acceptedImage(content []byte, maximum, entry uint64, segments []mappedSegment, instructions []machine.Instruction, pages []uint64) machine.Image {
 	blanks, _ := ZeroFillRanges(content)
 	digest := sha256.Sum256(content)
-	return machine.Image{Profile: ProfileName, ArtifactSHA256: hex.EncodeToString(digest[:]), EntryAddress: entry, MaximumLoadedBytes: maximum, LoadedBytes: materializeSegments(content, segments, blanks), ExecutableRegions: executableSegmentRegions(segments), Instructions: instructions}
+	return machine.Image{Profile: ProfileName, ArtifactSHA256: hex.EncodeToString(digest[:]), EntryAddress: entry, MaximumLoadedBytes: maximum, LoadedBytes: materializeSegments(content, segments, blanks, pages), ExecutableRegions: executableSegmentRegions(segments), Instructions: instructions}
 }
