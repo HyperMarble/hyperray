@@ -5,9 +5,7 @@ package isla
 import (
 	"context"
 	"encoding/hex"
-	"os/exec"
-	"strings"
-	"time"
+	"os"
 
 	"github.com/HyperMarble/hyperray/machine"
 )
@@ -24,10 +22,22 @@ func (engine FootprintEngine) TraceInstructions(ctx context.Context, request Foo
 		return FootprintReport{}, err
 	}
 	traces := make([]InstructionTrace, 0, len(request.instructions))
+	store := NewTraceStore(os.Getenv("HYPERRAY_TRACE_STORE"))
+	architecture := request.release.architecture.digest
 	for index := range request.instructions {
-		trace, err := engine.traceInstruction(ctx, request, request.instructions[index])
+		instruction := request.instructions[index]
+		encoding := hex.EncodeToString(instruction.Bytes)
+		if stored, found := store.Lookup(encoding, architecture); found {
+			stored.Address = instruction.Address
+			traces = append(traces, stored)
+			continue
+		}
+		trace, err := engine.traceInstruction(ctx, request, instruction)
 		if err != nil {
 			return FootprintReport{}, err
+		}
+		if err := store.Keep(encoding, architecture, trace); err != nil {
+			return FootprintReport{}, engineError(ProcessFail, encoding, err.Error())
 		}
 		traces = append(traces, trace)
 	}
@@ -43,7 +53,7 @@ func (engine FootprintEngine) traceInstruction(ctx context.Context, request Foot
 	if err != nil {
 		return InstructionTrace{}, err
 	}
-	dispositions, err := classifyDiagnostics(output)
+	dispositions, err := classifyDiagnostics(output, "footprint diagnostic")
 	if err != nil {
 		return InstructionTrace{}, err
 	}
@@ -53,23 +63,4 @@ func (engine FootprintEngine) traceInstruction(ctx context.Context, request Foot
 		ElapsedMilliseconds: output.elapsed.Milliseconds(), Diagnostics: output.diagnostics,
 		Dispositions: dispositions,
 	}, nil
-}
-
-func (engine FootprintEngine) runFootprint(ctx context.Context, request FootprintRequest, instruction machine.Instruction) (commandOutput, error) {
-	stdout := newLimitedBuffer(request.maximumOutputSize)
-	diagnostics := newLimitedBuffer(request.maximumOutputSize)
-	command := exec.CommandContext(ctx, engine.identity.Path, request.arguments(instruction)...)
-	command.Stdout = stdout
-	command.Stderr = diagnostics
-	start := time.Now()
-	err := command.Run()
-	output := commandOutput{stdout: stdout.String(), diagnostics: diagnostics.String(), elapsed: time.Since(start)}
-	if ctx.Err() != nil || stdout.exceeded || diagnostics.exceeded {
-		return commandOutput{}, engineError(ResourceLimit, hex.EncodeToString(instruction.Bytes), "footprint resource limit reached")
-	}
-	if err != nil {
-		detail := strings.TrimSpace(output.diagnostics + "\n" + output.stdout)
-		return commandOutput{}, engineError(ProcessFail, hex.EncodeToString(instruction.Bytes), detail)
-	}
-	return output, nil
 }
