@@ -12,8 +12,9 @@ import (
 	"github.com/HyperMarble/hyperray/machine/arm64"
 )
 
-func TestValidateSegmentFlagsAcceptsOnlyZeroAndNoReloc(t *testing.T) {
-	accepted := map[uint32]bool{0: true, 4: true}
+func TestValidateSegmentFlagsAcceptsOnlyMappedFlags(t *testing.T) {
+	// SG_NORELOC is 0x4 and SG_READ_ONLY is 0x10; both may appear together.
+	accepted := map[uint32]bool{0: true, 4: true, 0x10: true, 0x14: true}
 	for flags := uint32(0); flags < 32; flags++ {
 		header := macho.SegmentHeader{Name: "__TEXT", Flag: flags}
 		err := arm64.ValidateSegmentFlags(header)
@@ -43,7 +44,7 @@ func TestValidateSegmentFlagsRejectsUnknownAndCombinedFlags(t *testing.T) {
 }
 
 func TestValidateSegmentFlagsPreservesHeader(t *testing.T) {
-	header := macho.SegmentHeader{Name: "__DATA", Flag: 0x14, Addr: 0x1000, Memsz: 0x2000}
+	header := macho.SegmentHeader{Name: "__DATA", Flag: 0x8, Addr: 0x1000, Memsz: 0x2000}
 	before := header
 	assertUnsupportedFlags(t, header, arm64.ValidateSegmentFlags(header))
 	if header != before {
