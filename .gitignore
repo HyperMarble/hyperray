@@ -41,7 +41,6 @@ __pycache__/
 *.pyc
 
 # Adapter build output
-adapters/**/target/
 
 # Compiler droppings from ad-hoc rustc / cc runs in the repo root
 *.o
@@ -57,6 +56,6 @@ a.out
 sail_smt_cache
 
 # Rust crate build output
-machine-rs/target/
+machine/engine/target/
 !machine-rs/tests/fixtures/*.o
 !machine-rs/tests/fixtures/*.o

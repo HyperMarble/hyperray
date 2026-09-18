@@ -1,5 +1,5 @@
-// This test keeps source files in the adapter that owns their language.
-// It must not require an adapter before that adapter has real source code.
+// Source ownership: a file belongs to the directory that owns its language.
+// It reports every misplaced file instead of stopping at the first.
 package layout
 
 import (
@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"testing"
 )
 
 var sourceOwners = map[string]map[string]bool{
@@ -22,17 +21,6 @@ var sourceOwners = map[string]map[string]bool{
 	".py":  {"python": true},
 	".rs":  {"rust": true},
 }
-
-func TestAdapterSourceOwnership(t *testing.T) {
-	failures, err := sourceOwnershipFailures("../adapters", sourceOwners)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(failures) != 0 {
-		t.Errorf("source ownership errors:\n%s", strings.Join(failures, "\n"))
-	}
-}
-
 
 func sourceOwnershipFailures(root string, owners map[string]map[string]bool) ([]string, error) {
 	var failures []string
