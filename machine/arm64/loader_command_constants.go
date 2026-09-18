@@ -13,6 +13,14 @@ const (
 	loadCmdFunctionStarts macho.LoadCmd = 0x26
 	loadCmdDataInCode     macho.LoadCmd = 0x29
 	loadCmdBuildVersion   macho.LoadCmd = 0x32
+	// Apple SDK mach-o/loader.h. These state that a dynamic loader fills in
+	// addresses before the program runs. The sections it fills are named by
+	// RewrittenRanges, and a function that reaches one is refused there.
+	loadCmdDyldInfoOnly   macho.LoadCmd = 0x80000022
+	loadCmdDynamicSymtab  macho.LoadCmd = 0x0b
+	loadCmdLoadDylib      macho.LoadCmd = 0x0c
+	loadCmdLoadDylinker   macho.LoadCmd = 0x0e
+	loadCmdMain           macho.LoadCmd = 0x80000028
 	armThreadState64      uint32        = 6
 	armThreadState64Count uint32        = 68
 	threadCommand64Size   uint32        = 8 + 8 + armThreadState64Count*4
