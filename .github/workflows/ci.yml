@@ -25,10 +25,12 @@ jobs:
           pip install pytest tree-sitter tree-sitter-python tree-sitter-rust tree-sitter-cpp tree-sitter-go
           rustup default stable
       - name: gofmt is clean
-        run: test -z "$(gofmt -l cmd internal tests)"
+        run: test -z "$(gofmt -l .)"
+      - name: adapter source ownership
+        run: go test -count=1 ./layout
       - name: vet
         run: go vet ./...
       - name: build
         run: go build ./...
       - name: tests
-        run: go test ./tests/ -timeout 20m
+        run: go test ./... -timeout 20m
