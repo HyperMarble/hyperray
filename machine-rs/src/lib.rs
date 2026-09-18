@@ -11,3 +11,4 @@ pub mod permission;
 pub mod region;
 pub mod section;
 pub mod trace_queue;
+pub mod traced;
