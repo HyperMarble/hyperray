@@ -40,3 +40,12 @@ fn alternatives_join_with_or() {
 fn the_engine_is_asked_to_refute_the_negation() {
     assert_eq!(negated(&register("R0", 0)), "~(0:R0 = 0x0000000000000000)");
 }
+
+#[test]
+fn an_ordering_is_stated_as_rejected_values() {
+    let claim = hyperray_machine::claim::none_of(Place::Register("R0".to_string()), 0..3);
+    assert_eq!(
+        claim.to_string(),
+        "~((0:R0 = 0x0000000000000000 | 0:R0 = 0x0000000000000001 | 0:R0 = 0x0000000000000002))"
+    );
+}

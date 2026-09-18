@@ -13,13 +13,26 @@ pub enum Place {
 
 /// One claim about the state when the function returns.
 ///
-/// The assertion language offers equality only. A range or ordering cannot be
-/// stated, so it is not offered here either.
+/// The engine compares for equality only, but `Not` and `Any` build any
+/// finite comparison from it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Claim {
     Equals(Place, u64),
     All(Vec<Claim>),
     Any(Vec<Claim>),
+    Not(Box<Claim>),
+}
+
+/// A claim that `place` holds none of `rejected`.
+///
+/// An ordering is stated this way because the engine has no ordering
+/// operator, only equality and negation.
+pub fn none_of(place: Place, rejected: impl IntoIterator<Item = u64>) -> Claim {
+    let each = rejected
+        .into_iter()
+        .map(|value| Claim::Equals(place.clone(), value))
+        .collect();
+    Claim::Not(Box::new(Claim::Any(each)))
 }
 
 impl fmt::Display for Claim {
@@ -33,6 +46,7 @@ impl fmt::Display for Claim {
             }
             Claim::All(parts) => write_joined(out, parts, " & "),
             Claim::Any(parts) => write_joined(out, parts, " | "),
+            Claim::Not(inner) => write!(out, "~({inner})"),
         }
     }
 }
