@@ -24,6 +24,9 @@ pub fn regions(binary: &[u8]) -> Result<Vec<Region>, String> {
     }
     for segment in file.segments() {
         let supplied = segment.data().map_err(|error| error.to_string())?;
+        if reserves_only(&segment, supplied) {
+            continue;
+        }
         let Some(region) = occupied(
             segment.address(),
             segment.size(),
@@ -36,6 +39,15 @@ pub fn regions(binary: &[u8]) -> Result<Vec<Region>, String> {
         found.push(region);
     }
     Ok(found)
+}
+
+/// True for a segment that reserves address space without content.
+///
+/// Mach-O `__PAGEZERO` spans the low 4 GiB with no bytes and no permissions,
+/// so that a null access faults. Filling it with zeros would let one succeed.
+fn reserves_only(segment: &object::Segment<'_, '_>, supplied: &[u8]) -> bool {
+    use object::ObjectSegment;
+    supplied.is_empty() && permission::grants_nothing(segment.flags())
 }
 
 /// One region, zero filled beyond the bytes the file supplies.

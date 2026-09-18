@@ -37,3 +37,14 @@ pub fn of_section(kind: object::SectionKind) -> Permission {
         _ => Permission::ReadWrite,
     }
 }
+
+/// True when a segment's flags grant no access at all.
+pub fn grants_nothing(flags: SegmentFlags) -> bool {
+    match flags {
+        SegmentFlags::MachO {
+            initprot, maxprot, ..
+        } => initprot == 0 && maxprot == 0,
+        SegmentFlags::Elf { p_flags, .. } => p_flags & 0x7 == 0,
+        _ => false,
+    }
+}
