@@ -1,6 +1,0 @@
-; Build a plug-in that selects a machine root without changing its meaning.
-(executable
- (name slice_plugin)
- (modules rewrite_route slice_plugin)
- (modes (native plugin))
- (libraries libsail))

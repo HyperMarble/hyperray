@@ -1,8 +1,0 @@
-# Compile independent requirements as a second Cargo library package.
-[package]
-name = "fixture-requirement"
-version.workspace = true
-edition.workspace = true
-
-[lib]
-name = "renamed_requirement"

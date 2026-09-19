@@ -1,7 +1,0 @@
-{
-  "width": 8,
-  "reference_comparison": "unsigned_less_than",
-  "candidate_comparison": "unsigned_less_than",
-  "expected_status": "unvalidated_unsat",
-  "different_pairs": 0
-}

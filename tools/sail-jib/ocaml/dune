@@ -1,6 +1,0 @@
-; Build the pinned upstream backend and the Hyperray census as one plug-in.
-(executable
- (name jib_plugin)
- (modules keywords c_backend jib_type_kind jib_value_kind jib_node_kind jib_rewrites jib_backend jib_origin jib_census_data jib_collector jib_census jib_output jib_plugin)
- (modes (native plugin))
- (libraries libsail yojson))

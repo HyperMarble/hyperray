@@ -1,2 +1,0 @@
-(trace (read-reg |PC| nil #x1000) (instr #x0013)
-  (read-reg |PC| nil v1))

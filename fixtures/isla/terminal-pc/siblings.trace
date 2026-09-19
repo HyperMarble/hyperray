@@ -1,3 +1,0 @@
-(trace (read-reg |PC| nil #x1000)
-  (cases "source" (trace (read-reg |PC| nil v1))
-    (trace (instr #x0013))))
