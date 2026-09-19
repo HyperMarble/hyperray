@@ -17,6 +17,8 @@ const (
 	// addresses before the program runs. The sections it fills are named by
 	// RewrittenRanges, and a function that reaches one is refused there.
 	loadCmdDyldInfoOnly   macho.LoadCmd = 0x80000022
+	loadCmdChainedFixups  macho.LoadCmd = 0x80000034
+	loadCmdExportsTrie    macho.LoadCmd = 0x80000033
 	loadCmdDynamicSymtab  macho.LoadCmd = 0x0b
 	loadCmdLoadDylib      macho.LoadCmd = 0x0c
 	loadCmdLoadDylinker   macho.LoadCmd = 0x0e

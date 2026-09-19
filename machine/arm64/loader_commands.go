@@ -48,7 +48,7 @@ func validateLoadCommand(id macho.LoadCmd, command []byte, size uint32, content 
 		loadCmdBuildVersion:
 		return nil
 	case loadCmdDyldInfoOnly, loadCmdDynamicSymtab, loadCmdLoadDylib,
-		loadCmdLoadDylinker, loadCmdMain:
+		loadCmdLoadDylinker, loadCmdMain, loadCmdChainedFixups, loadCmdExportsTrie:
 		return nil
 	case macho.LoadCmdUnixThread:
 		return validateThreadCommand(command, size, order, index)
