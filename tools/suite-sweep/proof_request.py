@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # Build one proof request from measured binary facts. The claim is given by
 # the caller; this file never decides what is asserted.
+import hashlib
 import os
 import pathlib
 
 from binary_facts import mappings
 
 HYPERRAY = "/Volumes/Hak_SSD/hyperray-build/hyperray"
-ARCHITECTURE_DIGEST = "4ece4410a43c32b58737957d55920b485ade5171bb53deddebb9c7d61df77075"
 TOOLS = {
     "solver": "HYPERRAY_ARM64_ISLA",
     "semantics": "HYPERRAY_ARM64_ISLA_DUMP",
@@ -39,6 +39,15 @@ def arena_pages(placed: list) -> int:
     return 1 + 4 * mapped
 
 
+def measured(path: str) -> str:
+    """The digest of the file as it is now, so a request pins what it reads."""
+    value = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            value.update(block)
+    return value.hexdigest()
+
+
 def register(name: str, value: int) -> str:
     """A claim that one register holds one value."""
     return f"0:{name} = 0x{value & 0xFFFFFFFFFFFFFFFF:016x}"
@@ -59,7 +68,7 @@ def request(binary: pathlib.Path, name: str, start: int, end: int,
     """One request. `claim` is asserted as given, never rewritten here."""
     placed = mappings(binary)
     tools = {key: os.environ[variable] for key, variable in TOOLS.items()}
-    tools["architecture_sha256"] = ARCHITECTURE_DIGEST
+    tools["architecture_sha256"] = measured(tools["architecture"])
     tools["manifest_sha256"] = os.environ["HYPERRAY_ARM64_NORMAL_EXECUTION_MANIFEST_SHA256"]
     return {
         "binary": str(binary.resolve()),
