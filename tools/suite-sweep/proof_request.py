@@ -20,6 +20,25 @@ TOOLS = {
 RETURN_ADDRESS = 0x100010000
 
 
+def loaded_byte_budget(placed: list) -> int:
+    """Room for every byte these mappings cover.
+
+    A no_std test maps two pages; a std binary maps hundreds. A fixed budget
+    refuses the larger one before any proof starts.
+    """
+    return sum(entry["length"] for entry in placed)
+
+
+def arena_pages(placed: list) -> int:
+    """The page-table arena the engine requires for these mappings.
+
+    The engine checks four table pages for every mapped page, plus a root.
+    A fixed number is wrong for any binary that maps a different amount.
+    """
+    mapped = sum(entry["length"] for entry in placed) // 0x1000
+    return 1 + 4 * mapped
+
+
 def register(name: str, value: int) -> str:
     """A claim that one register holds one value."""
     return f"0:{name} = 0x{value & 0xFFFFFFFFFFFFFFFF:016x}"
@@ -38,6 +57,7 @@ def returned(value: int) -> str:
 def request(binary: pathlib.Path, name: str, start: int, end: int,
             claim: str, observations: list = None) -> dict:
     """One request. `claim` is asserted as given, never rewritten here."""
+    placed = mappings(binary)
     tools = {key: os.environ[variable] for key, variable in TOOLS.items()}
     tools["architecture_sha256"] = ARCHITECTURE_DIGEST
     tools["manifest_sha256"] = os.environ["HYPERRAY_ARM64_NORMAL_EXECUTION_MANIFEST_SHA256"]
@@ -55,13 +75,13 @@ def request(binary: pathlib.Path, name: str, start: int, end: int,
             "memory_observations": observations or [],
         },
         "memory": {
-            "table_base": 0x5000, "table_capacity_pages": 256,
-            "mappings": mappings(binary),
+            "table_base": 0x5000, "table_capacity_pages": arena_pages(placed),
+            "mappings": placed,
             "backing": [{"address": 0x3B00, "permission": "RW", "bytes": "00" * 320}],
         },
         "negated_assertion": f"~({claim})",
         "limits": {
-            "maximum_loaded_bytes": 65536, "maximum_output_bytes": 134217728,
+            "maximum_loaded_bytes": loaded_byte_budget(placed), "maximum_output_bytes": 134217728,
             "time_limit_seconds": 120, "pc_visit_limit": 512,
         },
     }
