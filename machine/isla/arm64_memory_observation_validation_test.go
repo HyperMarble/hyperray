@@ -14,6 +14,7 @@ func TestBuildARM64ProgramRejectsInvalidMemoryObservations(t *testing.T) {
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			boundary := arm64ProgramBoundary(start, end)
+			boundary.NativeRegisterNames = []string{"VBAR_EL1", "CPACR_EL1", "InGuardedPage"}
 			boundary.MemoryObservations = testCase.item
 			program, err := isla.BuildARM64Program(content, 32768, boundary)
 			if err == nil || program.Content() != nil {

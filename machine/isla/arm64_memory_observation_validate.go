@@ -4,9 +4,9 @@ package isla
 
 import "github.com/HyperMarble/hyperray/machine"
 
-func validateARM64Observations(values []MemoryObservation, image machine.Image, memory *ARM64MemoryInput, registers []RegisterValue) error {
+func validateARM64Observations(values []MemoryObservation, image machine.Image, memory *ARM64MemoryInput, registers []RegisterValue, native nativeRegisters) error {
 	for index, observation := range values {
-		if err := validateARM64ObservationName(values, index, observation.Name, registers); err != nil {
+		if err := validateARM64ObservationName(values, index, observation.Name, registers, native); err != nil {
 			return err
 		}
 		if !validObservationBytes(observation.Bytes) {
@@ -23,11 +23,11 @@ func validateARM64Observations(values []MemoryObservation, image machine.Image, 
 	return nil
 }
 
-func validateARM64ObservationName(values []MemoryObservation, index int, name string, registers []RegisterValue) error {
+func validateARM64ObservationName(values []MemoryObservation, index int, name string, registers []RegisterValue, native nativeRegisters) error {
 	if !plainLine(name) || !identifier(name) {
 		return engineError(InvalidInput, "ARM64 memory observation name", name)
 	}
-	if observationNameReserved(name, registers) {
+	if observationNameReserved(name, registers, native) {
 		return engineError(InvalidInput, "ARM64 memory observation name", "collides with native name: "+name)
 	}
 	for previous := 0; previous < index; previous++ {
@@ -38,8 +38,8 @@ func validateARM64ObservationName(values []MemoryObservation, index int, name st
 	return nil
 }
 
-func observationNameReserved(name string, registers []RegisterValue) bool {
-	if knownARM64Register(name) {
+func observationNameReserved(name string, registers []RegisterValue, native nativeRegisters) bool {
+	if native.reserved(name) {
 		return true
 	}
 	for _, register := range registers {

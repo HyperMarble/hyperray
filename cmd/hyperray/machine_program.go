@@ -23,6 +23,10 @@ func buildMachineProgram(request machineRequest) (isla.Program, error) {
 	if err != nil {
 		return isla.Program{}, fmt.Errorf("memory input: %w", err)
 	}
+	nativeRegisters, err := isla.ModelRegisterNames(request.Tools.Architecture)
+	if err != nil {
+		return isla.Program{}, fmt.Errorf("model registers: %w", err)
+	}
 	boundary := isla.ARM64ProgramBoundary{
 		Name:                request.Boundary.Name,
 		FunctionStart:       request.Boundary.FunctionStart,
@@ -33,6 +37,7 @@ func buildMachineProgram(request machineRequest) (isla.Program, error) {
 		Memory:              &memory,
 		PostResetRegisters:  registerValues(request.Boundary.Registers),
 		MemoryObservations:  memoryObservations(request.Boundary.Observations),
+		NativeRegisterNames: nativeRegisters,
 	}
 	return isla.BuildARM64Program(content, request.Limits.MaximumLoadedBytes, boundary)
 }

@@ -26,7 +26,8 @@ func BuildARM64Program(content []byte, maximumLoadedBytes uint64, boundary ARM64
 	if err != nil {
 		return Program{}, err
 	}
-	if err := validateARM64Observations(boundary.MemoryObservations, image, memory, registers); err != nil {
+	native := newNativeRegisters(boundary.NativeRegisterNames)
+	if err := validateARM64Observations(boundary.MemoryObservations, image, memory, registers, native); err != nil {
 		return Program{}, err
 	}
 	generated, err := renderARM64Program(image, boundary, registers)

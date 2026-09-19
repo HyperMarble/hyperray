@@ -13,4 +13,9 @@ type ARM64ProgramBoundary struct {
 	MaximumProgramBytes uint64
 	Memory              *ARM64MemoryInput
 	MemoryObservations  []MemoryObservation
+	// NativeRegisterNames are the registers the model in use declares, so an
+	// observation cannot take one of their names. ModelRegisterNames reads
+	// them from the model file; a boundary with none reserves only the
+	// fixed A64 aliases.
+	NativeRegisterNames []string
 }
