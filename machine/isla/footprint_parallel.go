@@ -28,19 +28,33 @@ func traceWorkerLimit(instructions int) int {
 // The instructions are independent: each reads the architecture and reports
 // what one encoding does. Results keep the caller's order, and the first
 // failure is the one reported.
+//
+// Each trace is stored the moment it is made. A run that is interrupted, or
+// that fails on a later instruction, still leaves behind every trace it
+// finished, so the next run does not repeat that work.
 func (engine FootprintEngine) traceMissing(ctx context.Context, request FootprintRequest,
-	missing []machine.Instruction) ([]InstructionTrace, error) {
+	store *TraceStore, missing []machine.Instruction) ([]InstructionTrace, error) {
+	architecture := request.release.architecture.digest
 	traced := make([]InstructionTrace, len(missing))
 	failures := make([]error, len(missing))
 	tokens := make(chan struct{}, traceWorkerLimit(len(missing)))
 	var waiting sync.WaitGroup
+	var keeping sync.Mutex
 	for index := range missing {
 		waiting.Add(1)
 		go func(index int, instruction machine.Instruction) {
 			defer waiting.Done()
 			tokens <- struct{}{}
 			defer func() { <-tokens }()
-			traced[index], failures[index] = engine.traceInstruction(ctx, request, instruction)
+			trace, err := engine.traceInstruction(ctx, request, instruction)
+			if err != nil {
+				failures[index] = err
+				return
+			}
+			traced[index] = trace
+			keeping.Lock()
+			failures[index] = store.Keep(trace.Encoding, architecture, trace)
+			keeping.Unlock()
 		}(index, missing[index])
 	}
 	waiting.Wait()
@@ -50,17 +64,6 @@ func (engine FootprintEngine) traceMissing(ctx context.Context, request Footprin
 		}
 	}
 	return traced, nil
-}
-
-// storeTraced writes each new trace to the store under its encoding.
-func storeTraced(store *TraceStore, architecture string, traced []InstructionTrace) error {
-	for index := range traced {
-		encoding := traced[index].Encoding
-		if err := store.Keep(encoding, architecture, traced[index]); err != nil {
-			return engineError(ProcessFail, encoding, err.Error())
-		}
-	}
-	return nil
 }
 
 // encodingOf names one instruction the way the store keys it.

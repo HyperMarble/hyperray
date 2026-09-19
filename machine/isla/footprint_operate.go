@@ -24,11 +24,8 @@ func (engine FootprintEngine) TraceInstructions(ctx context.Context, request Foo
 	store := NewTraceStore(os.Getenv("HYPERRAY_TRACE_STORE"))
 	architecture := request.release.architecture.digest
 	traces, missing := storedTraces(store, architecture, request.instructions)
-	traced, err := engine.traceMissing(ctx, request, missing)
+	traced, err := engine.traceMissing(ctx, request, store, missing)
 	if err != nil {
-		return FootprintReport{}, err
-	}
-	if err := storeTraced(store, architecture, traced); err != nil {
 		return FootprintReport{}, err
 	}
 	return newFootprintReport(engine, request, placeTraced(traces, traced)), nil
