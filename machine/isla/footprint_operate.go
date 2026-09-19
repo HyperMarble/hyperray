@@ -21,27 +21,17 @@ func (engine FootprintEngine) TraceInstructions(ctx context.Context, request Foo
 	if err := request.current(engine); err != nil {
 		return FootprintReport{}, err
 	}
-	traces := make([]InstructionTrace, 0, len(request.instructions))
 	store := NewTraceStore(os.Getenv("HYPERRAY_TRACE_STORE"))
 	architecture := request.release.architecture.digest
-	for index := range request.instructions {
-		instruction := request.instructions[index]
-		encoding := hex.EncodeToString(instruction.Bytes)
-		if stored, found := store.Lookup(encoding, architecture); found {
-			stored.Address = instruction.Address
-			traces = append(traces, stored)
-			continue
-		}
-		trace, err := engine.traceInstruction(ctx, request, instruction)
-		if err != nil {
-			return FootprintReport{}, err
-		}
-		if err := store.Keep(encoding, architecture, trace); err != nil {
-			return FootprintReport{}, engineError(ProcessFail, encoding, err.Error())
-		}
-		traces = append(traces, trace)
+	traces, missing := storedTraces(store, architecture, request.instructions)
+	traced, err := engine.traceMissing(ctx, request, missing)
+	if err != nil {
+		return FootprintReport{}, err
 	}
-	return newFootprintReport(engine, request, traces), nil
+	if err := storeTraced(store, architecture, traced); err != nil {
+		return FootprintReport{}, err
+	}
+	return newFootprintReport(engine, request, placeTraced(traces, traced)), nil
 }
 
 func (engine FootprintEngine) traceInstruction(ctx context.Context, request FootprintRequest, instruction machine.Instruction) (InstructionTrace, error) {

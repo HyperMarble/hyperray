@@ -38,7 +38,7 @@ func BuildProgram(elfContent []byte, maximumLoadedBytes uint64, boundary Program
 	if err != nil {
 		return Program{}, err
 	}
-	program := newProgram(image, content)
+	program := newProgram(image, content, image.Instructions)
 	program.threadEntries, err = validatedThreads(image, boundary)
 	if err != nil {
 		return Program{}, err

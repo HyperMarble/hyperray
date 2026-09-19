@@ -9,7 +9,7 @@ import sys
 from build import build, run
 from binary_facts import entry_and_end
 from expected import expected_value
-from proof_request import HYPERRAY, request
+from proof_request import HYPERRAY, request, returned
 from progress import Progress
 
 
@@ -42,7 +42,7 @@ def prove_one(directory, case: dict, report, position: int) -> dict:
     if failure:
         return {**case, "result": "BLOCKED: " + failure}
     (directory / f"{name}-req.json").write_text(
-        json.dumps(request(binary, name, start, end, value), indent=2)
+        json.dumps(request(binary, name, start, end, returned(value)), indent=2)
     )
     report.stage("proving")
     output = run([HYPERRAY, "machine", str(directory / f"{name}-req.json")])

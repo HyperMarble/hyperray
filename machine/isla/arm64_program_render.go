@@ -16,7 +16,7 @@ func renderARM64Program(image machine.Image, boundary ARM64ProgramBoundary, regi
 		return nil, err
 	}
 	output := newLimitedBuffer(boundary.MaximumProgramBytes)
-	within := instructionsUnderProof(image.Instructions, boundary.FunctionStart, boundary.FunctionEnd)
+	within := reachableInstructions(image.Instructions, boundary.FunctionStart, boundary.FunctionEnd)
 	writeARM64Header(output, boundary, registers, within)
 	writeARM64Memory(output, boundary.Memory)
 	writeARM64Observations(output, boundary.MemoryObservations)

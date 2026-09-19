@@ -33,7 +33,7 @@ func BuildARM64Program(content []byte, maximumLoadedBytes uint64, boundary ARM64
 	if err != nil {
 		return Program{}, err
 	}
-	program := newProgram(image, generated)
+	program := newProgram(image, generated, reachableInstructions(image.Instructions, boundary.FunctionStart, boundary.FunctionEnd))
 	program.profile = image.Profile
 	program.functionStart = boundary.FunctionStart
 	program.functionEnd = boundary.FunctionEnd

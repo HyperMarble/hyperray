@@ -28,16 +28,21 @@ func copyThreadEntries(values []ThreadEntry) []ThreadEntry {
 	return result
 }
 
-func newProgram(image machine.Image, content []byte) Program {
+// newProgram records the image and the instructions the caller states.
+//
+// `stated` is what the proof will execute. A program built from every
+// instruction in the file asks the engine for semantics the request never
+// named: a std binary holds 53,084 instructions where a proof states 6.
+func newProgram(image machine.Image, content []byte, stated []machine.Instruction) Program {
 	return Program{
 		content:          append([]byte(nil), content...),
 		digest:           contentDigest(content),
 		imageDigest:      image.ArtifactSHA256,
 		profile:          image.Profile,
 		entryAddress:     image.EntryAddress,
-		instructionCount: uint64(len(image.Instructions)),
+		instructionCount: uint64(len(stated)),
 		loadedByteCount:  uint64(len(image.LoadedBytes)),
-		instructions:     copyProgramInstructions(image.Instructions),
+		instructions:     copyProgramInstructions(stated),
 	}
 }
 
