@@ -3,7 +3,7 @@
 use crate::image::{Image, LoadError, Segment};
 use object::macho::{MachHeader64, CPU_TYPE_ARM64};
 use object::read::macho::{FatArch, MachHeader, MachOFatFile32, MachOFatFile64};
-use object::{Endianness, Object, ObjectSegment};
+use object::{Endianness, Object, ObjectSegment, SegmentFlags};
 
 pub fn load(content: &[u8]) -> Result<Image, LoadError> {
     let slice = arm64_slice(content)?;
@@ -78,12 +78,25 @@ fn read_segment(content: &[u8], segment: &object::Segment<'_, '_>) -> Result<Seg
         .checked_add(mapped_size)
         .ok_or(LoadError::ExtentOverflow { name: name.clone() })?;
     Ok(Segment {
-        readable: true,
-        writable: name.starts_with("__DATA"),
-        executable: name == "__TEXT",
+        readable: permits(segment, PROTECTION_READ),
+        writable: permits(segment, PROTECTION_WRITE),
+        executable: permits(segment, PROTECTION_EXECUTE),
         address: segment.address(),
         mapped_size,
         bytes: content[offset as usize..end as usize].to_vec(),
         name,
     })
+}
+
+/// Mach-O records what a segment permits in its initial protection field.
+const PROTECTION_READ: u32 = 0x1;
+const PROTECTION_WRITE: u32 = 0x2;
+const PROTECTION_EXECUTE: u32 = 0x4;
+
+/// Reads a permission from the file rather than from the segment's name.
+fn permits(segment: &object::Segment<'_, '_>, permission: u32) -> bool {
+    match segment.flags() {
+        SegmentFlags::MachO { initprot, .. } => initprot & permission != 0,
+        _ => false,
+    }
 }

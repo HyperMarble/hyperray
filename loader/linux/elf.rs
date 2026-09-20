@@ -3,7 +3,7 @@
 use crate::image::{Image, LoadError, Segment};
 use object::elf::{FileHeader64, EM_AARCH64, EM_RISCV};
 use object::read::elf::FileHeader;
-use object::{Endianness, Object, ObjectSegment};
+use object::{Endianness, Object, ObjectSegment, SegmentFlags};
 
 /// Both architectures this engine proves use the same ELF container.
 fn supported_machine(machine: u16) -> bool {
@@ -57,10 +57,23 @@ fn read_segment(content: &[u8], segment: &object::Segment<'_, '_>) -> Result<Seg
     Ok(Segment {
         name,
         address: segment.address(),
-        readable: true,
-        writable: true,
-        executable: true,
+        readable: permits(segment, PERMISSION_READ),
+        writable: permits(segment, PERMISSION_WRITE),
+        executable: permits(segment, PERMISSION_EXECUTE),
         mapped_size,
         bytes: content[offset as usize..end as usize].to_vec(),
     })
+}
+
+/// ELF records what a segment permits in its program header flags.
+const PERMISSION_EXECUTE: u32 = 0x1;
+const PERMISSION_WRITE: u32 = 0x2;
+const PERMISSION_READ: u32 = 0x4;
+
+/// Reads a permission from the file rather than assuming one.
+fn permits(segment: &object::Segment<'_, '_>, permission: u32) -> bool {
+    match segment.flags() {
+        SegmentFlags::Elf { p_flags } => p_flags & permission != 0,
+        _ => false,
+    }
 }
