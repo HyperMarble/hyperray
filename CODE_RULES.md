@@ -7,18 +7,11 @@ only what is specific to Hyperray. Where the two disagree, `AGENTS.md` wins.
 
 ## 1. Shape
 
-- One file, one stage. The file name is the stage: `extract.rs`,
-  `shape.rs`, `bound.rs`, `prove.rs`, `adequacy.rs`, `emit.rs`. No
-  `utils`, `helpers`, `misc`, `common`.
-- No production file over 75 lines. If a stage needs more, it becomes a
-  folder with the same name.
+- A file name says what the file is for. No `utils`, `helpers`, `misc`,
+  `common`.
+- No production file over 75 lines.
 - No function over 40 lines. No nesting deeper than 3 levels. When either
   limit is hit, split the function. Never re-indent to dodge it.
-- The five language adapters use separate directories: `adapters/rust/`,
-  `adapters/c/`, `adapters/cpp/`, `adapters/go/`, and `adapters/python/`.
-  C and C++ do not share production source files.
-- Equivalent stage files do the same job in every adapter. Their file
-  extensions and surface syntax follow the language that owns the directory.
 - Names are full words. `prefix_len`, not `p`. A name says the job, so the
   body needs no comment.
 
