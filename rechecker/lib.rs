@@ -7,11 +7,11 @@ pub mod abi;
 #[path = "arm64/call.rs"]
 pub mod arm64_call;
 pub mod call;
-pub mod page;
-pub mod run;
-pub mod runnable;
+pub mod placed;
+pub mod run_placed;
 pub mod witness;
 
 pub use call::{Buffer, Call, CallError, Outcome};
-pub use run::run;
+pub use placed::Placed;
+pub use run_placed::run_placed;
 pub use witness::{compare, named_value, Recheck, RecheckError};

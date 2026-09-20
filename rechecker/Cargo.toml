@@ -7,9 +7,19 @@ edition = "2021"
 path = "lib.rs"
 
 [dependencies]
-libc = "0.2"
+libloading = "0.9"
 solver = { path = "../solver" }
 
+
+
 [[test]]
-name = "recheck_test"
-path = "tests/recheck_test.rs"
+name = "placed_test"
+path = "tests/placed_test.rs"
+
+[[test]]
+name = "shapes_test"
+path = "tests/shapes_test.rs"
+
+[[test]]
+name = "agreement_test"
+path = "tests/agreement_test.rs"
