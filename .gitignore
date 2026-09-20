@@ -62,3 +62,8 @@ machine/engine/target/
 LAYOUT.md
 SESSION-*.md
 DESIGN-*.md
+
+# Cargo.lock belongs to a binary, and these are libraries.
+loader/Cargo.lock
+solver/Cargo.lock
+rechecker/Cargo.lock
