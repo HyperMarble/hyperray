@@ -1,0 +1,11 @@
+Test advance-moves-forward Allowed
+States 3
+???;
+???;
+0:R4=#x0000000000000001;
+Ok
+Witnesses
+Positive: 1 Negative: 2
+Condition exists 0:R4=1
+Observation advance-moves-forward Sometimes 1 2
+Time 2075ms

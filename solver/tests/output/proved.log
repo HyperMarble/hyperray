@@ -1,0 +1,9 @@
+Test loop-body-preserves-invariant Allowed
+States 1
+0:R4=#x0000000000000001;
+Ok
+Witnesses
+Positive: 1 Negative: 0
+Condition exists 0:R4=1
+Observation loop-body-preserves-invariant Always 1 0
+Time 355ms
