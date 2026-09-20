@@ -1,5 +1,8 @@
-// What every loader returns, whatever the file format it read.
-// A field here must hold the same meaning for macOS and for Linux.
+// Purpose: the image every loader returns, whatever format it read.
+// Never:   holds a field that means one thing on macOS and another on Linux.
+// In:      nothing, this file only declares the shape
+// Out:     Image, Segment, LoadError
+// Fails:   not applicable
 
 /// One mapped range of a program, with the bytes that belong in it.
 #[derive(Debug, PartialEq)]

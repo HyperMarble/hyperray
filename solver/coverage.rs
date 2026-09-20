@@ -1,5 +1,8 @@
-// Decides whether a proof run covered the code it was given.
-// A limit reached during the run is never reported as a verdict.
+// Purpose: decides whether a proof run reached the end of the code.
+// Never:   reports complete coverage for a run that hit its limit.
+// In:      the engine's output
+// Out:     Complete, or Incomplete with the reason the engine gave
+// Fails:   not applicable, an unrecognised run is incomplete
 use crate::verdict::Coverage;
 
 /// The engine prints this when it stops at the instruction limit.

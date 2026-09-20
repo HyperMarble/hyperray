@@ -1,5 +1,8 @@
-// Reports which functions have different instructions after a change.
-// A function present in only one build is a change, never a silent omission.
+// Purpose: reports which functions have different instructions after a change.
+// Never:   passes over a function that exists in only one of the two builds.
+// In:      two builds, and the names to compare
+// Out:     the functions whose instructions differ, with both versions
+// Fails:   a build is unreadable, or a named function has no extent
 use crate::locate::{locate, Located, LocateError};
 
 #[derive(Debug, PartialEq)]

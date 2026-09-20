@@ -1,5 +1,8 @@
-// Compiles Rust source for proving.
-// It must never run the compiled program or read a value from running it.
+// Purpose: compiles Rust source to a binary for proving.
+// Never:   runs the compiled program, or reads a value from running it.
+// In:      a source path, an output path, a target
+// Out:     the binary that was produced, and the target it was built for
+// Fails:   the source is absent, the compiler is absent, the source is rejected
 use std::path::{Path, PathBuf};
 use std::process::Command;
 

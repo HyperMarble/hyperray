@@ -1,5 +1,8 @@
-// Reads the engine's answer, and the inputs that break a claim.
-// An answer is returned only when the run covered the code.
+// Purpose: reads the engine's answer and the inputs that break a claim.
+// Never:   returns a verdict for a run that did not cover the code.
+// In:      the engine's output
+// Out:     Proved, or Disproved with the registers the engine named
+// Fails:   the run stopped early, or the output holds no answer
 use crate::coverage::read_coverage;
 use crate::verdict::{Coverage, SolverError, Verdict, Witness};
 

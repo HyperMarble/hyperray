@@ -1,5 +1,8 @@
-// Installs loaded segments into Isla memory as concrete regions.
-// A zero-filled segment must not be expanded byte by byte.
+// Purpose: places a loaded image into memory the solver can read.
+// Never:   installs fewer bytes than the image holds.
+// In:      solver memory, a loaded image
+// Out:     the number of bytes installed
+// Fails:   not applicable, a segment with no bytes becomes a zero region
 use crate::image::Image;
 use isla_lib::bitvector::b64::B64;
 use isla_lib::memory::Memory;

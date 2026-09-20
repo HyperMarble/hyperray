@@ -1,39 +1,16 @@
-// Reads a macOS Mach-O file into the shared image.
-// It must never invent bytes or accept a slice it cannot represent.
+// Purpose: reads a macOS Mach-O file into the shared image.
+// Never:   invents bytes, or reads a slice it cannot represent.
+// In:      the bytes of a file
+// Out:     an Image with its segments and its entry, when one is declared
+// Fails:   unreadable header, no ARM64 part, a segment outside the file
 use crate::image::{Image, LoadError, Segment};
 use object::macho::{MachHeader64, CPU_TYPE_ARM64};
-use object::read::macho::{FatArch, MachHeader, MachOFatFile32, MachOFatFile64};
-use object::{Endianness, Object, ObjectSegment, SegmentFlags};
+use object::read::macho::MachHeader;
+use object::{Endianness, Object, ObjectSegment};
 
 pub fn load(content: &[u8]) -> Result<Image, LoadError> {
-    let slice = arm64_slice(content)?;
+    let slice = crate::slice::arm64_slice(content)?;
     read_image(slice)
-}
-
-/// Returns the ARM64 part of the file.
-///
-/// A universal file holds one part per architecture, so the ARM64 part is
-/// named rather than assumed to be the whole file. A file holding no ARM64
-/// part is refused, because nothing in it can be read here.
-///
-/// Apple writes the part table in two widths, so both are read.
-fn arm64_slice(content: &[u8]) -> Result<&[u8], LoadError> {
-    if let Ok(fat) = MachOFatFile64::parse(content) {
-        return named_arch(content, fat.arches());
-    }
-    if let Ok(fat) = MachOFatFile32::parse(content) {
-        return named_arch(content, fat.arches());
-    }
-    Ok(content)
-}
-
-fn named_arch<'a, Fat: FatArch>(content: &'a [u8], arches: &[Fat]) -> Result<&'a [u8], LoadError> {
-    for arch in arches {
-        if arch.cputype() == CPU_TYPE_ARM64 {
-            return arch.data(content).map_err(|e| LoadError::Parse(e.to_string()));
-        }
-    }
-    Err(LoadError::UnsupportedArchitecture { cpu: 0, subtype: 0 })
 }
 
 fn read_image(content: &[u8]) -> Result<Image, LoadError> {
@@ -78,25 +55,12 @@ fn read_segment(content: &[u8], segment: &object::Segment<'_, '_>) -> Result<Seg
         .checked_add(mapped_size)
         .ok_or(LoadError::ExtentOverflow { name: name.clone() })?;
     Ok(Segment {
-        readable: permits(segment, PROTECTION_READ),
-        writable: permits(segment, PROTECTION_WRITE),
-        executable: permits(segment, PROTECTION_EXECUTE),
+        readable: crate::macos_permission::permits(segment, crate::macos_permission::PROTECTION_READ),
+        writable: crate::macos_permission::permits(segment, crate::macos_permission::PROTECTION_WRITE),
+        executable: crate::macos_permission::permits(segment, crate::macos_permission::PROTECTION_EXECUTE),
         address: segment.address(),
         mapped_size,
         bytes: content[offset as usize..end as usize].to_vec(),
         name,
     })
-}
-
-/// Mach-O records what a segment permits in its initial protection field.
-const PROTECTION_READ: u32 = 0x1;
-const PROTECTION_WRITE: u32 = 0x2;
-const PROTECTION_EXECUTE: u32 = 0x4;
-
-/// Reads a permission from the file rather than from the segment's name.
-fn permits(segment: &object::Segment<'_, '_>, permission: u32) -> bool {
-    match segment.flags() {
-        SegmentFlags::MachO { initprot, .. } => initprot & permission != 0,
-        _ => false,
-    }
 }

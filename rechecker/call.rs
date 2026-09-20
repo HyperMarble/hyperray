@@ -1,5 +1,8 @@
-// The inputs a function needs before the processor can run it.
-// A value the caller did not name must never be replaced by a guess.
+// Purpose: the inputs a function needs before the processor can run it.
+// Never:   replaces a value the caller did not name with a guess.
+// In:      the arguments and the buffers a counterexample named
+// Out:     Call, Outcome, and whether a call can be made as described
+// Fails:   a buffer names an argument that does not exist, or names it twice
 
 /// The bytes a function reads or writes through a pointer.
 ///

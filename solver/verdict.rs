@@ -1,5 +1,8 @@
-// What a proof run answers, and whether the answer covers the code.
-// A run that did not cover the code must never be read as a verdict.
+// Purpose: names what a proof answers and whether the answer covers the code.
+// Never:   lets a run that stopped early be read as a verdict.
+// In:      nothing, this file only declares the shape
+// Out:     Verdict, Witness, Coverage, SolverError
+// Fails:   not applicable
 
 /// The answer to one claim.
 #[derive(Debug, PartialEq)]

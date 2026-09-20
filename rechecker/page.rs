@@ -1,5 +1,8 @@
-// Places instruction bytes in memory this processor will execute.
-// The page must never stay writable while it is executable.
+// Purpose: places instruction bytes in memory this processor will execute.
+// Never:   leaves a page writable while it is executable.
+// In:      the instruction words to run
+// Out:     a page the processor can call, released when it goes out of scope
+// Fails:   no instructions, memory not reserved, memory not made executable
 use crate::witness::RecheckError;
 
 /// Memory holding instructions the processor can run.

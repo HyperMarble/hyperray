@@ -1,5 +1,8 @@
-// Finds a compiled function's address range by its symbol name.
-// A name with no compiled address must return an error, never a guess.
+// Purpose: finds a compiled function's address range by its name.
+// Never:   guesses a range for a name with no compiled address.
+// In:      the bytes of a binary, a function name
+// Out:     the name with its start and end address
+// Fails:   the file is unreadable, the name is absent, the range has no end
 use object::{Object, ObjectSymbol};
 
 #[derive(Debug, PartialEq)]

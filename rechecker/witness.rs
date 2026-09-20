@@ -1,5 +1,8 @@
-// Runs a counterexample on the real processor.
-// A witness that the processor does not reproduce must be reported, not hidden.
+// Purpose: compares what the processor produced with what the solver named.
+// Never:   hides a disagreement between the chip and the model.
+// In:      a witness, and the value the processor produced
+// Out:     Confirmed, or Contradicted with both values
+// Fails:   the witness does not name a register the code reads
 use solver::Witness;
 
 #[derive(Debug, PartialEq)]
