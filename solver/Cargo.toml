@@ -1,0 +1,14 @@
+[package]
+name = "solver"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+libc = "0.2"
+
+[[test]]
+name = "recheck_test"
+path = "rechecker/tests/recheck_test.rs"
