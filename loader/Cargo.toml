@@ -1,0 +1,11 @@
+[package]
+name = "loader"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+isla-lib = { path = "/Volumes/Hak_SSD/hyperray-work/isla-continuation-v1-source/isla-lib", version = "0.2.0" }
+object = { version = "0.36", default-features = false, features = ["read", "macho", "elf", "std"] }
