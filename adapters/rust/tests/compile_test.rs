@@ -11,7 +11,10 @@ fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 #[no_mangle]
 pub extern "C" fn half(n: u64) -> u64 { n >> 1 }
 #[no_mangle]
-pub extern "C" fn _start() -> ! { let _ = half(4); loop {} }
+#[no_mangle]
+pub extern "C" fn start_here() -> u64 { half(4) }
+#[no_mangle]
+pub extern "C" fn _start() -> ! { start_here(); loop {} }
 "#;
 
 fn scratch(name: &str) -> PathBuf {
@@ -33,7 +36,9 @@ fn compiles_real_source_for_a_target_without_an_operating_system() {
 #[test]
 fn absent_source_is_reported_by_path() {
     let missing = scratch("not-written.rs");
-    let _ = std::fs::remove_file(&missing);
+    if missing.exists() {
+        std::fs::remove_file(&missing).expect("the fixture must be removable");
+    }
     match compile(&missing, &scratch("unused.bin"), BARE_METAL_RISCV) {
         Err(CompileError::SourceMissing(path)) => assert_eq!(path, missing),
         other => panic!("absent source must be named, got {other:?}"),

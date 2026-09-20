@@ -20,7 +20,10 @@ fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 #[inline(never)]
 pub extern "C" fn half(n: u64) -> u64 { n >> 1 }
 #[no_mangle]
-pub extern "C" fn _start() -> ! { let _ = half(4); loop {} }
+#[no_mangle]
+pub extern "C" fn start_here() -> u64 { half(4) }
+#[no_mangle]
+pub extern "C" fn _start() -> ! { start_here(); loop {} }
 "#;
 
 fn scratch(name: &str) -> PathBuf {
