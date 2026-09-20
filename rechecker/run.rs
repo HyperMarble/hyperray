@@ -1,6 +1,6 @@
 // Executes instruction bytes on this processor with the witness values.
 // It must refuse to run bytes it was not built to execute.
-use crate::rechecker::witness::RecheckError;
+use crate::witness::RecheckError;
 
 /// This host executes ARM64 instructions, so only ARM64 bytes can be run.
 #[cfg(target_arch = "aarch64")]
@@ -32,7 +32,7 @@ fn ends_in_return(instructions: &[u32]) -> bool {
 
 #[cfg(target_arch = "aarch64")]
 fn execute(instructions: &[u32], x0: u64, x1: u64) -> Result<u64, RecheckError> {
-    let page = crate::rechecker::page::executable_page(instructions)?;
+    let page = crate::page::executable_page(instructions)?;
     // The bytes are the compiled function, so calling them runs what shipped.
     let function: extern "C" fn(u64, u64) -> u64 = unsafe { std::mem::transmute(page.address()) };
     Ok(function(x0, x1))

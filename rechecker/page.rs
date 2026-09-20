@@ -1,6 +1,6 @@
 // Places instruction bytes in memory this processor will execute.
 // The page must never stay writable while it is executable.
-use crate::rechecker::witness::RecheckError;
+use crate::witness::RecheckError;
 
 /// Memory holding instructions the processor can run.
 pub struct ExecutablePage {

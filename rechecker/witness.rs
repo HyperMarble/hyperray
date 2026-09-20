@@ -1,6 +1,6 @@
 // Runs a counterexample on the real processor.
 // A witness that the processor does not reproduce must be reported, not hidden.
-use crate::verdict::Witness;
+use solver::Witness;
 
 #[derive(Debug, PartialEq)]
 pub enum Recheck {

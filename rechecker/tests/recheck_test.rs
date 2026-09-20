@@ -1,7 +1,7 @@
 // A counterexample must be reproduced by the processor that shipped the code.
 // Instructions the rechecker cannot run must be refused, never guessed at.
-use solver::rechecker::run::run_arm64;
-use solver::rechecker::witness::{compare, named_value, Recheck, RecheckError};
+use rechecker::run::run_arm64;
+use rechecker::witness::{compare, named_value, Recheck, RecheckError};
 use solver::Witness;
 
 /// add x0, x1, x0 ; ret  -- the instructions the compiler emitted for
