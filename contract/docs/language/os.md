@@ -5,8 +5,8 @@
 ## Syntax
 
 ```text
-os none
-os InterfaceName OperationName
+(os none)
+(os InterfaceName OperationName)
 ```
 
 A contract can contain more than one `os` call.
@@ -18,11 +18,14 @@ A contract can contain more than one `os` call.
 
 The installed interface supplies the parameter and result types.
 A separate formal operation contract supplies behavior.
-Hyper-Ray returns `BLOCKED` when that behavior contract is absent.
+If that behavior contract is absent, the target profile is incomplete. Hyper-Ray
+returns an engine error and no verdict.
 The `.hray` file does not repeat this information.
 
 Examples of interfaces include WASI and native operating-system interfaces.
 The selected target decides which installed interfaces are legal.
+The first release uses the installed WASI Preview 1 interface.
+Hyper-Ray reads that interface instead of copying its operation list.
 
 `os none` means that no operating-system call is permitted.
 Internal function calls do not use `os`.
@@ -30,7 +33,7 @@ Internal function calls do not use `os`.
 ## Example
 
 ```text
-os wasi_snapshot_preview1 fd_read
+(os wasi_snapshot_preview1 fd_read)
 ```
 
 Generated view fragment:
@@ -46,5 +49,5 @@ The validator rejects these cases:
 - The interface is not installed.
 - The operation is not part of the interface.
 - The operation conflicts with the compiled target.
-- `os none` appears with another `os` line.
+- `(os none)` appears with another `os` section.
 - Execution uses an operation that the contract does not name.

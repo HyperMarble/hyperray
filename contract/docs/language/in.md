@@ -5,16 +5,16 @@
 ## Syntax
 
 ```text
-in none
-in argN all
-in when BooleanExpression
+(in none)
+(in argN all)
+(in when BooleanExpression)
 ```
 
 Use `in none` only when the function has no inputs.
-Otherwise, each compiler-defined argument appears once as `in argN all`.
+Otherwise, each compiler-defined argument appears once as `(in argN all)`.
 
-An `in when` line narrows the allowed set.
-All `in when` lines must be true together.
+An `(in when ...)` section narrows the allowed set.
+All input rules must be true together.
 An input rule can use `argN` and `memory_before` only.
 It cannot use `ret` or `memory_after`.
 
@@ -27,9 +27,9 @@ For a condition `P`, Hyper-Ray uses every input for which `P` is true.
 It does not choose a sample from that set.
 
 ```text
-in arg1 all
-in arg2 all
-in when (bvule arg2 arg1)
+(in arg1 all)
+(in arg2 all)
+(in when (bvule arg2 arg1))
 ```
 
 This input set contains every pair where `arg2` is not greater than `arg1`.
@@ -44,7 +44,7 @@ for every arg1 and arg2 where arg2 <= arg1
 
 The compiler artifact supplies each argument type and machine location.
 The artifact can use DWARF or another compiler-produced record.
-Missing location data gives `BLOCKED`.
+Missing location data is an engine error and produces no verdict.
 The contract never names a register, stack offset, or source-language alias.
 
 ## Rejection
@@ -56,4 +56,4 @@ The validator rejects these cases:
 - The argument number does not exist.
 - An `in when` expression does not have type `Bool`.
 - An `in when` expression uses `ret` or `memory_after`.
-- `in none` appears with another `in` line.
+- `(in none)` appears with another `in` section.

@@ -5,11 +5,11 @@
 ## Syntax
 
 ```text
-out none
-out ret
+(out none)
+(out ret)
 ```
 
-A contract contains exactly one `out` line.
+A contract contains exactly one `out` section.
 
 ## Meaning
 
@@ -17,17 +17,17 @@ Use `out none` when the compiler reports no return value.
 Use `out ret` when the compiler reports a return value.
 
 `out` does not state what the result must contain.
-A `req` line states that rule.
+A `req` section states that rule.
 
 The compiler artifact supplies the result type and machine location.
-Missing location data gives `BLOCKED`.
+Missing location data is an engine error and produces no verdict.
 This covers a register, multiple registers, or an indirect return area.
 
 ## Example
 
 ```text
-out ret
-req (= ret (bvadd arg1 #x0000000000000001))
+(out ret)
+(req (= ret (bvadd arg1 #x0000000000000001)))
 ```
 
 Generated view fragment:
@@ -42,5 +42,5 @@ The validator rejects these cases:
 
 - `out none` conflicts with compiler metadata.
 - `out ret` conflicts with compiler metadata.
-- The file contains more than one `out` line.
-- The line names a register or a return-area address.
+- The file contains more than one `out` section.
+- The section names a register or a return-area address.

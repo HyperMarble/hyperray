@@ -5,11 +5,11 @@
 ## Syntax
 
 ```text
-fn FunctionName
+(fn FunctionName)
 ```
 
-A contract contains exactly one `fn` line.
-It follows the `hray` header.
+A contract contains exactly one `fn` section.
+It is the first child of `hray`.
 
 ## Meaning
 
@@ -23,7 +23,7 @@ The contract writer cannot create an alias.
 ## Example
 
 ```text
-fn advance
+(fn advance)
 ```
 
 Generated view fragment:
@@ -38,5 +38,5 @@ The validator rejects these cases:
 
 - The name does not exist.
 - The name selects more than one function.
-- The line contains a wildcard.
-- The file contains more than one `fn` line.
+- The section contains a wildcard.
+- The file contains more than one `fn` section.

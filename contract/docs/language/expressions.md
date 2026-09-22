@@ -7,10 +7,10 @@ They use prefix syntax so evaluation order is always clear.
 
 ```text
 Expression        = Role | Variable | Literal | Application | Quantifier .
-Application       = "(" Operation { Space Expression } ")" .
-Quantifier        = "(" QuantifierWord Space "(" Binding { Space Binding } ")"
-                    Space BooleanExpression ")" .
-Binding           = "(" Variable Space Type ")" .
+Application       = "(" Operation Expression { Expression } ")" .
+Quantifier        = "(" QuantifierWord "(" Binding { Binding } ")"
+                    BooleanExpression ")" .
+Binding           = "(" Variable Type ")" .
 QuantifierWord    = "forall" | "exists" .
 Variable          = "value" PositiveInteger .
 BooleanExpression = Expression .
@@ -30,6 +30,33 @@ A Boolean expression is an expression whose inferred type is `Bool`.
 A `valueN` variable is legal only inside a quantifier that binds the same name.
 Each binding in one quantifier must use a different name.
 `PositiveInteger` and `DecimalDigit` use the lexical rules in [The `.hray` language](file.md).
+
+## Fixed expression forms
+
+The validator accepts exactly fourteen expression forms:
+
+| Form | Contract text |
+|---|---|
+| Constant | `true`, `false`, `#b...`, or `#x...` |
+| Global | A role or registered literal |
+| Local | A bound `valueN` variable |
+| Application | `(RegisteredOperation Expression ...)` |
+| Exists | `(exists ((valueN Type) ...) BooleanExpression)` |
+| Forall | `(forall ((valueN Type) ...) BooleanExpression)` |
+| Equal | `(= Expression Expression ...)` |
+| Distinct | `(distinct Expression Expression ...)` |
+| And | `(and BooleanExpression ...)` |
+| Or | `(or BooleanExpression ...)` |
+| Xor | `(xor BooleanExpression ...)` |
+| Implies | `(=> BooleanExpression ...)` |
+| Not | `(not BooleanExpression)` |
+| If-then-else | `(ite BooleanExpression Expression Expression)` |
+
+This list is complete. A new type, literal, or operation extends a registry.
+It does not add an expression form.
+
+The language rejects `let`, `match`, annotations, lambdas, decimal numerals,
+real decimals, strings, and standalone qualified values.
 
 ## Types
 

@@ -3,7 +3,7 @@
 The English view is one generated line of Python-level pseudocode.
 It lets a person read the exact contract without reading solver syntax.
 
-## Direction
+## Current direction
 
 The direction is only:
 
@@ -11,8 +11,20 @@ The direction is only:
 .hray contract -> English view
 ```
 
-Hyper-Ray never parses, stores, or proves the English view.
+Hyper-Ray does not currently parse, store, or prove the English view.
 The `.hray` contract remains the only source.
+
+## Planned human authoring
+
+A later human editor will accept only fixed pseudocode forms.
+It will build the same contract tree and then write canonical `.hray` text.
+
+```text
+fixed human pseudocode -> contract tree -> .hray contract
+```
+
+This is not free English and does not use AI translation.
+The current release accepts AI-written `.hray` contracts only.
 
 ## One-line rule
 
