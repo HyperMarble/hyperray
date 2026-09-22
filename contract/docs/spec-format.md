@@ -17,5 +17,8 @@ The reference has one document for each language part:
 The English view is one generated line of Python-level pseudocode.
 The `.hray` file remains the only source for a proof.
 
+The complete `.hray` file is one SMT-LIB-shaped term.
+The pinned SMT parser reads the whole file in one operation.
+
 Hashes, patches, batches, and caches are not language features.
 The reliability layer documents those items separately.

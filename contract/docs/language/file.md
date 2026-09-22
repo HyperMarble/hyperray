@@ -1,97 +1,68 @@
 # The `.hray` language
 
 This reference defines the syntax and meaning of one `.hray` contract.
-It follows the structure of the Go, Python, Rust, and SMT-LIB references.
-
-## Reference structure
-
-This language reference follows these official references:
-
-- [The Go Programming Language Specification](https://go.dev/ref/spec).
-- [The Python Language Reference](https://docs.python.org/3/reference/).
-- [The Rust Reference](https://doc.rust-lang.org/reference/).
-- [The SMT-LIB Standard](https://smt-lib.org/language.shtml).
-
-## Notation
-
-The grammar uses Extended Backus-Naur Form.
-
-```text
-Rule       = required item .
-[ Rule ]   = optional item .
-{ Rule }   = zero or more items .
-"word"     = exact text .
-```
-
-A space in a grammar rule means one ASCII space.
-A newline means LF.
+The complete file is one SMT-LIB term.
 
 ## Source text
 
-A `.hray` file is UTF-8 text.
-It contains no comments and no free English text.
-Each statement occupies one line.
-Names use SMT-LIB symbol syntax.
+A `.hray` file is UTF-8 text. Its root operation is `hray`.
+Each direct child is one contract section.
+SMT-LIB handles symbols, literals, expressions, nesting, and whitespace.
 
-## File order
+## Section order
 
-Every file uses this order:
+Every contract uses this order:
 
 ```text
-hray
-fn
-in
-out
-mem
-os
-req
+fn, in, out, mem, os, req
 ```
 
-A missing section is an error.
-A section that has no items uses `none`.
+These six names are the complete fixed section set.
+Registry updates cannot add a seventh section.
+`fn` and `out` occur once. `in`, `mem`, `os`, and `req` can repeat.
+A file can therefore contain more than six section entries.
+A section with no items uses `none`.
 
 ## Grammar
 
 ```text
-Contract       = "hray" Newline Function Inputs Output Memory OS Requirements EOF .
-Function       = "fn" Space FunctionName Newline .
-Inputs         = "in" Space "none" Newline
+Contract       = "(" "hray" Function Inputs Output Memory OS Requirements ")" .
+Function       = "(" "fn" FunctionName ")" .
+Inputs         = "(" "in" "none" ")"
                | Input { Input } { InputRule } .
-Input          = "in" Space Argument Space "all" Newline .
-InputRule      = "in" Space "when" Space BooleanExpression Newline .
-Output         = "out" Space ( "none" | "ret" ) Newline .
-Memory         = "mem" Space "none" Newline
+Input          = "(" "in" Argument "all" ")" .
+InputRule      = "(" "in" "when" BooleanExpression ")" .
+Output         = "(" "out" ( "none" | "ret" ) ")" .
+Memory         = "(" "mem" "none" ")"
                | MemoryAccess { MemoryAccess } .
-MemoryAccess   = "mem" Space AddressExpression Space Access Space SizeExpression Space "bytes" Newline .
+MemoryAccess   = "(" "mem" AddressExpression Access SizeExpression "bytes" ")" .
 Access         = "read" | "write" .
-OS             = "os" Space "none" Newline
+OS             = "(" "os" "none" ")"
                | OSCall { OSCall } .
-OSCall         = "os" Space InterfaceName Space OperationName Newline .
+OSCall         = "(" "os" InterfaceName OperationName ")" .
 Requirements   = Requirement { Requirement } .
-Requirement    = "req" Space BooleanExpression Newline .
+Requirement    = "(" "req" BooleanExpression ")" .
 Argument       = "arg" PositiveInteger .
-AddressExpression = Expression .
-SizeExpression = Expression .
 PositiveInteger = NonzeroDigit { DecimalDigit } .
 DecimalDigit   = "0" … "9" .
 NonzeroDigit   = "1" … "9" .
 ```
 
-`Space` is U+0020. `Newline` is U+000A. `EOF` is the end of the file.
-`FunctionName`, `InterfaceName`, and `OperationName` use SMT-LIB symbols.
-Their values must come from installed metadata.
-The language does not create these names.
+Adjacent grammar items use SMT-LIB token boundaries.
+Whitespace and indentation do not change the parsed contract.
+Names use SMT-LIB symbol syntax.
+Expressions use the rules in [Expressions](expressions.md).
 
 ## Complete example
 
 ```text
-hray
-fn advance
-in arg1 all
-out ret
-mem none
-os none
-req (= ret (bvadd arg1 #x0000000000000001))
+(hray
+  (fn advance)
+  (in arg1 all)
+  (out ret)
+  (mem none)
+  (os none)
+  (req (= ret (bvadd arg1 #x0000000000000001))))
 ```
 
 Generated view:
@@ -100,7 +71,12 @@ Generated view:
 for every arg1 in u64: advance(arg1) must return wrapping_add(arg1, 1)
 ```
 
-## Rejection
+## Parsing and validation
 
-The validator rejects unknown words, missing sections, repeated `none`, and statements in the wrong order.
-It also rejects names and types that the compiler or selected model does not define.
+The parser calls the pinned SMT-LIB parser once for the complete file.
+It preserves each section value as an SMT syntax tree.
+Syntax errors name an exact source position.
+Structure errors name the root or direct section index.
+
+The validator checks section order, section contents, names, types, and roles.
+It reads compiler and model metadata instead of guessing missing facts.
