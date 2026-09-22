@@ -1,0 +1,7 @@
+(hray
+  (fn advance)
+  (in arg1 all)
+  (out ret)
+  (mem none)
+  (os none)
+  (req (= ret (bvadd arg1 #x0000000000000001))))
