@@ -34,3 +34,23 @@ jobs:
         run: go build ./...
       - name: tests
         run: go test ./... -timeout 20m
+
+  # The pre-commit checks again, on every file this push or pull request
+  # changed, so a contributor who skipped `pre-commit install` is caught.
+  code-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+      - name: changed files pass the pre-commit checks
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          rustup default stable
+          rustup component add rustfmt clippy
+          pipx install pre-commit
+          pre-commit run --show-diff-on-failure --from-ref "$BASE" --to-ref HEAD
