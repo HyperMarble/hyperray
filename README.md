@@ -5,90 +5,94 @@
 [![Release](https://img.shields.io/github/v/release/HyperMarble/hyperray)](https://github.com/HyperMarble/hyperray/releases)
 [![License](https://img.shields.io/github/license/HyperMarble/hyperray)](LICENSE)
 
-hyperray is an open source verification engine for tasks with a bounded scope. It proves that the three things an author writes — the statement, the solution, and the tests — agree with each other over the task's whole finite behavior space. A green run means they agree, provably; anything hyperray cannot verify is reported as untried, never assumed. Currently hyperray verifies coding tasks in Python, Rust, and C++.
+hyperray checks whether code really does what it is supposed to do.
+It works on the compiled program, the exact machine instructions that
+run, and uses proofs instead of tests.
 
-hyperray sits upstream of evaluation pipelines: before any agent or grader touches a task, hyperray answers whether the task itself is sound — no incorrect solution can pass its tests, and no correct solution is rejected by them.
+## Why
 
-## Features
+Tests only check the inputs someone thought to write down. A change can
+pass every test and still be wrong. This matters more now that AI agents
+write much of the code, and benchmarks judge those agents with tests.
 
-* **Fail-closed ladder**: `hyperray verify` chains every gate into one command with one exit code. A rung that cannot run reports blocked instead of silently passing.
-* **Statement gate**: the problem statement is checked like a reviewer reads it — ASCII only, word budget, and every promise-bearing sentence must have spec rows behind it.
-* **Repository lint gate**: the host repository's own configured linters (ruff, cargo clippy, clang-format/tidy) run against the solution files. No config in the repo means no gate — hyperray never invents style rules.
-* **Fail-to-pass**: every test must fail on the clean base and pass with the solution. A test that passes without the solution enforces nothing.
-* **Test hygiene**: the suite runs twice and in reverse order; the same tree must give the same verdict, or the verifier cannot be trusted as an instrument.
-* **Per-rule enforcement**: for each spec rule hyperray constructs the wrong solutions that violate it (wrong message, wrong type, no error) and demands the tests kill every one. Survivors are named holes, never shrugs.
-* **Generated probes**: hyperray watches the real solution behave — one probe per rule, generated in the task's language; the author writes a single entry per operation.
-* **Bundle completeness**: the test patch must deliver the canonical runner; a patch that drops it fails locally in milliseconds instead of remotely in minutes.
-* **Multi-language**: pytest, cargo, ctest, and googletest binaries all speak through one runner abstraction.
-* **Self-updating binary**: `hyperray update` fetches the latest release and swaps itself atomically.
+hyperray answers with a proof: either the code meets its requirement for
+every input, or here is an input where it does not.
 
-## Architecture
+## How it works
 
-The frozen design lives in [docs/specs/finalarchitecture.md](docs/specs/finalarchitecture.md) and [docs/specs/whole flow.md](docs/specs/whole%20flow.md), digest-guarded by [docs/specs/architecture-freeze.sha256](docs/specs/architecture-freeze.sha256). The evidence rule and proof requirements are in [docs/specs](docs/specs).
-
-## Install & Run
-
-**Install the release binary** (macOS and Linux, arm64 and amd64):
-
-via Homebrew:
-
-```sh
-brew install hypermarble/tap/hyperray
+```
+your project + a spec of what the code must do
+   -> 1. build     the project, the way it builds for release
+   -> 2. read      the compiled program
+   -> 3. model     every instruction with the official ARM semantics
+   -> 4. verify    check the spec against the code, at the ISA level
 ```
 
-via Curl:
+1. **Build.** hyperray runs the project's own build (cargo for Rust, the
+   project's Python environment for Python), so it checks the exact code
+   that ships, with the same versions and settings.
+2. **Read.** It reads the compiled program: the original bytes, how they
+   are laid out in memory, and the libraries they call.
+3. **Model.** Each instruction gets its meaning from Sail, the official
+   machine-readable model of the ARM processor, run by our verification
+   engine and solved with Z3.
+4. **Verify.** The code is checked against your spec for every input.
+   Because the check runs on the processor's own instruction semantics,
+   it also sees what the code really does there, including behavior the
+   spec never mentioned, such as a path that can fault or write out of
+   bounds.
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/HyperMarble/hyperray/main/install.sh | sh
-```
+## What you get
 
-or from source (Go 1.25+)
+Every check ends in one of these answers:
 
-```sh
-go install github.com/HyperMarble/hyperray/cmd/hyperray@latest
-```
-
-**Verify a task:**
-
-```sh
-hyperray init my-task     # writes a spec template and the schema reference
-# author spec.md
-hyperray verify my-task   # the whole ladder, one exit code
-```
-
-Release artifacts ship with a `checksums.txt`; verify a download with `shasum -a 256 -c checksums.txt`.
-
-## Commands
-
-| Command | Purpose |
+| Answer | Meaning |
 |---|---|
-| `hyperray init` | Start a task: spec template plus schema reference |
-| `hyperray lint` | Compile spec.md strictly against the frozen instruction |
-| `hyperray verify` | Run the whole authoring ladder |
-| `hyperray check` / `hyperray start` | Verify a finished frozen task end to end |
-| `hyperray harvest` | Mine a pinned dependency's own tests for edge values |
-| `hyperray version` / `hyperray update` | Print the build; self-update to the latest release |
+| **Proved** | The code meets the spec for every input. |
+| **Disproved** | Here is an input where it does not, confirmed on the real processor. |
+| **Open** | hyperray could not finish, and says where and why. This says nothing about whether the code is right. |
+| **Blocked** | Something it needs is missing, such as the project's build settings. |
 
-Internal rungs (`prose-lint`, `repo-lint`, `bridges-gen`, `enforce`, `hygiene`, `rows`) are driven by `verify` and callable directly for debugging.
+Each answer is tied to the exact build it came from, so a result never
+outlives the code it describes.
 
-## Compatibility
+## Status
 
-| Language | Test frameworks | Lint gates |
-|---|---|---|
-| Python | pytest | ruff |
-| Rust | cargo test | cargo clippy |
-| C++ | ctest, googletest binaries | clang-format, clang-tidy |
+hyperray is in early development. It does **not** yet verify a real
+function end to end.
 
-## Roadmap
+- [x] `.hray` spec format, with parser and validator
+      (done, but still changing as the rest takes shape)
+- [ ] Language adapters that build a whole Rust or Python project
+- [ ] Verification engine
+- [ ] Verification: prove code meets its spec, at the ISA level
+- [ ] Git-style record tying every proof to the exact build it covers
+- [ ] Judge for coding benchmarks, and a training signal
+- [ ] x86 support
 
-1. PR-scoped verification
-2. Runtime reliability layer (Anchor)
-3. Open-ended scope
+Since hyperray is in early development, expect a lot of changes across
+the codebase, even in parts that are already done. The latest release,
+v0.1.2, is an earlier design.
 
-## Changelog
+## Repository map
 
-One-line entries per release in [CHANGELOG.md](CHANGELOG.md).
+| Folder | What it holds |
+|---|---|
+| `language/` | one adapter per language, which builds the project |
+| `loader/` | reads compiled programs and decodes instructions (Rust) |
+| `contract/` | the `.hray` spec format: parser and validator (Rust) |
+| `solver/` | reads the solver's answers (Rust) |
+| `rechecker/` | confirms counterexamples on the real processor (Rust) |
+| `machine/` | the old Go engine connection, to be replaced |
+| `cmd/hyperray/` | the command-line tool (Go) |
+| `skills/` | instructions for AI agents writing specs |
+| `docs/` | how the parts work |
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
+setup, tests, and how we work.
 
 ## License
 
-hyperray is available under the [MIT license](LICENSE).
+[MIT](LICENSE)
