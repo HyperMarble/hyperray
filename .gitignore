@@ -67,3 +67,7 @@ DESIGN-*.md
 loader/Cargo.lock
 solver/Cargo.lock
 rechecker/Cargo.lock
+
+# Maintainer notes, kept local
+CODE_RULES.md
+CLAUDE.md
