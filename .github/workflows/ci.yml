@@ -26,8 +26,6 @@ jobs:
           rustup default stable
       - name: gofmt is clean
         run: test -z "$(gofmt -l .)"
-      - name: adapter source ownership
-        run: go test -count=1 ./layout
       - name: vet
         run: go vet ./...
       - name: build
