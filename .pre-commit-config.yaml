@@ -1,0 +1,68 @@
+# Runs on every `git commit`, on the staged files only. Each hook enforces
+# one of the repo's code rules; a failing hook blocks the commit.
+# Setup once:  uv tool install pre-commit && pre-commit install
+exclude: '(^|/)(target|fixtures)/|/tests/sources/'
+
+repos:
+  - repo: local
+    hooks:
+      # Shape: file and function length, nesting depth, no hidden failures.
+      - id: shape
+        name: shape rules
+        language: python
+        entry: python .github/checks/shape.py
+        files: '\.(rs|py|go)$'
+        additional_dependencies:
+          - tree-sitter==0.25.2
+          - tree-sitter-rust==0.24.2
+          - tree-sitter-python==0.25.0
+          - tree-sitter-go==0.25.0
+
+      # Rust: formatter, then clippy with warnings as errors.
+      - id: rustfmt
+        name: rustfmt
+        language: system
+        entry: rustfmt --check --edition 2021
+        types: [rust]
+      - id: clippy
+        name: clippy
+        language: system
+        entry: python3 .github/checks/clippy_crates.py
+        types: [rust]
+
+      # Python: formatter, linter, strict types.
+      - id: ruff-format
+        name: ruff format
+        language: python
+        entry: ruff format --check
+        types: [python]
+        additional_dependencies: [ruff==0.16.5]
+      - id: ruff-check
+        name: ruff check
+        language: python
+        entry: ruff check --extend-select BLE,S110
+        types: [python]
+        additional_dependencies: [ruff==0.16.5]
+      - id: mypy
+        name: mypy strict
+        language: python
+        entry: mypy --strict
+        types: [python]
+        additional_dependencies:
+          - mypy==2.3.1
+          - tree-sitter==0.25.2
+          - tree-sitter-rust==0.24.2
+          - tree-sitter-python==0.25.0
+          - tree-sitter-go==0.25.0
+
+      # Go: formatter, then vet on the packages that changed.
+      - id: gofmt
+        name: gofmt
+        language: system
+        entry: bash -c 'unformatted=$(gofmt -l "$@"); [ -z "$unformatted" ] || { echo "$unformatted"; exit 1; }' --
+        types: [go]
+      - id: go-vet
+        name: go vet
+        language: system
+        entry: bash -c 'go vet $(for f in "$@"; do echo "./$(dirname "$f")"; done | sort -u)' --
+        types: [go]
