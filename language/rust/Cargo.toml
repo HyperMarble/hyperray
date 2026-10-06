@@ -35,3 +35,7 @@ path = "tests/cargo_build_test.rs"
 [[test]]
 name = "locked_test"
 path = "tests/locked_test.rs"
+
+[[test]]
+name = "build_record_test"
+path = "tests/build_record_test.rs"
