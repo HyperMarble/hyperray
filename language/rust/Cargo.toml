@@ -19,3 +19,11 @@ path = "tests/record_test.rs"
 [[test]]
 name = "project_test"
 path = "tests/project_test.rs"
+
+[[test]]
+name = "toolchain_test"
+path = "tests/toolchain_test.rs"
+
+[[test]]
+name = "os_test"
+path = "tests/os_test.rs"
