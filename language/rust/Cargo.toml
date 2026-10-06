@@ -15,3 +15,7 @@ sha2 = "0.10"
 [[test]]
 name = "record_test"
 path = "tests/record_test.rs"
+
+[[test]]
+name = "project_test"
+path = "tests/project_test.rs"
