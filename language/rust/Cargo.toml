@@ -27,3 +27,11 @@ path = "tests/toolchain_test.rs"
 [[test]]
 name = "os_test"
 path = "tests/os_test.rs"
+
+[[test]]
+name = "cargo_build_test"
+path = "tests/cargo_build_test.rs"
+
+[[test]]
+name = "locked_test"
+path = "tests/locked_test.rs"
