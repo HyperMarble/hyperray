@@ -48,6 +48,7 @@ pub fn record() -> BuildRecord {
     let settings = Settings {
         requested: Choice::default(),
         lock_file: digest("Cargo.lock"),
+        config_files: vec![digest(".cargo/config.toml")],
     };
     let rustflags = Some("-C target-cpu=native".to_string());
     let native = NativeCode {

@@ -6,6 +6,7 @@ pub mod c_toolchain;
 pub mod cargo_build;
 pub mod cargo_messages;
 pub mod choice;
+pub mod config_files;
 pub mod debug_info;
 pub mod digest;
 pub mod environment;
@@ -64,6 +65,7 @@ fn try_build_record(root: &Path, choice: &Choice) -> Result<BuildRecord, Blocked
         settings: Settings {
             requested: choice.clone(),
             lock_file: digest_of(&project.lock_file)?,
+            config_files: config_files::config_files(&project.root)?,
         },
         environment: environment::build_environment(std::env::vars()),
         native_code: built.native_code,

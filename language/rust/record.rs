@@ -37,6 +37,9 @@ pub struct Toolchain {
 pub struct Settings {
     pub requested: Choice,
     pub lock_file: FileDigest,
+    /// Cargo's settings files for this build, deepest first (the project's
+    /// own `.cargo/config.toml`, each parent folder's, the home one).
+    pub config_files: Vec<FileDigest>,
 }
 
 /// Everything needed to know exactly which code was built, and how.
