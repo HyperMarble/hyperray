@@ -61,6 +61,10 @@ name = "c_toolchain_test"
 path = "tests/c_toolchain_test.rs"
 
 [[test]]
+name = "record_facts_test"
+path = "tests/record_facts_test.rs"
+
+[[test]]
 name = "debug_info_test"
 path = "tests/debug_info_test.rs"
 
