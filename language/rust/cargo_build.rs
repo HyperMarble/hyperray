@@ -1,9 +1,10 @@
-// Purpose: runs the project's own release build and lists the files it made
-//          and the native code linked into them.
+// Purpose: runs the project's own build, as the user chose it, and lists the
+//          files it made and the native code linked into them.
 // Never:   changes Cargo.lock, or reports a dependency's file as the project's.
 use crate::blocked::Blocked;
 use crate::build_facts::{Compiled, NativeCode};
 use crate::cargo_messages::{files_of, native_code_of};
+use crate::choice::Choice;
 use crate::project::Project;
 use crate::run::printed;
 use serde_json::Value;
@@ -29,10 +30,14 @@ pub struct BuildOutput {
     pub native_code: Vec<NativeCode>,
 }
 
-/// Builds with `--locked`, so Cargo fails rather than change pinned versions.
-pub fn build(project: &Project) -> Result<BuildOutput, Blocked> {
+/// Builds what `choice` asks for, with `--locked`, so Cargo fails rather
+/// than change pinned versions.
+pub fn build(project: &Project, choice: &Choice) -> Result<BuildOutput, Blocked> {
     let members = workspace_members(project)?;
-    let args = ["build", "--release", "--locked", "--message-format=json"];
+    let mut args = vec!["build".to_string(), "--locked".to_string()];
+    args.extend(choice.cargo_args());
+    args.push("--message-format=json".to_string());
+    let args: Vec<&str> = args.iter().map(String::as_str).collect();
     let messages = printed("cargo", &args, &project.root)?;
     let mut output = BuildOutput {
         files: Vec::new(),

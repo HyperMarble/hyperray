@@ -4,6 +4,7 @@ mod sample_project;
 
 use language_rust::blocked::Blocked;
 use language_rust::cargo_build::{build, Built};
+use language_rust::choice::Choice;
 use language_rust::project::find;
 use sample_project::{create, Sample};
 
@@ -15,7 +16,7 @@ fn built(name: &str, file: &str, source: &str) -> Result<Result<Vec<Built>, Bloc
         locked: true,
     })?;
     let project = find(&root).map_err(|blocked| blocked.to_string())?;
-    Ok(build(&project).map(|output| output.files))
+    Ok(build(&project, &Choice::default()).map(|output| output.files))
 }
 
 #[test]

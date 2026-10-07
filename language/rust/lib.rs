@@ -4,6 +4,7 @@ pub mod blocked;
 pub mod build_facts;
 pub mod cargo_build;
 pub mod cargo_messages;
+pub mod choice;
 pub mod debug_info;
 pub mod digest;
 pub mod os;
@@ -13,14 +14,23 @@ pub mod run;
 pub mod toolchain;
 
 use blocked::Blocked;
+use choice::Choice;
 use digest::digest_of;
 use record::{Artifact, BuildRecord, Outcome, Settings};
 use std::path::Path;
 
-/// Builds the Cargo project at `root` and returns its build record, or the
-/// reason it could not be built.
+/// Builds the Cargo project at `root` the project's own default way (release
+/// profile, default features) and returns its build record, or the reason it
+/// could not be built.
 pub fn build_record(root: &Path) -> Outcome {
-    match try_build_record(root) {
+    build_record_with(root, &Choice::default())
+}
+
+/// Builds the Cargo project at `root` the way `choice` asks (a profile and a
+/// feature setting) and returns its build record, or the reason it could
+/// not be built.
+pub fn build_record_with(root: &Path, choice: &Choice) -> Outcome {
+    match try_build_record(root, choice) {
         Ok(record) => Outcome::Built(Box::new(record)),
         Err(blocked) => Outcome::Blocked {
             reason: blocked.to_string(),
@@ -28,9 +38,9 @@ pub fn build_record(root: &Path) -> Outcome {
     }
 }
 
-fn try_build_record(root: &Path) -> Result<BuildRecord, Blocked> {
+fn try_build_record(root: &Path, choice: &Choice) -> Result<BuildRecord, Blocked> {
     let project = project::find(root)?;
-    let built = cargo_build::build(&project)?;
+    let built = cargo_build::build(&project, choice)?;
     let mut artifacts = Vec::new();
     for file in built.files {
         artifacts.push(Artifact {
@@ -50,7 +60,7 @@ fn try_build_record(root: &Path) -> Result<BuildRecord, Blocked> {
         artifacts,
         toolchain: toolchain::toolchain(root)?,
         settings: Settings {
-            profile: "release".to_string(),
+            requested: choice.clone(),
             lock_file: digest_of(&project.lock_file)?,
         },
         os_build: os::os_build(root)?,

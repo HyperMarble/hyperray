@@ -1,6 +1,7 @@
 // Purpose: the build record the adapter hands to the loader, as JSON.
 // Never:   holds a value that was not read from the build or the machine.
 use crate::build_facts::Compiled;
+use crate::choice::Choice;
 use serde::Serialize;
 
 /// A file named by the hash of its bytes.
@@ -30,10 +31,11 @@ pub struct Toolchain {
     pub compiler: FileDigest,
 }
 
-/// The project settings that decided how the code was built.
+/// The project settings that decided how the code was built: what the user
+/// asked for, and the lock file that pinned every version.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Settings {
-    pub profile: String,
+    pub requested: Choice,
     pub lock_file: FileDigest,
 }
 

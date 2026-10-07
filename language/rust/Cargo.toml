@@ -41,6 +41,14 @@ name = "build_record_test"
 path = "tests/build_record_test.rs"
 
 [[test]]
+name = "choice_test"
+path = "tests/choice_test.rs"
+
+[[test]]
+name = "features_test"
+path = "tests/features_test.rs"
+
+[[test]]
 name = "debug_info_test"
 path = "tests/debug_info_test.rs"
 

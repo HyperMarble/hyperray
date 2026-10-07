@@ -1,6 +1,7 @@
 // Purpose: one complete, made-up build record for the JSON shape checks.
 // Never:   stands in for a real build; real builds are checked elsewhere.
 use language_rust::build_facts::Compiled;
+use language_rust::choice::Choice;
 use language_rust::record::{Artifact, BuildRecord, FileDigest, Settings, Toolchain};
 
 pub fn digest(path: &str) -> FileDigest {
@@ -36,7 +37,7 @@ pub fn record() -> BuildRecord {
         compiler: digest("rustc"),
     };
     let settings = Settings {
-        profile: "release".to_string(),
+        requested: Choice::default(),
         lock_file: digest("Cargo.lock"),
     };
     BuildRecord {
