@@ -1,6 +1,6 @@
 // Purpose: the build record the adapter hands to the loader, as JSON.
 // Never:   holds a value that was not read from the build or the machine.
-use crate::build_facts::Compiled;
+use crate::build_facts::{Compiled, EnvVar};
 use crate::choice::Choice;
 use serde::Serialize;
 
@@ -46,6 +46,7 @@ pub struct BuildRecord {
     pub artifacts: Vec<Artifact>,
     pub toolchain: Toolchain,
     pub settings: Settings,
+    pub environment: Vec<EnvVar>,
     pub os_build: String,
 }
 

@@ -49,6 +49,10 @@ name = "features_test"
 path = "tests/features_test.rs"
 
 [[test]]
+name = "environment_test"
+path = "tests/environment_test.rs"
+
+[[test]]
 name = "debug_info_test"
 path = "tests/debug_info_test.rs"
 

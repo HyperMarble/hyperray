@@ -7,6 +7,7 @@ pub mod cargo_messages;
 pub mod choice;
 pub mod debug_info;
 pub mod digest;
+pub mod environment;
 pub mod os;
 pub mod project;
 pub mod record;
@@ -63,6 +64,7 @@ fn try_build_record(root: &Path, choice: &Choice) -> Result<BuildRecord, Blocked
             requested: choice.clone(),
             lock_file: digest_of(&project.lock_file)?,
         },
+        environment: environment::build_environment(std::env::vars()),
         os_build: os::os_build(root)?,
     })
 }

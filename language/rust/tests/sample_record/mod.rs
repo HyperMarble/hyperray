@@ -1,6 +1,6 @@
 // Purpose: one complete, made-up build record for the JSON shape checks.
 // Never:   stands in for a real build; real builds are checked elsewhere.
-use language_rust::build_facts::Compiled;
+use language_rust::build_facts::{Compiled, EnvVar};
 use language_rust::choice::Choice;
 use language_rust::record::{Artifact, BuildRecord, FileDigest, Settings, Toolchain};
 
@@ -40,11 +40,16 @@ pub fn record() -> BuildRecord {
         requested: Choice::default(),
         lock_file: digest("Cargo.lock"),
     };
+    let rustflags = Some("-C target-cpu=native".to_string());
     BuildRecord {
         language: "rust".to_string(),
         artifacts: vec![artifact()],
         toolchain,
         settings,
+        environment: vec![EnvVar {
+            name: "RUSTFLAGS".to_string(),
+            value: rustflags,
+        }],
         os_build: "macOS 27.0 (25A123)".to_string(),
     }
 }
