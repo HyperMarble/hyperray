@@ -20,27 +20,46 @@ every input, or here is an input where it does not.
 
 ## How it works
 
-```
-your project + a spec of what the code must do
-   -> 1. build     the project, the way it builds for release
-   -> 2. read      the compiled program
-   -> 3. model     every instruction with the official ARM semantics
-   -> 4. verify    check the spec against the code, at the ISA level
+```mermaid
+flowchart TD
+    project["Your project"] --> build
+    selection["Function or patch to check"] --> build
+    build["1. Build<br/>the project its own way, for release"] --> read
+    read["2. Read<br/>original bytes, layout, needed libraries"] --> semantics
+    semantics["3. Semantics<br/>Sail, the official ARM model"] --> engine
+    engine["4. Engine<br/>walks the code symbolically<br/>(Isla + CBMC methods), solved with Z3"] --> formal
+    spec["Spec: what the code must do"] --> formal
+    formal["5. Formal verification<br/>check the code against the spec"] --> observable
+    observable["6. Observable verification<br/>what the code really does, beyond the spec"] --> confirm
+    confirm["7. Confirm<br/>run any failing input on the real processor"] --> record
+    record["8. Record<br/>tie the result to the exact build and change"] --> uses
+    uses["CLI, library, benchmark judge,<br/>agent loop, training signal"]
 ```
 
 1. **Build.** hyperray runs the project's own build (cargo for Rust, the
-   project's Python environment for Python), so it checks the exact code
-   that ships, with the same versions and settings.
-2. **Read.** It reads the compiled program: the original bytes, how they
-   are laid out in memory, and the libraries they call.
-3. **Model.** Each instruction gets its meaning from Sail, the official
-   machine-readable model of the ARM processor, run by our verification
-   engine and solved with Z3.
-4. **Verify.** The code is checked against your spec for every input.
-   Because the check runs on the processor's own instruction semantics,
-   it also sees what the code really does there, including behavior the
-   spec never mentioned, such as a path that can fault or write out of
-   bounds.
+   go tool for Go) with the project's own versions and settings, so it
+   checks the exact code that ships.
+2. **Read.** It reads the built program as it is: the original bytes, how
+   they are laid out in memory, and the libraries the code calls.
+3. **Semantics.** Each instruction gets its meaning from Sail, the
+   official machine-readable model of the ARM processor, pinned to one
+   version.
+4. **Engine.** The engine walks the selected code symbolically, so one
+   run covers every input. It builds on Isla and on methods from CBMC,
+   and hands its questions to the Z3 solver.
+5. **Formal verification.** The code is checked against your spec for
+   every input.
+6. **Observable verification.** Then the engine checks what the code
+   really does on the processor's own instruction semantics, including
+   behavior the spec never mentioned, such as a path that can fault or
+   write out of bounds. It never goes beyond what the ISA defines.
+7. **Confirm.** When the code fails, the failing input is run on the real
+   processor to confirm it.
+8. **Record.** The result is tied, Git-style, to the exact build and the
+   change it checks.
+
+hyperray works as a command-line tool and as a library, so it can judge
+coding benchmarks, run inside an agent's loop, or give a training signal.
 
 ## What you get
 
