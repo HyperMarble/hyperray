@@ -1,5 +1,6 @@
 // Purpose: the build record the adapter hands to the loader, as JSON.
 // Never:   holds a value that was not read from the build or the machine.
+use crate::build_facts::Compiled;
 use serde::Serialize;
 
 /// A file named by the hash of its bytes.
@@ -9,11 +10,16 @@ pub struct FileDigest {
     pub sha256: String,
 }
 
-/// One file the build produced, and what kind of target made it.
+/// One file the build produced, what kind of target made it, and how.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Artifact {
     pub kind: String,
     pub file: FileDigest,
+    pub features: Vec<String>,
+    pub compiled: Compiled,
+    /// The file's debug information (names and source lines, no code), when
+    /// the build made it: the one file inside Apple's `.dSYM` bundle.
+    pub debug_info: Option<FileDigest>,
 }
 
 /// The compiler that produced the artifacts.

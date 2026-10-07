@@ -1,34 +1,58 @@
-// Purpose: runs the project's own release build and lists the files it made.
+// Purpose: runs the project's own release build and lists the files it made
+//          and the native code linked into them.
 // Never:   changes Cargo.lock, or reports a dependency's file as the project's.
 use crate::blocked::Blocked;
+use crate::build_facts::{Compiled, NativeCode};
+use crate::cargo_messages::{files_of, native_code_of};
 use crate::project::Project;
 use crate::run::printed;
 use serde_json::Value;
 use std::path::PathBuf;
 
-/// One file the build made, with the kind of target that made it.
+/// One file the build made, with the kind of target that made it and how.
 #[derive(Debug, PartialEq)]
 pub struct Built {
     pub kind: String,
     pub path: PathBuf,
+    /// The features Cargo reports this file was built with.
+    pub features: Vec<String>,
+    pub compiled: Compiled,
+    /// Apple's `.dSYM` debug-info bundle for this file, when Cargo made one.
+    pub debug_info: Option<PathBuf>,
+}
+
+/// Everything one build reported: the project's own files, and the native
+/// code any package's build script linked in (dependencies' too).
+#[derive(Debug, PartialEq)]
+pub struct BuildOutput {
+    pub files: Vec<Built>,
+    pub native_code: Vec<NativeCode>,
 }
 
 /// Builds with `--locked`, so Cargo fails rather than change pinned versions.
-pub fn build(project: &Project) -> Result<Vec<Built>, Blocked> {
+pub fn build(project: &Project) -> Result<BuildOutput, Blocked> {
     let members = workspace_members(project)?;
     let args = ["build", "--release", "--locked", "--message-format=json"];
     let messages = printed("cargo", &args, &project.root)?;
-    let mut found = Vec::new();
-    for line in messages.lines() {
+    let mut output = BuildOutput {
+        files: Vec::new(),
+        native_code: Vec::new(),
+    };
+    // Cargo's messages are its JSON lines; any other line is the compiler
+    // printing what the project's own settings asked for, not a message.
+    for line in messages.lines().filter(|line| line.starts_with('{')) {
         let message = parse(line, "cargo build output")?;
         if is_member_artifact(&message, &members) {
-            found.extend(files_of(&message));
+            output.files.extend(files_of(&message)?);
+        }
+        if message["reason"] == "build-script-executed" {
+            output.native_code.extend(native_code_of(&message));
         }
     }
-    if found.is_empty() {
+    if output.files.is_empty() {
         return Err(Blocked::NoArtifact);
     }
-    Ok(found)
+    Ok(output)
 }
 
 /// The package ids of the project's own crates, not its dependencies.
@@ -51,20 +75,4 @@ fn parse(text: &str, what: &str) -> Result<Value, Blocked> {
 
 fn is_member_artifact(message: &Value, members: &[Value]) -> bool {
     message["reason"] == "compiler-artifact" && members.contains(&message["package_id"])
-}
-
-/// The compiled files of one artifact message. Metadata-only `.rmeta`
-/// files hold no machine code, so they are not part of the build record.
-fn files_of(message: &Value) -> Vec<Built> {
-    let kind = message["target"]["kind"][0].as_str().unwrap_or("unknown");
-    let files = message["filenames"].as_array().cloned().unwrap_or_default();
-    files
-        .iter()
-        .filter_map(Value::as_str)
-        .filter(|path| !path.ends_with(".rmeta"))
-        .map(|path| Built {
-            kind: kind.to_string(),
-            path: PathBuf::from(path),
-        })
-        .collect()
 }

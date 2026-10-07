@@ -1,7 +1,10 @@
 // Purpose: the Rust adapter: build a project its own way, record what came out.
 // Never:   read instructions or prove anything; the loader and engine do that.
 pub mod blocked;
+pub mod build_facts;
 pub mod cargo_build;
+pub mod cargo_messages;
+pub mod debug_info;
 pub mod digest;
 pub mod os;
 pub mod project;
@@ -29,10 +32,17 @@ fn try_build_record(root: &Path) -> Result<BuildRecord, Blocked> {
     let project = project::find(root)?;
     let built = cargo_build::build(&project)?;
     let mut artifacts = Vec::new();
-    for file in built {
+    for file in built.files {
         artifacts.push(Artifact {
             kind: file.kind,
             file: digest_of(&file.path)?,
+            features: file.features,
+            compiled: file.compiled,
+            debug_info: file
+                .debug_info
+                .as_deref()
+                .map(debug_info::dwarf_digest)
+                .transpose()?,
         });
     }
     Ok(BuildRecord {

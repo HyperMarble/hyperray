@@ -39,3 +39,11 @@ path = "tests/locked_test.rs"
 [[test]]
 name = "build_record_test"
 path = "tests/build_record_test.rs"
+
+[[test]]
+name = "debug_info_test"
+path = "tests/debug_info_test.rs"
+
+[[test]]
+name = "compiler_printout_test"
+path = "tests/compiler_printout_test.rs"

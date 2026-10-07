@@ -15,7 +15,7 @@ fn built(name: &str, file: &str, source: &str) -> Result<Result<Vec<Built>, Bloc
         locked: true,
     })?;
     let project = find(&root).map_err(|blocked| blocked.to_string())?;
-    Ok(build(&project))
+    Ok(build(&project).map(|output| output.files))
 }
 
 #[test]
