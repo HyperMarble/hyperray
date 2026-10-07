@@ -53,6 +53,14 @@ name = "environment_test"
 path = "tests/environment_test.rs"
 
 [[test]]
+name = "native_code_test"
+path = "tests/native_code_test.rs"
+
+[[test]]
+name = "c_toolchain_test"
+path = "tests/c_toolchain_test.rs"
+
+[[test]]
 name = "debug_info_test"
 path = "tests/debug_info_test.rs"
 

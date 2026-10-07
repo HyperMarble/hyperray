@@ -1,6 +1,6 @@
 // Purpose: one complete, made-up build record for the JSON shape checks.
 // Never:   stands in for a real build; real builds are checked elsewhere.
-use language_rust::build_facts::{Compiled, EnvVar};
+use language_rust::build_facts::{CToolchain, Compiled, EnvVar, NativeCode};
 use language_rust::choice::Choice;
 use language_rust::record::{Artifact, BuildRecord, FileDigest, Settings, Toolchain};
 
@@ -30,6 +30,15 @@ fn artifact() -> Artifact {
     }
 }
 
+fn c_toolchain() -> CToolchain {
+    CToolchain {
+        compiler: digest("clang"),
+        version: "Apple clang version 27.0.0".to_string(),
+        sdk_path: None,
+        sdk_version: Some("27.0".to_string()),
+    }
+}
+
 pub fn record() -> BuildRecord {
     let toolchain = Toolchain {
         version: "1.98.1".to_string(),
@@ -41,6 +50,10 @@ pub fn record() -> BuildRecord {
         lock_file: digest("Cargo.lock"),
     };
     let rustflags = Some("-C target-cpu=native".to_string());
+    let native = NativeCode {
+        package: "zstd-sys".to_string(),
+        linked_libs: vec!["static=zstd".to_string()],
+    };
     BuildRecord {
         language: "rust".to_string(),
         artifacts: vec![artifact()],
@@ -50,6 +63,8 @@ pub fn record() -> BuildRecord {
             name: "RUSTFLAGS".to_string(),
             value: rustflags,
         }],
+        native_code: vec![native],
+        c_toolchain: c_toolchain(),
         os_build: "macOS 27.0 (25A123)".to_string(),
     }
 }

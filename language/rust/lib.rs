@@ -2,6 +2,7 @@
 // Never:   read instructions or prove anything; the loader and engine do that.
 pub mod blocked;
 pub mod build_facts;
+pub mod c_toolchain;
 pub mod cargo_build;
 pub mod cargo_messages;
 pub mod choice;
@@ -65,6 +66,8 @@ fn try_build_record(root: &Path, choice: &Choice) -> Result<BuildRecord, Blocked
             lock_file: digest_of(&project.lock_file)?,
         },
         environment: environment::build_environment(std::env::vars()),
+        native_code: built.native_code,
+        c_toolchain: c_toolchain::c_toolchain(root)?,
         os_build: os::os_build(root)?,
     })
 }
