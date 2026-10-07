@@ -28,6 +28,12 @@ paste the test run
 
 If you claim something is faster, paste both numbers.
 
+## Coverage
+
+The step this touches (adapter, loader, semantics, engine) and its coverage
+run after the change: the count, with the command. A step's count may not
+go down.
+
 ## Can this cause a wrong PROVED?
 
 - [ ] No, and here is why
