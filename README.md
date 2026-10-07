@@ -22,9 +22,9 @@ every input, or here is an input where it does not.
 
 ```mermaid
 flowchart TD
-    project["Your project"] --> build
-    selection["Function or patch to check"] --> build
-    build["1. Build<br/>the project its own way, for release"] --> read
+    environment["Environment<br/>the code and everything it depends on"] --> build
+    selection["What to check<br/>a function, a patch, or a whole binary"] --> build
+    build["1. Build<br/>with the environment's own build tool and settings"] --> read
     read["2. Read<br/>original bytes, layout, needed libraries"] --> semantics
     semantics["3. Semantics<br/>Sail, the official ARM model"] --> engine
     engine["4. Engine<br/>walks the code symbolically<br/>(Isla + CBMC methods), solved with Z3"] --> formal
@@ -32,13 +32,13 @@ flowchart TD
     formal["5. Formal verification<br/>check the code against the spec"] --> observable
     observable["6. Observable verification<br/>what the code really does, beyond the spec"] --> confirm
     confirm["7. Confirm<br/>run any failing input on the real processor"] --> record
-    record["8. Record<br/>tie the result to the exact build and change"] --> uses
-    uses["CLI, library, benchmark judge,<br/>agent loop, training signal"]
+    record["8. Record<br/>tie the result to the exact build and change"]
+    record -- "next change" --> build
 ```
 
-1. **Build.** hyperray runs the project's own build (cargo for Rust, the
-   go tool for Go) with the project's own versions and settings, so it
-   checks the exact code that ships.
+1. **Build.** hyperray runs the environment's own build (cargo for Rust,
+   the go tool for Go) with its own versions and settings, so it checks
+   the exact code that ships.
 2. **Read.** It reads the built program as it is: the original bytes, how
    they are laid out in memory, and the libraries the code calls.
 3. **Semantics.** Each instruction gets its meaning from Sail, the
