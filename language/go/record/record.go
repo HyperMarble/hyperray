@@ -51,6 +51,7 @@ type BuildRecord struct {
 	Nested         []Nested      `json:"nested"`
 	IgnoredModules []FileDigest  `json:"ignored_modules"`
 	LocalModules   []LocalModule `json:"local_modules"`
+	Excluded       []Excluded    `json:"excluded"`
 }
 
 // Outcome is the adapter's answer: a build, or the reason there is none.

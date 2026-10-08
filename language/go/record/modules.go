@@ -39,3 +39,12 @@ type LocalModule struct {
 	Dir     string       `json:"dir"`
 	Sources []FileDigest `json:"sources"`
 }
+
+// Excluded is a folder with Go code that the build left out, with Go's own
+// reason, usually that build constraints exclude every file on this
+// machine, and the files it left out by hash.
+type Excluded struct {
+	Dir    string       `json:"dir"`
+	Reason string       `json:"reason"`
+	Files  []FileDigest `json:"files"`
+}

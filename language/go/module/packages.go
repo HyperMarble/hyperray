@@ -40,21 +40,16 @@ const listedFields = "-json=ImportPath,Name,Dir,GoFiles,CgoFiles,CFiles,CXXFiles
 	"TestGoFiles,TestEmbedFiles,XTestGoFiles,XTestEmbedFiles,Module"
 
 // ListPackages asks the go tool for every package under root, with the
-// build's own tags and flags, so the file lists match what gets built.
+// build's own tags and flags, so the file lists match what gets built. A
+// module where ./... matches nothing is a module with nothing to build,
+// which is what go build itself does with it, not a refusal.
 func ListPackages(root string, choice record.Choice) ([]Package, error) {
 	args := append([]string{"list", listedFields}, choice.Args()...)
 	text, err := tool.Printed(root, "go", append(args, "./...")...)
 	if err != nil {
 		return nil, err
 	}
-	found, err := DecodePackages(text)
-	if err != nil {
-		return nil, err
-	}
-	if len(found) == 0 {
-		return nil, record.NoPackages(root)
-	}
-	return found, nil
+	return DecodePackages(text)
 }
 
 // DecodePackages reads the stream of packages `go list -json` prints.
@@ -86,4 +81,12 @@ func (pkg Package) NativeCode() *record.NativeCode {
 		AssemblyFiles: pkg.SFiles, SwigFiles: pkg.SwigFiles, SwigCxxFiles: pkg.SwigCXXFiles,
 		ObjectFiles: pkg.SysoFiles,
 	}
+}
+
+// decodeOne reads the single JSON object `go list -e -json <dir>` prints.
+func decodeOne(text string, into any) error {
+	if err := json.NewDecoder(strings.NewReader(text)).Decode(into); err != nil {
+		return record.Unreadable("go list output", err)
+	}
+	return nil
 }

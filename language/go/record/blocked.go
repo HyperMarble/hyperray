@@ -13,10 +13,6 @@ func NoModule(root string) Blocked {
 	return Blocked{fmt.Sprintf("%s has no go.mod: which Go version and modules should be used?", root)}
 }
 
-func NoPackages(root string) Blocked {
-	return Blocked{fmt.Sprintf("%s has no Go packages to build", root)}
-}
-
 func ToolMissing(tool string, cause error) Blocked {
 	return Blocked{fmt.Sprintf("%s could not start: %v", tool, cause)}
 }

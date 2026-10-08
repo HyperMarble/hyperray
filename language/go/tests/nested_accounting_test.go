@@ -1,5 +1,6 @@
 // Purpose: every folder holding Go code is accounted for in exactly one
-// place: a built file's sources, a nested module, or an ignored module.
+// place: a built file's sources, a nested module, an ignored module, or a
+// folder go excluded.
 // Never:   lets a folder with Go code belong to no part of the record.
 package goadapter_test
 
@@ -16,6 +17,7 @@ func TestEveryFolderWithGoCodeIsAccountedFor(t *testing.T) {
 	root, out := writeModule(t, map[string]string{
 		"lib/lib.go": library, "inner/go.mod": innerModule, "inner/x/x.go": innerSource,
 		"testdata/m/go.mod": innerModule, "testdata/m/m.go": innerSource,
+		"other/other.go": otherMachine,
 	})
 	record := built(t, root, out, goadapter.Choice{})
 	placed := placedDirs(record)
@@ -34,7 +36,7 @@ func TestEveryFolderWithGoCodeIsAccountedFor(t *testing.T) {
 }
 
 // placedDirs is every folder the record accounts for: a source's folder,
-// a nested module's tree, or an ignored module's tree.
+// a nested module's tree, an ignored module's tree, or an excluded folder.
 func placedDirs(record *goadapter.BuildRecord) map[string]bool {
 	dirs := map[string]bool{}
 	for _, artifact := range record.Artifacts {
@@ -49,6 +51,9 @@ func placedDirs(record *goadapter.BuildRecord) map[string]bool {
 	}
 	for _, ignored := range record.IgnoredModules {
 		markTree(dirs, filepath.Dir(ignored.Path))
+	}
+	for _, excluded := range record.Excluded {
+		dirs[excluded.Dir] = true
 	}
 	return dirs
 }
