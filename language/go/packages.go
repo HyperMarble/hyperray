@@ -10,17 +10,30 @@ import (
 
 // Package is what `go list` reports about one package of the module.
 type Package struct {
-	ImportPath string
-	Name       string
-	Dir        string
-	GoFiles    []string
-	CgoFiles   []string
-	CFiles     []string
-	CXXFiles   []string
-	SFiles     []string
+	ImportPath      string
+	Name            string
+	Dir             string
+	GoFiles         []string
+	CgoFiles        []string
+	CFiles          []string
+	CXXFiles        []string
+	SFiles          []string
+	MFiles          []string
+	HFiles          []string
+	FFiles          []string
+	SwigFiles       []string
+	SwigCXXFiles    []string
+	SysoFiles       []string
+	EmbedFiles      []string
+	TestGoFiles     []string
+	TestEmbedFiles  []string
+	XTestGoFiles    []string
+	XTestEmbedFiles []string
 }
 
-const listedFields = "-json=ImportPath,Name,Dir,GoFiles,CgoFiles,CFiles,CXXFiles,SFiles"
+const listedFields = "-json=ImportPath,Name,Dir,GoFiles,CgoFiles,CFiles,CXXFiles,SFiles," +
+	"MFiles,HFiles,FFiles,SwigFiles,SwigCXXFiles,SysoFiles,EmbedFiles," +
+	"TestGoFiles,TestEmbedFiles,XTestGoFiles,XTestEmbedFiles"
 
 // listPackages asks the go tool for every package under root, with the
 // build's own tags and flags, so the file lists match what gets built.

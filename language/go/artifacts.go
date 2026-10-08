@@ -15,7 +15,7 @@ func artifactsOf(files []built) ([]Artifact, error) {
 		if err != nil {
 			return nil, err
 		}
-		artifacts = append(artifacts, Artifact{Kind: file.kind, Package: file.pkg, File: digest, BuildInfo: info})
+		artifacts = append(artifacts, Artifact{Kind: file.kind, Package: file.pkg, File: digest, Sources: file.sources, BuildInfo: info})
 	}
 	return artifacts, nil
 }

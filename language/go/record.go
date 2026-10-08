@@ -34,12 +34,13 @@ type BuildInfo struct {
 }
 
 // Artifact is one file the build made: which package, what kind of program,
-// and what Go says about how it was built.
+// the source bytes compiled into it, and what Go says about how it was built.
 type Artifact struct {
-	Kind      string     `json:"kind"`
-	Package   string     `json:"package"`
-	File      FileDigest `json:"file"`
-	BuildInfo BuildInfo  `json:"build_info"`
+	Kind      string       `json:"kind"`
+	Package   string       `json:"package"`
+	File      FileDigest   `json:"file"`
+	Sources   []FileDigest `json:"sources"`
+	BuildInfo BuildInfo    `json:"build_info"`
 }
 
 // Toolchain is the go tool that built the module.

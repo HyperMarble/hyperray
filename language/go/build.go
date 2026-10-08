@@ -11,9 +11,10 @@ import (
 
 // built is one file the build made, before it is digested and read back.
 type built struct {
-	kind string
-	pkg  string
-	path string
+	kind    string
+	pkg     string
+	path    string
+	sources []FileDigest
 }
 
 const (
@@ -50,7 +51,11 @@ func buildOne(root, out string, choice Choice, overlay string, index int, pkg Pa
 		if _, err := printed(root, "go", append(args, "-o", exe, pkg.ImportPath)...); err != nil {
 			return nil, err
 		}
-		files = append(files, built{programKind, pkg.ImportPath, exe})
+		sources, err := sourcesOf(pkg, false)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, built{programKind, pkg.ImportPath, exe, sources})
 	}
 	test := filepath.Join(out, name+".test")
 	args := append([]string{"test"}, choice.args()...)
@@ -58,5 +63,9 @@ func buildOne(root, out string, choice Choice, overlay string, index int, pkg Pa
 	if _, err := printed(root, "go", args...); err != nil {
 		return nil, err
 	}
-	return append(files, built{testProgramKind, pkg.ImportPath, test}), nil
+	sources, err := sourcesOf(pkg, true)
+	if err != nil {
+		return nil, err
+	}
+	return append(files, built{testProgramKind, pkg.ImportPath, test, sources}), nil
 }
