@@ -105,5 +105,6 @@ and [AI_POLICY.md](AI_POLICY.md) for how we use AI tools.
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE). Free for personal use, research,
-and non-profits. Commercial use needs a deal with us.
+[GNU AGPL v3](LICENSE). Copyright 2026 S Tharundhatri. Use it, change it,
+ship it, but whatever you ship or run as a service must be published
+under the same license.

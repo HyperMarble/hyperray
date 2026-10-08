@@ -53,4 +53,4 @@ it yourself, no code golf.
 ## License
 
 By contributing, you agree that your work is licensed under the
-[PolyForm Noncommercial License](LICENSE).
+[GNU AGPL v3](LICENSE).
