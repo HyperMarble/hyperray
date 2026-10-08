@@ -36,16 +36,25 @@ func plain() {}
 func init() {}
 `
 
+const ownTestFile = "package kinds\n\nfunc helper() {}\n"
+const externalTestFile = "package kinds_test\n\nfunc outside() {}\n"
+
 func TestKeptNamesAreTheReferableFunctions(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "k.go"), []byte(kinds), 0o644); err != nil {
-		t.Fatal(err)
+	for name, text := range map[string]string{"k.go": kinds, "k_test.go": ownTestFile, "x_test.go": externalTestFile} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
-	names, err := KeptNames(module.Package{Dir: dir, GoFiles: []string{"k.go"}}, nil)
+	pkg := module.Package{Dir: dir, GoFiles: []string{"k.go"}, TestGoFiles: []string{"k_test.go"}, XTestGoFiles: []string{"x_test.go"}}
+	names, err := KeptNames(pkg, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"T.Value", "(*T).Pointer", "T.Paren", "(*T).ParenPtr", "(*T).StarParen", "plain"}
+	if external, err := ExternalTestNames(pkg, nil); err != nil || !slices.Equal(external, []string{"outside"}) {
+		t.Fatalf("external: %v %v", external, err)
+	}
+	want := []string{"T.Value", "(*T).Pointer", "T.Paren", "(*T).ParenPtr", "(*T).StarParen", "plain", "helper"}
 	if !slices.Equal(names, want) {
 		t.Fatalf("got %v, want %v", names, want)
 	}

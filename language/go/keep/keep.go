@@ -1,7 +1,8 @@
-// Purpose: names every function and method in a package that Go code can
-// refer to by value, so a generated test can keep each one linked
-// with its own machine code (Go's linker drops what nothing reaches,
-// and the compiler inlines small bodies away).
+// Purpose: names every function and method in a package, its own test
+// files, and its external test package, that Go code can refer to by
+// value, so a generated test can keep each one linked with its own
+// machine code (Go's linker drops what nothing reaches, and the compiler
+// inlines small bodies away).
 // Never:   names what Go cannot take by value: init, main, generic functions
 // and methods of generic types. Those have machine code only where
 // they are used with concrete types, and that code is kept too.
@@ -18,16 +19,29 @@ import (
 )
 
 // KeptNames lists the package's functions as Go expressions: `f`, `T.m`
-// for a value receiver, `(*T).m` for a pointer receiver. Each file is read
-// the way the build reads it: through the user's overlay when one maps it.
+// for a value receiver, `(*T).m` for a pointer receiver, from its Go and
+// cgo files and its own test files, which the test program compiles too.
+// Each file is read the way the build reads it: through the user's
+// overlay when one maps it.
 func KeptNames(pkg module.Package, overlay map[string]string) ([]string, error) {
-	set := token.NewFileSet()
-	names := []string{}
-	files := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles))
+	files := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles)+len(pkg.TestGoFiles))
 	files = append(files, pkg.GoFiles...)
 	files = append(files, pkg.CgoFiles...)
+	files = append(files, pkg.TestGoFiles...)
+	return namesInFiles(pkg.Dir, files, overlay)
+}
+
+// ExternalTestNames lists the functions of the package's external test
+// package, the `_test` one Go compiles separately and links in.
+func ExternalTestNames(pkg module.Package, overlay map[string]string) ([]string, error) {
+	return namesInFiles(pkg.Dir, pkg.XTestGoFiles, overlay)
+}
+
+func namesInFiles(dir string, files []string, overlay map[string]string) ([]string, error) {
+	set := token.NewFileSet()
+	names := []string{}
 	for _, file := range files {
-		path, present := throughOverlay(filepath.Join(pkg.Dir, file), overlay)
+		path, present := throughOverlay(filepath.Join(dir, file), overlay)
 		if !present {
 			continue
 		}
