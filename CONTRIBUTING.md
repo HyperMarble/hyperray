@@ -46,16 +46,9 @@ We use `type(scope): short summary`, for example
 
 ## Using AI tools
 
-AI tools are welcome. They're great for moving faster. But the code still
-has to be right, and it's yours once you submit it:
-
-- **Read every line.** You should be able to explain why each line is
-  there and why it's correct.
-- **Test it yourself.** Passing CI is the minimum, not proof it's right.
-- **Say what you used** in the pull request description.
-
-Pull requests that are fully AI-generated, where the author can't explain
-the changes, will be closed.
+AI tools are welcome. The rules are short and live in
+[AI_POLICY.md](AI_POLICY.md): say what you used, know every line, check
+it yourself, no code golf.
 
 ## License
 
