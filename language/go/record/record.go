@@ -20,11 +20,16 @@ type Artifact struct {
 	BuildInfo BuildInfo    `json:"build_info"`
 }
 
-// Toolchain is the go tool that built the module.
+// Toolchain is the go installation that built the module: the go command,
+// every tool in its tool directory, one hash over the standard library's
+// source, and the experiments switched on.
 type Toolchain struct {
-	Version  string     `json:"version"`
-	Host     string     `json:"host"`
-	Compiler FileDigest `json:"compiler"`
+	Version     string       `json:"version"`
+	Host        string       `json:"host"`
+	Experiments string       `json:"experiments"`
+	Compiler    FileDigest   `json:"compiler"`
+	Tools       []FileDigest `json:"tools"`
+	StdSource   string       `json:"std_source"`
 }
 
 // Settings is what the user asked for and the files that pin every version.
