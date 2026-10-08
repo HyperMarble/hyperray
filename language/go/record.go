@@ -81,16 +81,17 @@ type CToolchain struct {
 
 // BuildRecord is everything needed to know exactly which code was built, and how.
 type BuildRecord struct {
-	Language       string       `json:"language"`
-	Artifacts      []Artifact   `json:"artifacts"`
-	Toolchain      Toolchain    `json:"toolchain"`
-	Settings       Settings     `json:"settings"`
-	Environment    []EnvVar     `json:"environment"`
-	NativeCode     []NativeCode `json:"native_code"`
-	CToolchain     *CToolchain  `json:"c_toolchain"`
-	OsBuild        string       `json:"os_build"`
-	Nested         []Nested     `json:"nested"`
-	IgnoredModules []FileDigest `json:"ignored_modules"`
+	Language       string        `json:"language"`
+	Artifacts      []Artifact    `json:"artifacts"`
+	Toolchain      Toolchain     `json:"toolchain"`
+	Settings       Settings      `json:"settings"`
+	Environment    []EnvVar      `json:"environment"`
+	NativeCode     []NativeCode  `json:"native_code"`
+	CToolchain     *CToolchain   `json:"c_toolchain"`
+	OsBuild        string        `json:"os_build"`
+	Nested         []Nested      `json:"nested"`
+	IgnoredModules []FileDigest  `json:"ignored_modules"`
+	LocalModules   []LocalModule `json:"local_modules"`
 }
 
 // Outcome is the adapter's answer: a build, or the reason there is none.

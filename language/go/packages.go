@@ -29,11 +29,12 @@ type Package struct {
 	TestEmbedFiles  []string
 	XTestGoFiles    []string
 	XTestEmbedFiles []string
+	Module          *ModuleInfo
 }
 
 const listedFields = "-json=ImportPath,Name,Dir,GoFiles,CgoFiles,CFiles,CXXFiles,SFiles," +
 	"MFiles,HFiles,FFiles,SwigFiles,SwigCXXFiles,SysoFiles,EmbedFiles," +
-	"TestGoFiles,TestEmbedFiles,XTestGoFiles,XTestEmbedFiles"
+	"TestGoFiles,TestEmbedFiles,XTestGoFiles,XTestEmbedFiles,Module"
 
 // listPackages asks the go tool for every package under root, with the
 // build's own tags and flags, so the file lists match what gets built.
@@ -43,6 +44,18 @@ func listPackages(root string, choice Choice) ([]Package, error) {
 	if err != nil {
 		return nil, err
 	}
+	found, err := decodePackages(text)
+	if err != nil {
+		return nil, err
+	}
+	if len(found) == 0 {
+		return nil, noPackages(root)
+	}
+	return found, nil
+}
+
+// decodePackages reads the stream of packages `go list -json` prints.
+func decodePackages(text string) ([]Package, error) {
 	decoder := json.NewDecoder(strings.NewReader(text))
 	found := []Package{}
 	for decoder.More() {
@@ -51,9 +64,6 @@ func listPackages(root string, choice Choice) ([]Package, error) {
 			return nil, unreadable("go list output", err)
 		}
 		found = append(found, pkg)
-	}
-	if len(found) == 0 {
-		return nil, noPackages(root)
 	}
 	return found, nil
 }

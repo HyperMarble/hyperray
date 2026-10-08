@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -42,6 +43,18 @@ func lockFiles(root string) ([]FileDigest, error) {
 		}
 	}
 	return found, nil
+}
+
+// pinsUnchanged is an error when the pin files moved during the build.
+func pinsUnchanged(root string, before []FileDigest) error {
+	after, err := lockFiles(root)
+	if err != nil {
+		return err
+	}
+	if !slices.Equal(before, after) {
+		return Blocked{Reason: "module pin files changed during build"}
+	}
+	return nil
 }
 
 func digestIfPresent(path string) (FileDigest, bool, error) {
