@@ -1,11 +1,12 @@
 // Purpose: each build choice becomes exactly Cargo's own arguments.
 // Never:   switches a feature on, or picks a profile, that was not asked for.
-use language_rust::choice::{Choice, Features};
+use language_rust::choice::{Choice, Features, Targets};
 
 fn args(profile: &str, features: Features) -> Vec<String> {
     let choice = Choice {
         profile: profile.to_string(),
         features,
+        targets: Targets::Default,
     };
     choice.cargo_args()
 }
@@ -39,5 +40,17 @@ fn each_feature_setting_becomes_cargos_arguments() {
     assert_eq!(
         args("release", Features::All),
         ["--profile", "release", "--all-features"]
+    );
+}
+
+#[test]
+fn asking_for_every_target_adds_cargos_all_targets_flag() {
+    let choice = Choice {
+        targets: Targets::All,
+        ..Choice::default()
+    };
+    assert_eq!(
+        choice.cargo_args(),
+        ["--profile", "release", "--all-targets"]
     );
 }

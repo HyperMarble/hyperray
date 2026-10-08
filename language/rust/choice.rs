@@ -1,4 +1,5 @@
-// Purpose: the build the user asks for: which profile and which features.
+// Purpose: the build the user asks for: which profile, which features, and
+//          which targets (the test programs too, or not).
 // Never:   switches on a feature or picks a profile nobody asked for; with no
 //          request it is exactly the project's own default release build.
 use serde::Serialize;
@@ -17,11 +18,24 @@ pub enum Features {
     All,
 }
 
-/// One build of the project: a named profile and a feature setting.
+/// Which of the project's targets to build.
+#[derive(Debug, PartialEq, Clone, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Targets {
+    /// The project's default targets: its library and its programs.
+    Default,
+    /// Everything the project can make: library, programs, test programs,
+    /// examples and benchmarks. Test programs carry `compiled.test = true`.
+    All,
+}
+
+/// One build of the project: a named profile, a feature setting, and which
+/// targets to make.
 #[derive(Debug, PartialEq, Clone, Serialize)]
 pub struct Choice {
     pub profile: String,
     pub features: Features,
+    pub targets: Targets,
 }
 
 impl Default for Choice {
@@ -30,6 +44,7 @@ impl Default for Choice {
         Choice {
             profile: "release".to_string(),
             features: Features::Default,
+            targets: Targets::Default,
         }
     }
 }
@@ -46,6 +61,9 @@ impl Choice {
                 args.extend(feature_list(names));
             }
             Features::All => args.push("--all-features".to_string()),
+        }
+        if self.targets == Targets::All {
+            args.push("--all-targets".to_string());
         }
         args
     }

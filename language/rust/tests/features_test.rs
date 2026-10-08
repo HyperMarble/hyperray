@@ -5,7 +5,7 @@
 mod sample_project;
 
 use language_rust::build_record_with;
-use language_rust::choice::{Choice, Features};
+use language_rust::choice::{Choice, Features, Targets};
 use language_rust::record::{BuildRecord, Outcome};
 use sample_project::{create, Sample};
 use std::io::Write;
@@ -56,6 +56,7 @@ fn a_feature_switched_off_is_left_out_and_switched_on_is_built() -> Result<(), S
         Choice {
             profile: "release".to_string(),
             features: Features::Plus(vec!["fancy".to_string()]),
+            targets: Targets::Default,
         },
     )?;
     assert!(!has_fancy(&off)? && has_fancy(&on)?);
@@ -72,6 +73,7 @@ fn the_projects_own_profile_is_used_and_recorded() -> Result<(), String> {
         Choice {
             profile: "dist".to_string(),
             features: Features::Default,
+            targets: Targets::Default,
         },
     )?;
     assert!(release
