@@ -44,7 +44,11 @@ func tryBuildRecord(root, out string, choice record.Choice) (*record.BuildRecord
 		return nil, err
 	}
 	facts.Artifacts = artifacts
-	facts.Settings = record.Settings{Requested: choice, LockFiles: locks}
+	flags, err := tool.BuildFlags(root, choice)
+	if err != nil {
+		return nil, err
+	}
+	facts.Settings = record.Settings{Requested: choice, Tags: build.StampedTags(artifacts), BuildFlags: flags, LockFiles: locks}
 	facts.NativeCode = build.NativeCodeOf(packages)
 	facts.LocalModules, err = module.LocalModules(root, choice)
 	if err != nil {

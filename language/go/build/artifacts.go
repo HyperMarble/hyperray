@@ -5,6 +5,8 @@
 package build
 
 import (
+	"strings"
+
 	"github.com/HyperMarble/hyperray/language/go/module"
 	"github.com/HyperMarble/hyperray/language/go/record"
 )
@@ -56,4 +58,24 @@ func NativeCodeOf(packages []module.Package) []record.NativeCode {
 		}
 	}
 	return found
+}
+
+// StampedTags is the build tags Go stamped into the built files: what the
+// build really used, whichever -tags came last.
+func StampedTags(artifacts []record.Artifact) []string {
+	for _, artifact := range artifacts {
+		if tags := tagsIn(artifact.BuildInfo); len(tags) > 0 {
+			return tags
+		}
+	}
+	return []string{}
+}
+
+func tagsIn(info record.BuildInfo) []string {
+	for _, setting := range info.Settings {
+		if setting.Key == "-tags" && setting.Value != "" {
+			return strings.Split(setting.Value, ",")
+		}
+	}
+	return nil
 }
