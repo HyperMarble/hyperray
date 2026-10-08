@@ -53,4 +53,4 @@ it yourself, no code golf.
 ## License
 
 By contributing, you agree that your work is licensed under the
-[MIT License](LICENSE).
+[PolyForm Noncommercial License](LICENSE).

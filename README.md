@@ -105,4 +105,5 @@ and [AI_POLICY.md](AI_POLICY.md) for how we use AI tools.
 
 ## License
 
-[MIT](LICENSE)
+[PolyForm Noncommercial 1.0.0](LICENSE). Free for personal use, research,
+and non-profits. Commercial use needs a deal with us.
