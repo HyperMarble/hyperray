@@ -105,6 +105,4 @@ and [AI_POLICY.md](AI_POLICY.md) for how we use AI tools.
 
 ## License
 
-[GNU AGPL v3](LICENSE). Copyright 2026 S Tharundhatri. Use it, change it,
-ship it, but whatever you ship or run as a service must be published
-under the same license.
+[GNU AGPL v3](LICENSE). Copyright 2026 S Tharundhatri. 
