@@ -1,6 +1,6 @@
 // Purpose: turns the built files into record entries: each one named by its
-// hash and carrying Go's own build facts, and the packages that
-// compile C, C++ or assembly.
+// hash, carrying Go's own build facts and the profile Go applied, and the
+// packages that compile C, C++ or assembly.
 // Never:   records a file without reading Go's build facts back out of it.
 package build
 
@@ -20,9 +20,32 @@ func ArtifactsOf(files []built) ([]record.Artifact, error) {
 		if err != nil {
 			return nil, err
 		}
-		artifacts = append(artifacts, record.Artifact{Kind: file.kind, Package: file.pkg, File: digest, Sources: file.sources, BuildInfo: info})
+		profile, err := profileOf(info)
+		if err != nil {
+			return nil, err
+		}
+		artifacts = append(artifacts, record.Artifact{
+			Kind: file.kind, Package: file.pkg, File: digest, Sources: file.sources, Profile: profile, BuildInfo: info,
+		})
 	}
 	return artifacts, nil
+}
+
+// profileOf hashes the profile Go says it applied: the `-pgo` setting it
+// stamps into a built file names the file, with "auto" already resolved to
+// the default.pgo it found. No setting means no profile was applied.
+func profileOf(info record.BuildInfo) (*record.FileDigest, error) {
+	for _, setting := range info.Settings {
+		if setting.Key != "-pgo" || setting.Value == "off" {
+			continue
+		}
+		digest, err := record.DigestOf(setting.Value)
+		if err != nil {
+			return nil, err
+		}
+		return &digest, nil
+	}
+	return nil, nil
 }
 
 func NativeCodeOf(packages []module.Package) []record.NativeCode {

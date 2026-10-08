@@ -16,6 +16,7 @@ type Artifact struct {
 	Package   string       `json:"package"`
 	File      FileDigest   `json:"file"`
 	Sources   []FileDigest `json:"sources"`
+	Profile   *FileDigest  `json:"pgo_profile,omitempty"`
 	BuildInfo BuildInfo    `json:"build_info"`
 }
 
