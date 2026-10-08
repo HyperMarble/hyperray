@@ -1,6 +1,6 @@
 // Purpose: every file list `go list` can report is either hashed into the
-// record or named here as not compiled; a new kind in a future Go
-// fails this test by name.
+// record or named here as not compiled, and every compiled kind is Go
+// source, embedded data, or native; a new kind in a future Go fails by name.
 // Never:   trusts a hand-written list of kinds over `go help list`.
 package module
 
@@ -39,6 +39,21 @@ func TestEveryFileListGoListReportsIsHashedOrNamedExcluded(t *testing.T) {
 	for kind := range (Package{}).fileLists() {
 		if !known[kind] {
 			t.Errorf("%s is hashed but not named as a kind", kind)
+		}
+	}
+}
+
+func TestEveryCompiledKindIsGoSourceEmbeddedDataOrNative(t *testing.T) {
+	native := map[string]bool{}
+	for _, kind := range nativeFileKinds {
+		native[kind] = true
+	}
+	if len(native) == 0 {
+		t.Fatal("no native kinds")
+	}
+	for _, kind := range programFileKinds {
+		if kind != "GoFiles" && kind != "EmbedFiles" && !native[kind] {
+			t.Errorf("%s is compiled but is neither go source, embedded data, nor native", kind)
 		}
 	}
 }

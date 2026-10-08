@@ -15,6 +15,12 @@ var programFileKinds = []string{
 	"SFiles", "SwigFiles", "SwigCXXFiles", "SysoFiles", "EmbedFiles",
 }
 
+// The compiled kinds that are not Go source: what the C toolchain sees.
+var nativeFileKinds = []string{
+	"CgoFiles", "CFiles", "CXXFiles", "MFiles", "HFiles", "FFiles", "SFiles",
+	"SwigFiles", "SwigCXXFiles", "SysoFiles",
+}
+
 // The fields whose files go only into the test program.
 var testFileKinds = []string{"TestGoFiles", "TestEmbedFiles", "XTestGoFiles", "XTestEmbedFiles"}
 

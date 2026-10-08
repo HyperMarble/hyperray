@@ -71,16 +71,19 @@ func DecodePackages(text string) ([]Package, error) {
 	return found, nil
 }
 
-// NativeCode names the package's C, C++ and assembly files, if it has any.
+// NativeCode names the package's files that are not Go source, if any.
 func (pkg Package) NativeCode() *record.NativeCode {
-	if len(pkg.CgoFiles)+len(pkg.CFiles)+len(pkg.CXXFiles)+len(pkg.SFiles) == 0 {
+	lists, total := pkg.fileLists(), 0
+	for _, kind := range nativeFileKinds {
+		total += len(lists[kind])
+	}
+	if total == 0 {
 		return nil
 	}
 	return &record.NativeCode{
-		Package:       pkg.ImportPath,
-		CgoFiles:      pkg.CgoFiles,
-		CFiles:        pkg.CFiles,
-		CxxFiles:      pkg.CXXFiles,
-		AssemblyFiles: pkg.SFiles,
+		Package: pkg.ImportPath, CgoFiles: pkg.CgoFiles, CFiles: pkg.CFiles, CxxFiles: pkg.CXXFiles,
+		ObjectiveCFiles: pkg.MFiles, HeaderFiles: pkg.HFiles, FortranFiles: pkg.FFiles,
+		AssemblyFiles: pkg.SFiles, SwigFiles: pkg.SwigFiles, SwigCxxFiles: pkg.SwigCXXFiles,
+		ObjectFiles: pkg.SysoFiles,
 	}
 }

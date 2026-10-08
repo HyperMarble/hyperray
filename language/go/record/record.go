@@ -39,23 +39,6 @@ type EnvVar struct {
 	Value *string `json:"value"`
 }
 
-// NativeCode is a package whose build compiles C, C++ or assembly files.
-type NativeCode struct {
-	Package       string   `json:"package"`
-	CgoFiles      []string `json:"cgo_files"`
-	CFiles        []string `json:"c_files"`
-	CxxFiles      []string `json:"cxx_files"`
-	AssemblyFiles []string `json:"assembly_files"`
-}
-
-// CToolchain is the C compiler and SDK cgo uses, when cgo is on.
-type CToolchain struct {
-	Compiler   FileDigest `json:"compiler"`
-	Version    string     `json:"version"`
-	SdkPath    *string    `json:"sdk_path"`
-	SdkVersion *string    `json:"sdk_version"`
-}
-
 // BuildRecord is everything needed to know exactly which code was built, and how.
 type BuildRecord struct {
 	Language       string        `json:"language"`

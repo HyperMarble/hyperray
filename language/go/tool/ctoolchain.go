@@ -5,13 +5,17 @@
 package tool
 
 import (
+	"errors"
 	"runtime"
 	"strings"
 
 	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
+var errNotFound = errors.New("not found on this machine")
+
 // CCompiler is nil when CGO_ENABLED is not 1: no C compiler takes part.
+// Otherwise it is the C compiler Go names, and every other tool beside it.
 func CCompiler(root string, environment []record.EnvVar) (*record.CToolchain, error) {
 	if EnvValue(environment, "CGO_ENABLED") != "1" {
 		return nil, nil
@@ -20,21 +24,29 @@ func CCompiler(root string, environment []record.EnvVar) (*record.CToolchain, er
 	if len(compiler) == 0 {
 		return nil, nil
 	}
-	if runtime.GOOS == "darwin" {
-		return apple(root, compiler[0])
-	}
-	path, err := Printed(root, "sh", "-c", "command -v "+compiler[0])
+	found, err := cCompiler(root, compiler[0])
 	if err != nil {
 		return nil, err
 	}
-	return describe(root, strings.TrimSpace(path), compiler[0], nil, nil)
+	return found, otherTools(root, environment, compiler[0], found)
+}
+
+func cCompiler(root, name string) (*record.CToolchain, error) {
+	if runtime.GOOS == "darwin" {
+		return apple(root, name)
+	}
+	path, ok := locate(root, name)
+	if !ok {
+		return nil, record.ToolMissing(name, errNotFound)
+	}
+	return describe(root, path, name, nil, nil)
 }
 
 // apple asks xcrun, which is what `cc` on macOS goes through.
 func apple(root, name string) (*record.CToolchain, error) {
-	path, err := Printed(root, "xcrun", "--find", name)
-	if err != nil {
-		return nil, err
+	path, ok := locate(root, name)
+	if !ok {
+		return nil, record.ToolMissing(name, errNotFound)
 	}
 	sdkPath, err := Printed(root, "xcrun", "--show-sdk-path")
 	if err != nil {
@@ -44,7 +56,7 @@ func apple(root, name string) (*record.CToolchain, error) {
 	if err != nil {
 		return nil, err
 	}
-	return describe(root, strings.TrimSpace(path), name, trimmed(sdkPath), trimmed(sdkVersion))
+	return describe(root, path, name, trimmed(sdkPath), trimmed(sdkVersion))
 }
 
 func describe(root, path, name string, sdkPath, sdkVersion *string) (*record.CToolchain, error) {
