@@ -1,7 +1,7 @@
 // Purpose: writes the generated test file that keeps every function linked,
 // and the overlay that puts it into each package for the build.
-// Never:   writes into the module's folder: Go's `-overlay` adds the file
-// to the build only, and the file itself lives in the output folder.
+// Never:   writes into the module's folder, or hides a file the package
+// already has: the overlay only ever adds a name the package does not use.
 package keep
 
 import (
@@ -15,8 +15,25 @@ import (
 	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
-// The name the generated file has inside the package, for the overlay.
+// The name the generated file has inside the package, for the overlay. An
+// overlay makes the build see our file at that path, so the name must be
+// one the package does not already use, or its own file would vanish.
 const keepFileName = "hyperray_keep_test.go"
+
+// freeName is keepFileName when the package has no file by that name, else
+// the first numbered variant it does not have.
+func freeName(dir string) string {
+	name := keepFileName
+	for count := 1; exists(filepath.Join(dir, name)); count++ {
+		name = fmt.Sprintf("hyperray_keep_%d_test.go", count)
+	}
+	return name
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
 
 // The file uses no predeclared name (`any`, `len`, `nil`): a package may
 // redefine any of them, and Go's own suite has one that redefines them all.
@@ -40,7 +57,7 @@ func WriteOverlay(packages []module.Package, out string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		replace[filepath.Join(pkg.Dir, keepFileName)] = path
+		replace[filepath.Join(pkg.Dir, freeName(pkg.Dir))] = path
 	}
 	text, err := json.Marshal(map[string]any{"Replace": replace})
 	if err != nil {
