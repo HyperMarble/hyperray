@@ -1,57 +1,31 @@
-## What this changes
+#### What type of PR is this?
 
-One sentence.
+<!--
+One of: support, feature, optimization, refactor, docs
+-->
 
-## One logic change per commit
+#### What this PR does / why we need it:
 
-- [ ] Each commit makes one change
-- [ ] Each commit builds on its own
-- [ ] Each commit has its own test
+#### Which issue(s) this PR is related to:
 
-Run this and paste the result:
+<!--
+Fixes #<number>, or N/A
+-->
+
+#### Special notes for your reviewer:
+
+#### Does this PR introduce a user-facing change?
+
+<!--
+If no, write NONE in the block below. If yes, one line a user would read.
+-->
+```release-note
 
 ```
-for c in $(git rev-list origin/main..HEAD); do
-  printf "%s %3s files  %s\n" "$(git rev-parse --short $c)" \
-    "$(git show --name-only --format="" $c | grep -c .)" \
-    "$(git log -1 --format=%s $c)"
-done
-```
 
-## Evidence
+#### AI usage disclosure:
 
-Every claim names the command that produced it. Paste real output.
-
-```
-paste the test run
-```
-
-If you claim something is faster, paste both numbers.
-
-## Coverage
-
-The step this touches (adapter, loader, semantics, engine) and its coverage
-run after the change: the count, with the command. A step's count may not
-go down.
-
-## Can this cause a wrong PROVED?
-
-- [ ] No, and here is why
-- [ ] Yes, and here is the test that would catch it
-
-Anything that skips work, caches a result, or reuses state belongs here.
-Speed is never a reason to accept a verdict change.
-
-## Checks
-
-- [ ] `cargo test --release` passes
-- [ ] `cargo clippy --release --all-targets` reports nothing in our code
-- [ ] `cargo fmt` applied
-- [ ] No file over 75 lines, no function over 40
-- [ ] No `unwrap`, `expect`, `panic!`, or discarded error in `src/`
-
-## Commit messages
-
-- Say WHAT changed, not how
-- Put measurements in the body, with the command that produced them
-- No `Co-authored-by`
+<!--
+YES or NO. AI is fine. Either way you are the author: you know what every
+line does and why, and you can answer for it in review.
+-->
