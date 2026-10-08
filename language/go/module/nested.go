@@ -3,21 +3,16 @@
 // out of ./... (vendor, testdata, a name starting with "." or "_") is listed
 // as ignored, by hash, and not built.
 // Never:   lets code under an inner go.mod vanish from the record.
-package goadapter
+package module
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-// Nested is a module inside another, built as its own.
-type Nested struct {
-	Dir    string       `json:"dir"`
-	Record *BuildRecord `json:"record"`
-}
+	"github.com/HyperMarble/hyperray/language/go/record"
+)
 
 // ignoredName is the go tool's rule for a folder a pattern never enters.
 func ignoredName(name string) bool {
@@ -38,11 +33,11 @@ func ignoredPath(root, dir string) bool {
 	return false
 }
 
-// nestedModules lists the folders under root that hold their own go.mod:
+// NestedModules lists the folders under root that hold their own go.mod:
 // those to build, and those Go's rules ignore. A nested module's own
 // nested modules are left to its build.
-func nestedModules(root string) ([]string, []string, error) {
-	build, ignored := []string{}, []string{}
+func NestedModules(root string) ([]string, []string, error) {
+	toBuild, ignored := []string{}, []string{}
 	err := filepath.WalkDir(root, func(dir string, entry fs.DirEntry, err error) error {
 		if err != nil || !entry.IsDir() || dir == root {
 			return err
@@ -54,39 +49,11 @@ func nestedModules(root string) ([]string, []string, error) {
 			ignored = append(ignored, dir)
 			return nil
 		}
-		build = append(build, dir)
+		toBuild = append(toBuild, dir)
 		return filepath.SkipDir
 	})
 	if err != nil {
-		return nil, nil, unreadable(root, err)
+		return nil, nil, record.Unreadable(root, err)
 	}
-	return build, ignored, nil
-}
-
-// withNested builds every nested module into its own folder under out and
-// hashes the go.mod of every ignored one.
-func withNested(root, out string, choice Choice, record *BuildRecord) (*BuildRecord, error) {
-	build, ignored, err := nestedModules(root)
-	if err != nil {
-		return nil, err
-	}
-	for index, dir := range build {
-		nestedOut := filepath.Join(out, fmt.Sprintf("nested_%d", index))
-		if err := os.MkdirAll(nestedOut, 0o755); err != nil {
-			return nil, unreadable(nestedOut, err)
-		}
-		nested, err := tryBuildRecord(dir, nestedOut, choice)
-		if err != nil {
-			return nil, err
-		}
-		record.Nested = append(record.Nested, Nested{Dir: dir, Record: nested})
-	}
-	for _, dir := range ignored {
-		digest, err := digestOf(filepath.Join(dir, "go.mod"))
-		if err != nil {
-			return nil, err
-		}
-		record.IgnoredModules = append(record.IgnoredModules, digest)
-	}
-	return record, nil
+	return toBuild, ignored, nil
 }

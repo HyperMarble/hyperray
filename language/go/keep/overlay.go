@@ -2,7 +2,7 @@
 // and the overlay that puts it into each package for the build.
 // Never:   writes into the module's folder: Go's `-overlay` adds the file
 // to the build only, and the file itself lives in the output folder.
-package goadapter
+package keep
 
 import (
 	"encoding/json"
@@ -10,6 +10,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/HyperMarble/hyperray/language/go/module"
+	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
 // The name the generated file has inside the package, for the overlay.
@@ -28,9 +31,9 @@ func TestHyperrayKeep(t *testing.T) {
 }
 `
 
-// writeOverlay writes one keep file per package into out and returns the
+// WriteOverlay writes one keep file per package into out and returns the
 // path of the overlay that maps each into its package.
-func writeOverlay(packages []Package, out string) (string, error) {
+func WriteOverlay(packages []module.Package, out string) (string, error) {
 	replace := map[string]string{}
 	for index, pkg := range packages {
 		path, err := writeKeepFile(pkg, filepath.Join(out, fmt.Sprintf("keep_%d_test.go", index)))
@@ -41,23 +44,23 @@ func writeOverlay(packages []Package, out string) (string, error) {
 	}
 	text, err := json.Marshal(map[string]any{"Replace": replace})
 	if err != nil {
-		return "", unreadable("overlay", err)
+		return "", record.Unreadable("overlay", err)
 	}
 	overlay := filepath.Join(out, "overlay.json")
 	if err := os.WriteFile(overlay, text, 0o644); err != nil {
-		return "", unreadable(overlay, err)
+		return "", record.Unreadable(overlay, err)
 	}
 	return overlay, nil
 }
 
-func writeKeepFile(pkg Package, path string) (string, error) {
-	names, err := keptNames(pkg)
+func writeKeepFile(pkg module.Package, path string) (string, error) {
+	names, err := KeptNames(pkg)
 	if err != nil {
 		return "", err
 	}
 	text := fmt.Sprintf(keepFileText, pkg.Name, strings.Join(names, ", "))
 	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
-		return "", unreadable(path, err)
+		return "", record.Unreadable(path, err)
 	}
 	return path, nil
 }

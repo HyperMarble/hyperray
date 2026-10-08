@@ -2,7 +2,7 @@
 // record or named here as not compiled; a new kind in a future Go
 // fails this test by name.
 // Never:   trusts a hand-written list of kinds over `go help list`.
-package goadapter
+package module
 
 import (
 	"os/exec"

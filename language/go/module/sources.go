@@ -1,9 +1,13 @@
 // Purpose: names every source file a package's build compiles, by the hash
 // of its bytes, so the record says exactly which bytes went in.
 // Never:   hashes a file the build constraints excluded, or a derived list.
-package goadapter
+package module
 
-import "path/filepath"
+import (
+	"path/filepath"
+
+	"github.com/HyperMarble/hyperray/language/go/record"
+)
 
 // The `go list` fields whose files go into the package's program.
 var programFileKinds = []string{
@@ -31,15 +35,15 @@ func (pkg Package) fileLists() map[string][]string {
 	}
 }
 
-// sourcesOf digests the files compiled into the package's program, or into
+// SourcesOf digests the files compiled into the package's program, or into
 // its test program when tests is set, in the order `go list` reports them.
-func sourcesOf(pkg Package, tests bool) ([]FileDigest, error) {
+func SourcesOf(pkg Package, tests bool) ([]record.FileDigest, error) {
 	kinds := programFileKinds
 	if tests {
 		kinds = append(append([]string{}, kinds...), testFileKinds...)
 	}
 	lists := pkg.fileLists()
-	found := []FileDigest{}
+	found := []record.FileDigest{}
 	for _, kind := range kinds {
 		digests, err := digestAll(pkg.Dir, lists[kind])
 		if err != nil {
@@ -50,10 +54,10 @@ func sourcesOf(pkg Package, tests bool) ([]FileDigest, error) {
 	return found, nil
 }
 
-func digestAll(dir string, names []string) ([]FileDigest, error) {
-	found := []FileDigest{}
+func digestAll(dir string, names []string) ([]record.FileDigest, error) {
+	found := []record.FileDigest{}
 	for _, name := range names {
-		digest, err := digestOf(filepath.Join(dir, name))
+		digest, err := record.DigestOf(filepath.Join(dir, name))
 		if err != nil {
 			return nil, err
 		}

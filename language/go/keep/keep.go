@@ -5,18 +5,21 @@
 // Never:   names what Go cannot take by value: init, main, generic functions
 // and methods of generic types. Those have machine code only where
 // they are used with concrete types, and that code is kept too.
-package goadapter
+package keep
 
 import (
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"path/filepath"
+
+	"github.com/HyperMarble/hyperray/language/go/module"
+	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
-// keptNames lists the package's functions as Go expressions: `f`, `T.m`
+// KeptNames lists the package's functions as Go expressions: `f`, `T.m`
 // for a value receiver, `(*T).m` for a pointer receiver.
-func keptNames(pkg Package) ([]string, error) {
+func KeptNames(pkg module.Package) ([]string, error) {
 	set := token.NewFileSet()
 	names := []string{}
 	files := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles))
@@ -25,7 +28,7 @@ func keptNames(pkg Package) ([]string, error) {
 	for _, file := range files {
 		parsed, err := parser.ParseFile(set, filepath.Join(pkg.Dir, file), nil, 0)
 		if err != nil {
-			return nil, unreadable(file, err)
+			return nil, record.Unreadable(file, err)
 		}
 		names = append(names, namesIn(parsed)...)
 	}

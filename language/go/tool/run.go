@@ -1,17 +1,19 @@
 // Purpose: runs one tool in a folder and returns what it printed.
 // Never:   treats a tool that failed, or could not start, as a success.
-package goadapter
+package tool
 
 import (
 	"bytes"
 	"errors"
 	"os/exec"
 	"strings"
+
+	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
-// printed runs tool with args inside folder and returns its standard output.
+// Printed runs tool with args inside folder and returns its standard output.
 // A failure carries everything the tool printed, so the reason is readable.
-func printed(folder, tool string, args ...string) (string, error) {
+func Printed(folder, tool string, args ...string) (string, error) {
 	command := exec.Command(tool, args...)
 	command.Dir = folder
 	var out, errs bytes.Buffer
@@ -19,11 +21,11 @@ func printed(folder, tool string, args ...string) (string, error) {
 	err := command.Run()
 	var exit *exec.ExitError
 	if errors.As(err, &exit) {
-		printed := strings.TrimSpace(errs.String() + out.String())
-		return "", toolFailed(tool+" "+strings.Join(args, " "), printed)
+		text := strings.TrimSpace(errs.String() + out.String())
+		return "", record.ToolFailed(tool+" "+strings.Join(args, " "), text)
 	}
 	if err != nil {
-		return "", toolMissing(tool, err)
+		return "", record.ToolMissing(tool, err)
 	}
 	return out.String(), nil
 }

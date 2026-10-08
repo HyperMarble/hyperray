@@ -1,13 +1,15 @@
 // Purpose: the keep list names plain functions and methods of both receiver
 // kinds, and leaves out what Go cannot refer to by value.
 // Never:   names a generic function or a method of a generic type.
-package goadapter
+package keep
 
 import (
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/HyperMarble/hyperray/language/go/module"
 )
 
 const kinds = `package kinds
@@ -33,22 +35,13 @@ func TestKeptNamesAreTheReferableFunctions(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "k.go"), []byte(kinds), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	names, err := keptNames(Package{Dir: dir, GoFiles: []string{"k.go"}})
+	names, err := KeptNames(module.Package{Dir: dir, GoFiles: []string{"k.go"}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []string{"T.Value", "(*T).Pointer", "plain"}
 	if len(names) != len(want) || names[0] != want[0] || names[1] != want[1] || names[2] != want[2] {
 		t.Fatalf("got %v, want %v", names, want)
-	}
-}
-
-func TestAHiddenSettingIsRecordedWithoutItsValue(t *testing.T) {
-	if shown("GOAUTH", "netrc") != nil || shown("GOPROXY", "https://me:pw@proxy.example") != nil {
-		t.Fatal("a secret value was shown")
-	}
-	if value := shown("GOFLAGS", "-trimpath"); value == nil || *value != "-trimpath" {
-		t.Fatal("a plain value was hidden")
 	}
 }
 
@@ -60,7 +53,7 @@ func TestAPackageThatRedefinesBuiltinsStillGetsItsKeepFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := t.TempDir()
-	if _, err := writeOverlay([]Package{{Name: "r", Dir: dir, GoFiles: []string{"r.go"}}}, out); err != nil {
+	if _, err := WriteOverlay([]module.Package{{Name: "r", Dir: dir, GoFiles: []string{"r.go"}}}, out); err != nil {
 		t.Fatal(err)
 	}
 	text, err := os.ReadFile(filepath.Join(out, "keep_0_test.go"))

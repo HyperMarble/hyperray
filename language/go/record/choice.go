@@ -2,7 +2,7 @@
 // build flags, exactly as the go tool takes them.
 // Never:   switches on a tag or adds a flag nobody asked for; with no request
 // it is exactly the module's own default build.
-package goadapter
+package record
 
 import "strings"
 
@@ -12,9 +12,9 @@ type Choice struct {
 	Flags []string `json:"flags"`
 }
 
-// args is what the go tool takes for this build. The Go 1.25+ default uses
+// Args is what the go tool takes for this build. The Go 1.25+ default uses
 // vendor when present and otherwise keeps module files read-only.
-func (choice Choice) args() []string {
+func (choice Choice) Args() []string {
 	args := []string{}
 	if len(choice.Tags) > 0 {
 		args = append(args, "-tags", strings.Join(choice.Tags, ","))

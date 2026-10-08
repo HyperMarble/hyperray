@@ -3,9 +3,14 @@
 // a directory, or a module a go.work `use` line brings in. go.sum pins
 // neither, so the record pins them here.
 // Never:   lists the root module itself, or a module go.sum already pins.
-package goadapter
+package module
 
-import "path/filepath"
+import (
+	"path/filepath"
+
+	"github.com/HyperMarble/hyperray/language/go/record"
+	"github.com/HyperMarble/hyperray/language/go/tool"
+)
 
 // ModuleInfo is what `go list` reports about a package's module.
 type ModuleInfo struct {
@@ -15,23 +20,16 @@ type ModuleInfo struct {
 	Replace *ModuleInfo
 }
 
-// LocalModule is one locally sourced module and the sources compiled from it.
-type LocalModule struct {
-	Path    string       `json:"path"`
-	Dir     string       `json:"dir"`
-	Sources []FileDigest `json:"sources"`
-}
-
 // isLocal is true for a module whose code comes from a folder go.sum does
 // not pin: a directory replace, or a workspace module other than root's.
-func (module *ModuleInfo) isLocal(root string) bool {
-	if module == nil {
+func (info *ModuleInfo) isLocal(root string) bool {
+	if info == nil {
 		return false
 	}
-	if module.Replace != nil && module.Replace.Dir != "" {
+	if info.Replace != nil && info.Replace.Dir != "" {
 		return true
 	}
-	return module.Main && otherFolder(module.Dir, root)
+	return info.Main && otherFolder(info.Dir, root)
 }
 
 // otherFolder is true when the two paths name different folders, links followed.
@@ -41,29 +39,29 @@ func otherFolder(a, b string) bool {
 	return errA != nil || errB != nil || realA != realB
 }
 
-// localModules walks every package the build depends on and hashes the
+// LocalModules walks every package the build depends on and hashes the
 // sources of those that come from a local module, grouped by module.
-func localModules(root string, choice Choice) ([]LocalModule, error) {
-	args := append([]string{"list", "-deps", listedFields}, choice.args()...)
-	text, err := printed(root, "go", append(args, "./...")...)
+func LocalModules(root string, choice record.Choice) ([]record.LocalModule, error) {
+	args := append([]string{"list", "-deps", listedFields}, choice.Args()...)
+	text, err := tool.Printed(root, "go", append(args, "./...")...)
 	if err != nil {
 		return nil, err
 	}
-	packages, err := decodePackages(text)
+	packages, err := DecodePackages(text)
 	if err != nil {
 		return nil, err
 	}
 	return groupLocal(packages, root)
 }
 
-func groupLocal(packages []Package, root string) ([]LocalModule, error) {
-	found := []LocalModule{}
+func groupLocal(packages []Package, root string) ([]record.LocalModule, error) {
+	found := []record.LocalModule{}
 	at := map[string]int{}
 	for _, pkg := range packages {
 		if !pkg.Module.isLocal(root) {
 			continue
 		}
-		sources, err := sourcesOf(pkg, false)
+		sources, err := SourcesOf(pkg, false)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +69,7 @@ func groupLocal(packages []Package, root string) ([]LocalModule, error) {
 		if !seen {
 			index = len(found)
 			at[pkg.Module.Path] = index
-			found = append(found, LocalModule{Path: pkg.Module.Path, Dir: pkg.Module.Dir})
+			found = append(found, record.LocalModule{Path: pkg.Module.Path, Dir: pkg.Module.Dir})
 		}
 		found[index].Sources = append(found[index].Sources, sources...)
 	}

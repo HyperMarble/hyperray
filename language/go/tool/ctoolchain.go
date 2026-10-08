@@ -2,26 +2,28 @@
 // the system's own tools name them, when cgo is switched on.
 // Never:   guesses a compiler: the go tool names it, the system locates it,
 // or the build is blocked.
-package goadapter
+package tool
 
 import (
 	"runtime"
 	"strings"
+
+	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
-// cToolchain is nil when CGO_ENABLED is not 1: no C compiler takes part.
-func cToolchain(root string, environment []EnvVar) (*CToolchain, error) {
-	if setting(environment, "CGO_ENABLED") != "1" {
+// CCompiler is nil when CGO_ENABLED is not 1: no C compiler takes part.
+func CCompiler(root string, environment []record.EnvVar) (*record.CToolchain, error) {
+	if EnvValue(environment, "CGO_ENABLED") != "1" {
 		return nil, nil
 	}
-	compiler := strings.Fields(setting(environment, "CC"))
+	compiler := strings.Fields(EnvValue(environment, "CC"))
 	if len(compiler) == 0 {
 		return nil, nil
 	}
 	if runtime.GOOS == "darwin" {
 		return apple(root, compiler[0])
 	}
-	path, err := printed(root, "sh", "-c", "command -v "+compiler[0])
+	path, err := Printed(root, "sh", "-c", "command -v "+compiler[0])
 	if err != nil {
 		return nil, err
 	}
@@ -29,32 +31,32 @@ func cToolchain(root string, environment []EnvVar) (*CToolchain, error) {
 }
 
 // apple asks xcrun, which is what `cc` on macOS goes through.
-func apple(root, name string) (*CToolchain, error) {
-	path, err := printed(root, "xcrun", "--find", name)
+func apple(root, name string) (*record.CToolchain, error) {
+	path, err := Printed(root, "xcrun", "--find", name)
 	if err != nil {
 		return nil, err
 	}
-	sdkPath, err := printed(root, "xcrun", "--show-sdk-path")
+	sdkPath, err := Printed(root, "xcrun", "--show-sdk-path")
 	if err != nil {
 		return nil, err
 	}
-	sdkVersion, err := printed(root, "xcrun", "--show-sdk-version")
+	sdkVersion, err := Printed(root, "xcrun", "--show-sdk-version")
 	if err != nil {
 		return nil, err
 	}
 	return describe(root, strings.TrimSpace(path), name, trimmed(sdkPath), trimmed(sdkVersion))
 }
 
-func describe(root, path, name string, sdkPath, sdkVersion *string) (*CToolchain, error) {
-	version, err := printed(root, name, "--version")
+func describe(root, path, name string, sdkPath, sdkVersion *string) (*record.CToolchain, error) {
+	version, err := Printed(root, name, "--version")
 	if err != nil {
 		return nil, err
 	}
-	digest, err := digestOf(path)
+	digest, err := record.DigestOf(path)
 	if err != nil {
 		return nil, err
 	}
-	return &CToolchain{Compiler: digest, Version: firstLine(version), SdkPath: sdkPath, SdkVersion: sdkVersion}, nil
+	return &record.CToolchain{Compiler: digest, Version: firstLine(version), SdkPath: sdkPath, SdkVersion: sdkVersion}, nil
 }
 
 func trimmed(text string) *string {

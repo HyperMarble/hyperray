@@ -1,36 +1,12 @@
 // Purpose: the build record the adapter hands to the loader, as JSON, in the
 // same shape as the Rust adapter's record.
 // Never:   holds a value that was not read from the build or the machine.
-package goadapter
+package record
 
 // FileDigest names a file by the hash of its bytes.
 type FileDigest struct {
 	Path   string `json:"path"`
 	Sha256 string `json:"sha256"`
-}
-
-// Module is one module version as Go recorded it inside the built file.
-// Replace is set when a `replace` line swapped in other code.
-type Module struct {
-	Path    string  `json:"path"`
-	Version string  `json:"version"`
-	Sum     string  `json:"sum,omitempty"`
-	Replace *Module `json:"replace,omitempty"`
-}
-
-// Setting is one build setting as Go recorded it inside the built file.
-type Setting struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-// BuildInfo is Go's own record of a build, read back from the built file.
-type BuildInfo struct {
-	GoVersion string    `json:"go_version"`
-	Path      string    `json:"path"`
-	Main      Module    `json:"main"`
-	Deps      []Module  `json:"deps"`
-	Settings  []Setting `json:"settings"`
 }
 
 // Artifact is one file the build made: which package, what kind of program,
