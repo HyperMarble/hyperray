@@ -20,11 +20,10 @@ func BuildRecordOf(root, out string, choice record.Choice) record.Outcome {
 }
 
 func tryBuildRecord(root, out string, choice record.Choice) (*record.BuildRecord, error) {
+	asked := choice
+	root, choice = tool.Relocated(root, choice)
 	locks, err := module.LockFiles(root)
 	if err != nil {
-		return nil, err
-	}
-	if err := tool.ValidateChoice(root, choice); err != nil {
 		return nil, err
 	}
 	packages, err := module.ListPackages(root, choice)
@@ -44,17 +43,13 @@ func tryBuildRecord(root, out string, choice record.Choice) (*record.BuildRecord
 		return nil, err
 	}
 	facts.Artifacts = artifacts
-	flags, err := tool.BuildFlags(root, choice)
+	facts.NativeCode = build.NativeCodeOf(packages)
+	facts.Settings, err = settingsOf(root, asked, choice, locks, facts)
 	if err != nil {
 		return nil, err
 	}
-	facts.Settings = record.Settings{Requested: choice, Tags: build.StampedTags(artifacts), BuildFlags: flags, LockFiles: locks}
-	facts.NativeCode = build.NativeCodeOf(packages)
 	facts.LocalModules, err = module.LocalModules(root, choice)
 	if err != nil {
-		return nil, err
-	}
-	if err := module.PinsUnchanged(root, locks); err != nil {
 		return nil, err
 	}
 	return withNested(root, out, choice, facts)

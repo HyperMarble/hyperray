@@ -13,6 +13,7 @@ import (
 
 	"github.com/HyperMarble/hyperray/language/go/module"
 	"github.com/HyperMarble/hyperray/language/go/record"
+	"github.com/HyperMarble/hyperray/language/go/tool"
 )
 
 // The name the generated file has inside the package, for the overlay. An
@@ -49,11 +50,23 @@ func TestHyperrayKeep(t *testing.T) {
 `
 
 // WriteOverlay writes one keep file per package into out and returns the
-// path of the overlay that maps each into its package.
-func WriteOverlay(packages []module.Package, out string) (string, error) {
+// path of the overlay that maps each into its package. Go takes one
+// overlay, so a user's overlay, when there is one, is merged in first.
+func WriteOverlay(packages []module.Package, out, userOverlay string) (string, error) {
 	replace := map[string]string{}
+	if userOverlay != "" {
+		theirs, err := tool.ReadOverlay(userOverlay)
+		if err != nil {
+			return "", err
+		}
+		replace = theirs
+	}
+	user := map[string]string{}
+	for disk, backing := range replace {
+		user[disk] = backing
+	}
 	for index, pkg := range packages {
-		path, err := writeKeepFile(pkg, filepath.Join(out, fmt.Sprintf("keep_%d_test.go", index)))
+		path, err := writeKeepFile(pkg, user, filepath.Join(out, fmt.Sprintf("keep_%d_test.go", index)))
 		if err != nil {
 			return "", err
 		}
@@ -70,8 +83,8 @@ func WriteOverlay(packages []module.Package, out string) (string, error) {
 	return overlay, nil
 }
 
-func writeKeepFile(pkg module.Package, path string) (string, error) {
-	names, err := KeptNames(pkg)
+func writeKeepFile(pkg module.Package, overlay map[string]string, path string) (string, error) {
+	names, err := KeptNames(pkg, overlay)
 	if err != nil {
 		return "", err
 	}

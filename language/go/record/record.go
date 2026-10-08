@@ -32,19 +32,6 @@ type Toolchain struct {
 	StdSource   string       `json:"std_source"`
 }
 
-// Settings is what the user asked for, what the build really ran with, and
-// the files that pin every version. Tags come from Go's own stamp in the
-// built files, since a later -tags replaces an earlier one. BuildFlags are
-// every flag in the order Go read them, GOFLAGS first; under -trimpath Go
-// leaves -ldflags and the cgo flags out of its stamp, so this is where
-// they survive.
-type Settings struct {
-	Requested  Choice       `json:"requested"`
-	Tags       []string     `json:"tags"`
-	BuildFlags []string     `json:"build_flags"`
-	LockFiles  []FileDigest `json:"lock_files"`
-}
-
 // EnvVar is one go tool setting; a hidden value is nil.
 type EnvVar struct {
 	Name  string  `json:"name"`

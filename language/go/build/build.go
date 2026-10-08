@@ -28,7 +28,12 @@ const (
 )
 
 func BuildAll(root, out string, choice record.Choice, packages []module.Package) ([]built, error) {
-	overlay, err := keep.WriteOverlay(packages, out)
+	flags, err := tool.BuildFlags(root, choice)
+	if err != nil {
+		return nil, err
+	}
+	theirs, _ := tool.FlagValue(flags, "overlay")
+	overlay, err := keep.WriteOverlay(packages, out, theirs)
 	if err != nil {
 		return nil, err
 	}

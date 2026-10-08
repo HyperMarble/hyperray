@@ -18,21 +18,36 @@ import (
 )
 
 // KeptNames lists the package's functions as Go expressions: `f`, `T.m`
-// for a value receiver, `(*T).m` for a pointer receiver.
-func KeptNames(pkg module.Package) ([]string, error) {
+// for a value receiver, `(*T).m` for a pointer receiver. Each file is read
+// the way the build reads it: through the user's overlay when one maps it.
+func KeptNames(pkg module.Package, overlay map[string]string) ([]string, error) {
 	set := token.NewFileSet()
 	names := []string{}
 	files := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles))
 	files = append(files, pkg.GoFiles...)
 	files = append(files, pkg.CgoFiles...)
 	for _, file := range files {
-		parsed, err := parser.ParseFile(set, filepath.Join(pkg.Dir, file), nil, 0)
+		path, present := throughOverlay(filepath.Join(pkg.Dir, file), overlay)
+		if !present {
+			continue
+		}
+		parsed, err := parser.ParseFile(set, path, nil, 0)
 		if err != nil {
 			return nil, record.Unreadable(file, err)
 		}
 		names = append(names, namesIn(parsed)...)
 	}
 	return names, nil
+}
+
+// throughOverlay is the file the build reads for path: the backing file
+// when the overlay maps it, nothing when the overlay hides it.
+func throughOverlay(path string, overlay map[string]string) (string, bool) {
+	backing, mapped := overlay[path]
+	if !mapped {
+		return path, true
+	}
+	return backing, backing != ""
 }
 
 func namesIn(file *ast.File) []string {

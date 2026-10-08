@@ -48,16 +48,13 @@ func LockFiles(root string) ([]record.FileDigest, error) {
 	return found, nil
 }
 
-// PinsUnchanged is an error when the pin files moved during the build.
-func PinsUnchanged(root string, before []record.FileDigest) error {
+// PinsAfter is the pin files after the build, and whether any moved.
+func PinsAfter(root string, before []record.FileDigest) ([]record.FileDigest, bool, error) {
 	after, err := LockFiles(root)
 	if err != nil {
-		return err
+		return nil, false, err
 	}
-	if !slices.Equal(before, after) {
-		return record.Blocked{Reason: "module pin files changed during build"}
-	}
-	return nil
+	return after, !slices.Equal(before, after), nil
 }
 
 func digestIfPresent(path string) (record.FileDigest, bool, error) {
