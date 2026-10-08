@@ -1,22 +1,31 @@
-# hyperray
+<h1 align="center">hyperray</h1>
 
-[![CI](https://github.com/HyperMarble/hyperray/actions/workflows/ci.yml/badge.svg)](https://github.com/HyperMarble/hyperray/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/HyperMarble/hyperray)](https://goreportcard.com/report/github.com/HyperMarble/hyperray)
-[![Release](https://img.shields.io/github/v/release/HyperMarble/hyperray)](https://github.com/HyperMarble/hyperray/releases)
-[![License](https://img.shields.io/github/license/HyperMarble/hyperray)](LICENSE)
+<p align="center">
+  Proves what compiled code does, instruction by instruction, instead of testing it.
+  <br />
+  <a href="#about">About</a>
+  ·
+  <a href="#how-it-works">How it works</a>
+  ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+  ·
+  <a href="AI_POLICY.md">AI policy</a>
+</p>
 
-hyperray checks whether code really does what it is supposed to do.
-It works on the compiled program, the exact machine instructions that
-run, and uses proofs instead of tests.
+<p align="center">
+  <a href="https://github.com/HyperMarble/hyperray/actions/workflows/ci.yml"><img src="https://github.com/HyperMarble/hyperray/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://goreportcard.com/report/github.com/HyperMarble/hyperray"><img src="https://goreportcard.com/badge/github.com/HyperMarble/hyperray" alt="Go Report Card"></a>
+  <a href="https://github.com/HyperMarble/hyperray/releases"><img src="https://img.shields.io/github/v/release/HyperMarble/hyperray" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/HyperMarble/hyperray" alt="License"></a>
+</p>
 
-## Why
+## About
 
-Tests only check the inputs someone thought to write down. A change can
-pass every test and still be wrong. This matters more now that AI agents
-write much of the code, and benchmarks judge those agents with tests.
-
-hyperray answers with a proof: either the code meets its requirement for
-every input, or here is an input where it does not.
+hyperray is a reliability layer for compiled code. It takes a project,
+builds it the project's own way, reads the machine code that comes out,
+and proves what that code does for every input, against the official
+model of the processor. The answer is a proof or a counterexample, never
+a sample of test cases.
 
 ## How it works
 
@@ -58,9 +67,6 @@ flowchart TD
 8. **Record.** The result is tied, Git-style, to the exact build and the
    change it checks.
 
-hyperray works as a command-line tool and as a library, so it can judge
-coding benchmarks, run inside an agent's loop, or give a training signal.
-
 ## What you get
 
 Every check ends in one of these answers:
@@ -81,36 +87,21 @@ hyperray is in early development. It does **not** yet verify a real
 function end to end.
 
 - [x] `.hray` spec format, with parser and validator
-      (done, but still changing as the rest takes shape)
-- [ ] Language adapters that build a whole Rust or Python project
-- [ ] Verification engine
-- [ ] Verification: prove code meets its spec, at the ISA level
+- [x] Language adapters for Rust and Go, building the whole project
+- [x] Loader that reads the built program and everything it links
+- [ ] Semantics: the ARM model, pinned to one version
+- [ ] Engine: symbolic walk, formal and observable verification
+- [ ] Confirm on the real processor
 - [ ] Git-style record tying every proof to the exact build it covers
-- [ ] Judge for coding benchmarks, and a training signal
 - [ ] x86 support
 
-Since hyperray is in early development, expect a lot of changes across
-the codebase, even in parts that are already done. The latest release,
-v0.1.2, is an earlier design.
-
-## Repository map
-
-| Folder | What it holds |
-|---|---|
-| `language/` | one adapter per language, which builds the project |
-| `loader/` | reads compiled programs and decodes instructions (Rust) |
-| `contract/` | the `.hray` spec format: parser and validator (Rust) |
-| `solver/` | reads the solver's answers (Rust) |
-| `rechecker/` | confirms counterexamples on the real processor (Rust) |
-| `machine/` | the old Go engine connection, to be replaced |
-| `cmd/hyperray/` | the command-line tool (Go) |
-| `skills/` | instructions for AI agents writing specs |
-| `docs/` | how the parts work |
+Expect a lot of change across the codebase, even in parts that are done.
+The latest release, v0.1.2, is an earlier design.
 
 ## Contributing
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
-setup, tests, and how we work.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests, and how we work,
+and [AI_POLICY.md](AI_POLICY.md) for how we use AI tools.
 
 ## License
 
