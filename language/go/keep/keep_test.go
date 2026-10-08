@@ -1,11 +1,13 @@
 // Purpose: the keep list names plain functions and methods of both receiver
-// kinds, and leaves out what Go cannot refer to by value.
+// kinds, written with or without parentheses, and leaves out what Go
+// cannot refer to by value.
 // Never:   names a generic function or a method of a generic type.
 package keep
 
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -18,6 +20,10 @@ type T struct{ n int }
 
 func (t T) Value() int    { return t.n }
 func (t *T) Pointer() int { return t.n }
+
+func (t (T)) Paren() int      { return t.n }
+func (t (*T)) ParenPtr() int  { return t.n }
+func (t *(T)) StarParen() int { return t.n }
 
 type G[X any] struct{ x X }
 
@@ -39,8 +45,8 @@ func TestKeptNamesAreTheReferableFunctions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"T.Value", "(*T).Pointer", "plain"}
-	if len(names) != len(want) || names[0] != want[0] || names[1] != want[1] || names[2] != want[2] {
+	want := []string{"T.Value", "(*T).Pointer", "T.Paren", "(*T).ParenPtr", "(*T).StarParen", "plain"}
+	if !slices.Equal(names, want) {
 		t.Fatalf("got %v, want %v", names, want)
 	}
 }

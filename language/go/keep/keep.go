@@ -77,19 +77,3 @@ func keptName(decl ast.Decl) (string, bool) {
 func referable(name string) bool {
 	return name != "init" && name != "main" && name != "_"
 }
-
-// receiverName is `T` or `(*T)`; a generic receiver `T[X]` has no name
-// that refers to one method body.
-func receiverName(expr ast.Expr) (string, bool) {
-	switch typed := expr.(type) {
-	case *ast.Ident:
-		return typed.Name, true
-	case *ast.StarExpr:
-		ident, ok := typed.X.(*ast.Ident)
-		if !ok {
-			return "", false
-		}
-		return "(*" + ident.Name + ")", true
-	}
-	return "", false
-}
