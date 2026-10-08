@@ -1,0 +1,64 @@
+// Purpose: turns the built files into record entries: each one named by its
+// hash and by what kind of file it is, carrying Go's own build facts and
+// the profile Go applied, and the packages that compile C, C++ or assembly.
+// Never:   records a file without reading Go's build facts back out of it.
+package build
+
+import (
+	"strings"
+
+	"github.com/HyperMarble/hyperray/language/go/module"
+	"github.com/HyperMarble/hyperray/language/go/record"
+)
+
+func ArtifactsOf(files []built) ([]record.Artifact, error) {
+	artifacts := []record.Artifact{}
+	for _, file := range files {
+		digest, err := record.DigestOf(file.path)
+		if err != nil {
+			return nil, err
+		}
+		info, err := stampOf(file)
+		if err != nil {
+			return nil, err
+		}
+		profile, err := profileOf(info)
+		if err != nil {
+			return nil, err
+		}
+		artifacts = append(artifacts, record.Artifact{
+			Kind: labelOf(file, info), Package: file.pkg, File: digest, Sources: file.sources, Profile: profile, BuildInfo: info,
+		})
+	}
+	return artifacts, nil
+}
+
+func NativeCodeOf(packages []module.Package) []record.NativeCode {
+	found := []record.NativeCode{}
+	for _, pkg := range packages {
+		if native := pkg.NativeCode(); native != nil {
+			found = append(found, *native)
+		}
+	}
+	return found
+}
+
+// StampedTags is the build tags Go stamped into the built files: what the
+// build really used, whichever -tags came last.
+func StampedTags(artifacts []record.Artifact) []string {
+	for _, artifact := range artifacts {
+		if tags := tagsIn(artifact.BuildInfo); len(tags) > 0 {
+			return tags
+		}
+	}
+	return []string{}
+}
+
+func tagsIn(info record.BuildInfo) []string {
+	for _, setting := range info.Settings {
+		if setting.Key == "-tags" && setting.Value != "" {
+			return strings.Split(setting.Value, ",")
+		}
+	}
+	return nil
+}
