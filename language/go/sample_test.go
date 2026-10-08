@@ -4,7 +4,6 @@
 package goadapter_test
 
 import (
-	"debug/macho"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,22 +33,6 @@ func writeModule(t *testing.T, files map[string]string) (string, string) {
 		t.Fatal(err)
 	}
 	return root, out
-}
-
-// symbols lists the names of every function that has its own machine code
-// in the built file.
-func symbols(t *testing.T, path string) []string {
-	t.Helper()
-	file, err := macho.Open(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer file.Close()
-	names := []string{}
-	for _, symbol := range file.Symtab.Syms {
-		names = append(names, symbol.Name)
-	}
-	return names
 }
 
 func hasSymbol(names []string, suffix string) bool {
