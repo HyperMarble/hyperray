@@ -37,7 +37,7 @@ func TestAnUnpinnedImportIsBlockedAndGoModStaysUnchanged(t *testing.T) {
 		t.Fatal(err)
 	}
 	outcome := goadapter.BuildRecordOf(root, out, goadapter.Choice{})
-	if outcome.Status != "blocked" || !strings.Contains(outcome.Reason, "-mod=readonly") {
+	if outcome.Status != "blocked" {
 		t.Fatalf("%+v", outcome)
 	}
 	after, err := os.ReadFile(root + "/go.mod")

@@ -2,6 +2,8 @@
 // Never:   read instructions or prove anything; the loader and engine do that.
 package goadapter
 
+import "slices"
+
 // BuildRecordOf builds the module at root the way choice asks, puts every
 // output under out, and returns the build record or the reason there is none.
 func BuildRecordOf(root, out string, choice Choice) Outcome {
@@ -15,6 +17,9 @@ func BuildRecordOf(root, out string, choice Choice) Outcome {
 func tryBuildRecord(root, out string, choice Choice) (*BuildRecord, error) {
 	locks, err := lockFiles(root)
 	if err != nil {
+		return nil, err
+	}
+	if err := validateChoice(root, choice); err != nil {
 		return nil, err
 	}
 	packages, err := listPackages(root, choice)
@@ -36,6 +41,13 @@ func tryBuildRecord(root, out string, choice Choice) (*BuildRecord, error) {
 	record.Artifacts = artifacts
 	record.Settings = Settings{Requested: choice, LockFiles: locks}
 	record.NativeCode = nativeCodeOf(packages)
+	latest, err := lockFiles(root)
+	if err != nil {
+		return nil, err
+	}
+	if !slices.Equal(locks, latest) {
+		return nil, Blocked{Reason: "module pin files changed during build"}
+	}
 	return record, nil
 }
 

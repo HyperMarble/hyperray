@@ -4,12 +4,14 @@
 package goadapter
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // The files that pin a module's versions, when they exist.
-var lockFileNames = []string{"go.mod", "go.sum", "go.work", "go.work.sum"}
+var lockFileNames = []string{"go.mod", "go.sum"}
 
 // lockFiles digests every version-pinning file the module has. go.mod
 // must exist; the others exist only when the module has dependencies or
@@ -18,9 +20,20 @@ func lockFiles(root string) ([]FileDigest, error) {
 	if _, err := os.Stat(filepath.Join(root, "go.mod")); err != nil {
 		return nil, noModule(root)
 	}
-	found := []FileDigest{}
+	paths := []string{}
 	for _, name := range lockFileNames {
-		digest, present, err := digestIfPresent(filepath.Join(root, name))
+		paths = append(paths, filepath.Join(root, name))
+	}
+	workspace, err := printed(root, "go", "env", "GOWORK")
+	if err != nil {
+		return nil, err
+	}
+	if work := strings.TrimSpace(workspace); work != "" && work != "off" {
+		paths = append(paths, work, work+".sum")
+	}
+	found := []FileDigest{}
+	for _, path := range paths {
+		digest, present, err := digestIfPresent(path)
 		if err != nil {
 			return nil, err
 		}
@@ -33,7 +46,10 @@ func lockFiles(root string) ([]FileDigest, error) {
 
 func digestIfPresent(path string) (FileDigest, bool, error) {
 	if _, err := os.Stat(path); err != nil {
-		return FileDigest{}, false, nil
+		if errors.Is(err, os.ErrNotExist) {
+			return FileDigest{}, false, nil
+		}
+		return FileDigest{}, false, unreadable(path, err)
 	}
 	digest, err := digestOf(path)
 	return digest, err == nil, err

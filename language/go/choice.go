@@ -12,10 +12,10 @@ type Choice struct {
 	Flags []string `json:"flags"`
 }
 
-// args is what the go tool takes for this build. `-mod=readonly` makes Go
-// fail rather than change go.mod or go.sum.
+// args is what the go tool takes for this build. The Go 1.25+ default uses
+// vendor when present and otherwise keeps module files read-only.
 func (choice Choice) args() []string {
-	args := []string{"-mod=readonly"}
+	args := []string{}
 	if len(choice.Tags) > 0 {
 		args = append(args, "-tags", strings.Join(choice.Tags, ","))
 	}

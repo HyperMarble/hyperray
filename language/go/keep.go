@@ -19,7 +19,10 @@ import (
 func keptNames(pkg Package) ([]string, error) {
 	set := token.NewFileSet()
 	names := []string{}
-	for _, file := range pkg.GoFiles {
+	files := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles))
+	files = append(files, pkg.GoFiles...)
+	files = append(files, pkg.CgoFiles...)
+	for _, file := range files {
 		parsed, err := parser.ParseFile(set, filepath.Join(pkg.Dir, file), nil, 0)
 		if err != nil {
 			return nil, unreadable(file, err)

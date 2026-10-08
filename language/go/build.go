@@ -5,8 +5,8 @@
 package goadapter
 
 import (
+	"fmt"
 	"path/filepath"
-	"strings"
 )
 
 // built is one file the build made, before it is digested and read back.
@@ -27,8 +27,8 @@ func buildAll(root, out string, choice Choice, packages []Package) ([]built, err
 		return nil, err
 	}
 	files := []built{}
-	for _, pkg := range packages {
-		made, err := buildOne(root, out, choice, overlay, pkg)
+	for index, pkg := range packages {
+		made, err := buildOne(root, out, choice, overlay, index, pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -41,8 +41,8 @@ func buildAll(root, out string, choice Choice, packages []Package) ([]built, err
 // non-test files, and always its test program with the keep file added.
 // `-vet=off`: go test runs vet by default, and vet's opinions (or its own
 // crashes) must not stop a build that the compiler accepts.
-func buildOne(root, out string, choice Choice, overlay string, pkg Package) ([]built, error) {
-	name := strings.ReplaceAll(pkg.ImportPath, "/", "_")
+func buildOne(root, out string, choice Choice, overlay string, index int, pkg Package) ([]built, error) {
+	name := fmt.Sprintf("package_%d", index)
 	files := []built{}
 	if pkg.Name == "main" && len(pkg.GoFiles)+len(pkg.CgoFiles) > 0 {
 		exe := filepath.Join(out, name)
