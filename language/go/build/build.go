@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/HyperMarble/hyperray/language/go/keep"
 	"path/filepath"
+	"strings"
 
 	"github.com/HyperMarble/hyperray/language/go/module"
 	"github.com/HyperMarble/hyperray/language/go/record"
@@ -19,6 +20,7 @@ type built struct {
 	kind    string
 	pkg     string
 	path    string
+	mode    string
 	sources []record.FileDigest
 }
 
@@ -37,9 +39,10 @@ func BuildAll(root, out string, choice record.Choice, packages []module.Package)
 	if err != nil {
 		return nil, err
 	}
+	mode, _ := tool.FlagValue(flags, "buildmode")
 	files := []built{}
 	for index, pkg := range packages {
-		made, err := buildOne(root, out, choice, overlay, index, pkg)
+		made, err := buildOne(root, out, choice, overlay, mode, index, pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -52,8 +55,10 @@ func BuildAll(root, out string, choice record.Choice, packages []module.Package)
 // non-test files, and always its test program with the keep file added.
 // `-vet=off`: go test runs vet by default, and vet's opinions (or its own
 // crashes) must not stop a build that the compiler accepts.
-func buildOne(root, out string, choice record.Choice, overlay string, index int, pkg module.Package) ([]built, error) {
-	name := fmt.Sprintf("package_%d", index)
+// `-buildmode=default`: a test program is an executable, as `go test` makes
+// it; a requested buildmode applies to the program, not to it.
+func buildOne(root, out string, choice record.Choice, overlay, mode string, index int, pkg module.Package) ([]built, error) {
+	name := fmt.Sprintf("%d_%s", index, strings.ReplaceAll(pkg.ImportPath, "/", "_"))
 	files := []built{}
 	if pkg.Name == "main" && len(pkg.GoFiles)+len(pkg.CgoFiles) > 0 {
 		exe := filepath.Join(out, name)
@@ -65,11 +70,11 @@ func buildOne(root, out string, choice record.Choice, overlay string, index int,
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, built{programKind, pkg.ImportPath, exe, sources})
+		files = append(files, built{programKind, pkg.ImportPath, exe, mode, sources})
 	}
 	test := filepath.Join(out, name+".test")
 	args := append([]string{"test"}, choice.Args()...)
-	args = append(args, "-c", "-vet=off", "-overlay", overlay, "-o", test, pkg.ImportPath)
+	args = append(args, "-c", "-vet=off", "-buildmode=default", "-overlay", overlay, "-o", test, pkg.ImportPath)
 	if _, err := tool.Printed(root, "go", args...); err != nil {
 		return nil, err
 	}
@@ -77,5 +82,5 @@ func buildOne(root, out string, choice record.Choice, overlay string, index int,
 	if err != nil {
 		return nil, err
 	}
-	return append(files, built{testProgramKind, pkg.ImportPath, test, sources}), nil
+	return append(files, built{testProgramKind, pkg.ImportPath, test, "", sources}), nil
 }
