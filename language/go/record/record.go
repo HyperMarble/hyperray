@@ -52,6 +52,7 @@ type BuildRecord struct {
 	IgnoredModules []FileDigest  `json:"ignored_modules"`
 	LocalModules   []LocalModule `json:"local_modules"`
 	Excluded       []Excluded    `json:"excluded"`
+	NotBuilt       []NotBuilt    `json:"not_built"`
 }
 
 // Outcome is the adapter's answer: a build, or the reason there is none.

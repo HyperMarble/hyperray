@@ -30,7 +30,7 @@ func tryBuildRecord(root, out string, choice record.Choice) (*record.BuildRecord
 	if err != nil {
 		return nil, err
 	}
-	files, err := build.BuildAll(root, out, choice, packages)
+	files, notBuilt, err := build.BuildAll(root, out, choice, packages)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +43,7 @@ func tryBuildRecord(root, out string, choice record.Choice) (*record.BuildRecord
 		return nil, err
 	}
 	facts.Artifacts = artifacts
+	facts.NotBuilt = notBuilt
 	facts.NativeCode = build.NativeCodeOf(packages)
 	facts.Settings, err = settingsOf(root, asked, choice, locks, facts)
 	if err != nil {

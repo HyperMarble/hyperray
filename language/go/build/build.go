@@ -1,6 +1,7 @@
 // Purpose: builds every program the module can make: each main package's
 // executable, and each package's test program with every function
-// kept, so a package's machine code is always in a file.
+// kept, so a package's machine code is always in a file. A test program
+// the project's own flags forbid is recorded as not built, with Go's words.
 // Never:   writes into the module's folder; every output goes to out.
 package build
 
@@ -29,26 +30,27 @@ const (
 	testProgramKind = "test program"
 )
 
-func BuildAll(root, out string, choice record.Choice, packages []module.Package) ([]built, error) {
+func BuildAll(root, out string, choice record.Choice, packages []module.Package) ([]built, []record.NotBuilt, error) {
 	flags, err := tool.BuildFlags(root, choice)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	theirs, _ := tool.FlagValue(flags, "overlay")
 	overlay, err := keep.WriteOverlay(packages, out, theirs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	mode, _ := tool.FlagValue(flags, "buildmode")
-	files := []built{}
+	files, notBuilt := []built{}, []record.NotBuilt{}
 	for index, pkg := range packages {
-		made, err := buildOne(root, out, choice, overlay, mode, index, pkg)
+		made, missing, err := buildOne(root, out, choice, overlay, mode, index, pkg)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		files = append(files, made...)
+		notBuilt = append(notBuilt, missing...)
 	}
-	return files, nil
+	return files, notBuilt, nil
 }
 
 // buildOne makes the package's executable when it is a program with
@@ -57,18 +59,18 @@ func BuildAll(root, out string, choice record.Choice, packages []module.Package)
 // crashes) must not stop a build that the compiler accepts.
 // `-buildmode=default`: a test program is an executable, as `go test` makes
 // it; a requested buildmode applies to the program, not to it.
-func buildOne(root, out string, choice record.Choice, overlay, mode string, index int, pkg module.Package) ([]built, error) {
+func buildOne(root, out string, choice record.Choice, overlay, mode string, index int, pkg module.Package) ([]built, []record.NotBuilt, error) {
 	name := fmt.Sprintf("%d_%s", index, strings.ReplaceAll(pkg.ImportPath, "/", "_"))
 	files := []built{}
 	if pkg.Name == "main" && len(pkg.GoFiles)+len(pkg.CgoFiles) > 0 {
 		exe := filepath.Join(out, name)
 		args := append([]string{"build"}, choice.Args()...)
 		if _, err := tool.Printed(root, "go", append(args, "-o", exe, pkg.ImportPath)...); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		sources, err := module.SourcesOf(pkg, false)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		files = append(files, built{programKind, pkg.ImportPath, exe, mode, sources})
 	}
@@ -76,11 +78,13 @@ func buildOne(root, out string, choice record.Choice, overlay, mode string, inde
 	args := append([]string{"test"}, choice.Args()...)
 	args = append(args, "-c", "-vet=off", "-buildmode=default", "-overlay", overlay, "-o", test, pkg.ImportPath)
 	if _, err := tool.Printed(root, "go", args...); err != nil {
-		return nil, err
+		// The project's own build made the program; a flag it builds with
+		// can still forbid linking a test program. That is recorded, not refused.
+		return files, []record.NotBuilt{{Kind: testProgramKind, Package: pkg.ImportPath, Reason: err.Error()}}, nil
 	}
 	sources, err := module.SourcesOf(pkg, true)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return append(files, built{testProgramKind, pkg.ImportPath, test, "", sources}), nil
+	return append(files, built{testProgramKind, pkg.ImportPath, test, "", sources}), nil, nil
 }

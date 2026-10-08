@@ -48,3 +48,12 @@ type Excluded struct {
 	Reason string       `json:"reason"`
 	Files  []FileDigest `json:"files"`
 }
+
+// NotBuilt is a file the build was asked for and could not make, with Go's
+// own words for why. The adapter's test program for a package is the usual
+// case: a flag the project builds with can forbid linking one.
+type NotBuilt struct {
+	Kind    string `json:"kind"`
+	Package string `json:"package"`
+	Reason  string `json:"reason"`
+}
