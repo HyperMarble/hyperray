@@ -46,9 +46,8 @@ We use `type(scope): short summary`, for example
 
 ## Using AI tools
 
-AI tools are welcome. The rules are short and live in
-[AI_POLICY.md](AI_POLICY.md): say what you used, know every line, check
-it yourself, no code golf.
+AI tools are welcome. Please read
+[AI_POLICY.md](AI_POLICY.md): before contributing using AI.
 
 ## License
 
