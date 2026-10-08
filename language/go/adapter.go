@@ -48,7 +48,7 @@ func tryBuildRecord(root, out string, choice Choice) (*BuildRecord, error) {
 	if !slices.Equal(locks, latest) {
 		return nil, Blocked{Reason: "module pin files changed during build"}
 	}
-	return record, nil
+	return withNested(root, out, choice, record)
 }
 
 // machineFacts is the part of the record that comes from the machine and
