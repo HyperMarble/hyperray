@@ -44,13 +44,15 @@ The other 134 programs never reached the adapter:
 - 38 the compiler refused: 20 use nightly features removed after the tests
   were written, 7 need checkers Rust does not ship for Mac, 6 are marked
   broken by the Rust team, 1 is x86 only, 1 crashed the compiler, 3 other.
-- 1 is unsupported, see below.
+- 1 only exists as a test program (`compile-flags: --test`); the adapter
+  builds test programs when asked for every target, see below.
 
-## Unsupported
+## Test programs
 
-- Test-mode programs (what `cargo test` builds). The adapter builds the
-  real program only. A patch that changes only a `#[test]` function has no
-  machine code to judge yet.
+A patch inside a `#[test]` function has machine code only in the test
+program (what `cargo test` builds). Ask for every target (`targets = all`,
+Cargo's `--all-targets`) and the record carries the test programs too, each
+marked `compiled.test = true`.
 
 ## What the record holds
 

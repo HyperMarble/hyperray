@@ -75,3 +75,7 @@ path = "tests/compiler_printout_test.rs"
 [[test]]
 name = "config_file_test"
 path = "tests/config_file_test.rs"
+
+[[test]]
+name = "test_programs_test"
+path = "tests/test_programs_test.rs"
