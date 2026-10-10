@@ -3,9 +3,10 @@
 // value, so a generated test can keep each one linked with its own
 // machine code (Go's linker drops what nothing reaches, and the compiler
 // inlines small bodies away).
-// Never:   names what Go cannot take by value: init, main, generic functions
-// and methods of generic types. Those have machine code only where
-// they are used with concrete types, and that code is kept too.
+// Never:   names what Go cannot take by value: the init function, the blank
+// name, generic functions and methods of generic types. Those have machine
+// code only where they are used with concrete types, and that code is kept
+// too.
 package keep
 
 import (
@@ -74,7 +75,7 @@ func namesIn(file *ast.File) []string {
 // or false when Go has no such expression for it.
 func keptName(decl ast.Decl) (string, bool) {
 	function, ok := decl.(*ast.FuncDecl)
-	if !ok || function.Type.TypeParams != nil || !referable(function.Name.Name) {
+	if !ok || function.Type.TypeParams != nil || !referable(function) {
 		return "", false
 	}
 	if function.Recv == nil {
@@ -84,6 +85,11 @@ func keptName(decl ast.Decl) (string, bool) {
 	return receiver + "." + function.Name.Name, ok
 }
 
-func referable(name string) bool {
-	return name != "init" && name != "main" && name != "_"
+// referable is false for the two things the compiler refuses to refer to by
+// value: the init function ("undefined: init") and the blank name ("cannot use
+// _ as value"). Everything else has an expression, including a function named
+// main and a method named init or main. A test asks the compiler.
+func referable(function *ast.FuncDecl) bool {
+	name := function.Name.Name
+	return name != "_" && (name != "init" || function.Recv != nil)
 }
