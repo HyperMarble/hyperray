@@ -1,20 +1,29 @@
 // Purpose: the Rust adapter: build a project its own way, record what came out.
 // Never:   read instructions or prove anything; the loader and engine do that.
-pub mod blocked;
-pub mod build_facts;
-pub mod c_toolchain;
-pub mod cargo_build;
-pub mod cargo_messages;
-pub mod choice;
-pub mod config_files;
-pub mod debug_info;
-pub mod digest;
-pub mod environment;
-pub mod os;
+mod build;
 pub mod project;
 pub mod record;
-pub mod run;
-pub mod toolchain;
+mod tool;
+
+pub use build::{
+    cargo_build,
+    cargo_messages,
+    choice,
+    debug_info, //
+};
+pub use project::config_files;
+pub use record::{
+    blocked,
+    build_facts, //
+};
+pub use tool::{
+    c_toolchain,
+    digest,
+    environment,
+    os,
+    run,
+    toolchain, //
+};
 
 use blocked::Blocked;
 use choice::Choice;
