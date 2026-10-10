@@ -119,8 +119,8 @@ program), `-C` (that folder becomes the root), and from the environment
   source file compiled into it by hash, the PGO profile Go applied by hash,
   and Go's own stamp read back out of the file: Go version, every module
   with version and checksum, every setting Go stamps
-- the go installation: version, host, experiments, `bin/go`, every tool in
-  `GOTOOLDIR`, and one hash over all of `GOROOT/src`
+- the go tool as go itself reports it: version, host, experiments, and
+  `bin/go` by hash. Go stamps the same version into every file it builds
 - what was asked, and what the build ran with: the tags Go stamped, every
   flag in the order Go read them, `go.mod`, `go.sum` and the active
   `go.work` by hash, and after the build the pin files again when they
