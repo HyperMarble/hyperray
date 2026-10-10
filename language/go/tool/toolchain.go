@@ -1,5 +1,5 @@
-// Purpose: records the go tool the module builds with, as go itself reports
-// it: version, host and experiments, and the go command by hash.
+// Purpose: records the go installation the module builds with: the go
+// command, its tools, standard library source, and reported settings.
 // Never:   reports the machine's default go when the module's `toolchain`
 // line or GOTOOLCHAIN selects another.
 package tool
@@ -12,8 +12,8 @@ import (
 	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
-// GoToolchain asks the go tool that root selects for its version, host and
-// binary. `go version` prints `go version go1.26.0 darwin/arm64`.
+// GoToolchain asks the go tool that root selects for its version and host,
+// then hashes the command and the installation files it builds with.
 func GoToolchain(root string) (record.Toolchain, error) {
 	text, err := Printed(root, "go", "version")
 	if err != nil {
@@ -23,15 +23,26 @@ func GoToolchain(root string) (record.Toolchain, error) {
 	if len(fields) < 4 {
 		return record.Toolchain{}, record.Unreadable("go version", errors.New("no version and host"))
 	}
-	settings, err := Printed(root, "go", "env", "GOROOT", "GOEXPERIMENT")
+	settings, err := Printed(root, "go", "env", "GOROOT", "GOTOOLDIR", "GOEXPERIMENT")
 	if err != nil {
 		return record.Toolchain{}, err
 	}
-	lines := strings.SplitN(strings.TrimRight(settings, "\n")+"\n", "\n", 3)
-	goroot, experiments := lines[0], lines[1]
+	lines := strings.SplitN(strings.TrimRight(settings, "\n")+"\n\n", "\n", 4)
+	goroot, toolDir, experiments := lines[0], lines[1], lines[2]
 	compiler, err := record.DigestOf(filepath.Join(goroot, "bin", "go"))
 	if err != nil {
 		return record.Toolchain{}, err
 	}
-	return record.Toolchain{Version: fields[2], Host: fields[3], Experiments: experiments, Compiler: compiler}, nil
+	tools, err := digestFolder(toolDir)
+	if err != nil {
+		return record.Toolchain{}, err
+	}
+	std, err := treeHash(filepath.Join(goroot, "src"))
+	if err != nil {
+		return record.Toolchain{}, err
+	}
+	return record.Toolchain{
+		Version: fields[2], Host: fields[3], Experiments: experiments,
+		Compiler: compiler, Tools: tools, StdSource: std,
+	}, nil
 }
