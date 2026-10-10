@@ -53,17 +53,21 @@ func LocalModules(root string, choice record.Choice) ([]record.LocalModule, erro
 	if err != nil {
 		return nil, err
 	}
-	return groupLocal(packages, root)
+	user, err := tool.UserOverlay(root, choice)
+	if err != nil {
+		return nil, err
+	}
+	return groupLocal(packages, root, user)
 }
 
-func groupLocal(packages []Package, root string) ([]record.LocalModule, error) {
+func groupLocal(packages []Package, root string, user map[string]string) ([]record.LocalModule, error) {
 	found := []record.LocalModule{}
 	at := map[string]int{}
 	for _, pkg := range packages {
 		if !pkg.Module.isLocal(root) {
 			continue
 		}
-		sources, err := SourcesOf(pkg, false)
+		sources, err := SourcesOf(pkg, false, user)
 		if err != nil {
 			return nil, err
 		}

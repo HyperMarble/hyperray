@@ -28,12 +28,16 @@ func ExcludedFolders(root string, choice record.Choice, packages []Package) ([]r
 	if err != nil {
 		return nil, err
 	}
+	user, err := tool.UserOverlay(root, choice)
+	if err != nil {
+		return nil, err
+	}
 	found := []record.Excluded{}
 	for _, dir := range goFolders(root, nested) {
 		if known[dir] {
 			continue
 		}
-		excluded, err := excludedFolder(root, dir, choice)
+		excluded, err := excludedFolder(root, dir, choice, user)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +50,7 @@ func ExcludedFolders(root string, choice record.Choice, packages []Package) ([]r
 
 // excludedFolder is go list's account of one folder, or nothing when go
 // list has no complaint about it.
-func excludedFolder(root, dir string, choice record.Choice) (*record.Excluded, error) {
+func excludedFolder(root, dir string, choice record.Choice, user map[string]string) (*record.Excluded, error) {
 	args := append([]string{"list", "-e", "-json=Dir,IgnoredGoFiles,IgnoredOtherFiles,Error"}, choice.Args()...)
 	text, err := tool.Printed(root, "go", append(args, dir)...)
 	if err != nil {
@@ -59,7 +63,7 @@ func excludedFolder(root, dir string, choice record.Choice) (*record.Excluded, e
 	if entry.Error == nil {
 		return nil, nil
 	}
-	files, err := digestAll(dir, append(append([]string{}, entry.IgnoredGoFiles...), entry.IgnoredOtherFiles...))
+	files, err := digestAll(dir, append(append([]string{}, entry.IgnoredGoFiles...), entry.IgnoredOtherFiles...), user)
 	if err != nil {
 		return nil, err
 	}
