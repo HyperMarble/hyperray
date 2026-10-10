@@ -1,13 +1,9 @@
 // Purpose: the parts of the record that are not the build itself: what the
-// machine and the go tool say, and the nested modules built after the root.
+// machine and the go tool say, and what the build was asked for.
 // Never:   reads instructions or proves anything.
 package goadapter
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/HyperMarble/hyperray/language/go/build"
 	"github.com/HyperMarble/hyperray/language/go/module"
 	"github.com/HyperMarble/hyperray/language/go/record"
@@ -55,32 +51,4 @@ func settingsOf(root string, asked, choice record.Choice, locks []record.FileDig
 		settings.LockFilesAfter = after
 	}
 	return settings, tool.Inputs(root, flags, facts.Environment, &settings)
-}
-
-// withNested builds every nested module into its own folder under out and
-// hashes the go.mod of every ignored one.
-func withNested(root, out string, choice record.Choice, facts *record.BuildRecord) (*record.BuildRecord, error) {
-	toBuild, ignored, err := module.NestedModules(root)
-	if err != nil {
-		return nil, err
-	}
-	for index, dir := range toBuild {
-		nestedOut := filepath.Join(out, fmt.Sprintf("nested_%d", index))
-		if err := os.MkdirAll(nestedOut, 0o755); err != nil {
-			return nil, record.Unreadable(nestedOut, err)
-		}
-		nested, err := tryBuildRecord(dir, nestedOut, choice)
-		if err != nil {
-			return nil, err
-		}
-		facts.Nested = append(facts.Nested, record.Nested{Dir: dir, Record: nested})
-	}
-	for _, dir := range ignored {
-		digest, err := record.DigestOf(filepath.Join(dir, "go.mod"))
-		if err != nil {
-			return nil, err
-		}
-		facts.IgnoredModules = append(facts.IgnoredModules, digest)
-	}
-	return facts, nil
 }

@@ -38,19 +38,16 @@ type EnvVar struct {
 
 // BuildRecord is everything needed to know exactly which code was built, and how.
 type BuildRecord struct {
-	Language       string        `json:"language"`
-	Artifacts      []Artifact    `json:"artifacts"`
-	Toolchain      Toolchain     `json:"toolchain"`
-	Settings       Settings      `json:"settings"`
-	Environment    []EnvVar      `json:"environment"`
-	NativeCode     []NativeCode  `json:"native_code"`
-	CToolchain     *CToolchain   `json:"c_toolchain"`
-	OsBuild        string        `json:"os_build"`
-	Nested         []Nested      `json:"nested"`
-	IgnoredModules []FileDigest  `json:"ignored_modules"`
-	LocalModules   []LocalModule `json:"local_modules"`
-	Excluded       []Excluded    `json:"excluded"`
-	NotBuilt       []NotBuilt    `json:"not_built"`
+	Language     string        `json:"language"`
+	Artifacts    []Artifact    `json:"artifacts"`
+	Toolchain    Toolchain     `json:"toolchain"`
+	Settings     Settings      `json:"settings"`
+	Environment  []EnvVar      `json:"environment"`
+	NativeCode   []NativeCode  `json:"native_code"`
+	CToolchain   *CToolchain   `json:"c_toolchain"`
+	OsBuild      string        `json:"os_build"`
+	LocalModules []LocalModule `json:"local_modules"`
+	NotBuilt     []NotBuilt    `json:"not_built"`
 }
 
 // Outcome is the adapter's answer: a build, or the reason there is none.

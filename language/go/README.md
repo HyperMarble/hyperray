@@ -19,7 +19,7 @@ needs and cannot read.
 adapter.go, assemble.go, types.go   the door in, and the record's assembly
 record/    the record's shape, hashing, the refusal reasons, the build choice
 tool/      running the go tool, the toolchain, go env, the C toolchain, the flags
-module/    the module, its packages and sources, nested, local and excluded ones
+module/    the module, its packages and sources, and local modules
 keep/      the keep list and the overlay that adds it
 build/     building, reading Go's stamp back, naming what came out
 tests/     end-to-end tests, each on a real module written for it
@@ -70,8 +70,7 @@ Counts per folder of Go's suite are "handed over / Go built":
 Among the 1,893 are 22 records with zero built files, tests whose every
 file carries a build line for another chip or system (`amd64`, `js`,
 `aix`, …): `go build ./...` builds nothing for them and exits clean, and
-so does the adapter, listing each left-out folder with Go's own reason and
-its files by hash. And 2 records whose test program is listed as not
+so does the adapter. And 2 records whose test program is listed as not
 built: their own flag (`-ldflags -strictdups=2`,
 `-gcflags=-d=maymorestack=main.f`) links the program but forbids linking
 a test program, and the record says so in Go's words.
@@ -130,13 +129,15 @@ program), `-C` (that folder becomes the root), and from the environment
   archiver, pkg-config, and the linker the C compiler reports, each by hash
 - every package with native code: cgo, C, C++, Objective-C, headers,
   Fortran, assembly, SWIG, prebuilt objects
-- nested modules, each with its own record; modules under folders Go's
-  pattern rules skip, by hash; local modules from a directory replace or a
-  workspace, their compiled sources by hash; folders Go excluded, with its
-  reason and their files by hash; test programs the project's flags forbid,
-  with Go's words
+- local modules from a directory replace or a workspace, their compiled
+  sources by hash; test programs the project's flags forbid, with Go's
+  words
 - the OS build, by exact version, so a record names the kernel it ran
   under
+
+A module nested inside the project is a separate module to Go, and
+`go build ./...` leaves it out. The adapter follows Go: it builds the
+module it is pointed at, and a nested one when it is pointed at that.
 
 ## Not added yet
 

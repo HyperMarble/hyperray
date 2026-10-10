@@ -82,11 +82,3 @@ func (pkg Package) NativeCode() *record.NativeCode {
 		ObjectFiles: pkg.SysoFiles,
 	}
 }
-
-// decodeOne reads the single JSON object `go list -e -json <dir>` prints.
-func decodeOne(text string, into any) error {
-	if err := json.NewDecoder(strings.NewReader(text)).Decode(into); err != nil {
-		return record.Unreadable("go list output", err)
-	}
-	return nil
-}
