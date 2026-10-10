@@ -49,7 +49,7 @@ func tryBuildRecord(root, out string, choice record.Choice) (*record.BuildRecord
 	if err != nil {
 		return nil, err
 	}
-	facts.LocalModules, err = module.LocalModules(root, choice)
+	facts.LocalModules, err = module.LocalModules(root, choice, artifacts)
 	if err != nil {
 		return nil, err
 	}
