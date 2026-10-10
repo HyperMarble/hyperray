@@ -68,15 +68,18 @@ func TestAPackageThatRedefinesBuiltinsStillGetsItsKeepFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := t.TempDir()
-	if _, err := WriteOverlay([]module.Package{{Name: "r", Dir: dir, GoFiles: []string{"r.go"}}}, out, ""); err != nil {
+	if _, err := WriteOverlay(dir, []module.Package{{Name: "r", Dir: dir, GoFiles: []string{"r.go"}}}, out, ""); err != nil {
 		t.Fatal(err)
 	}
 	text, err := os.ReadFile(filepath.Join(out, "keep_0_test.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The package's own variable named nil is kept by its address, `&nil`.
+	// Apart from that the file must not use a name the package redefined.
+	rest := strings.ReplaceAll(string(text), "&nil", "")
 	for _, builtin := range []string{"len(", "nil", "any"} {
-		if strings.Contains(string(text), builtin) {
+		if strings.Contains(rest, builtin) {
 			t.Fatalf("the keep file uses %q:\n%s", builtin, text)
 		}
 	}

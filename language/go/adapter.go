@@ -53,9 +53,5 @@ func tryBuildRecord(root, out string, choice record.Choice) (*record.BuildRecord
 	if err != nil {
 		return nil, err
 	}
-	facts.Excluded, err = module.ExcludedFolders(root, choice, packages)
-	if err != nil {
-		return nil, err
-	}
-	return withNested(root, out, choice, facts)
+	return facts, nil
 }

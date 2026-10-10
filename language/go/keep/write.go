@@ -36,14 +36,16 @@ func exists(path string) bool {
 
 // The file uses no predeclared name (`any`, `len`, `nil`): a package may
 // redefine any of them, and Go's own suite has one that redefines them all.
-const keepFileText = `package %s
+// Its own names (the import, the list, the test) are ones the package does
+// not declare: see idents.go.
+const keepFileText = `package %[1]s
 
-import "testing"
+import %[2]s
 
-var hyperrayKeep = []interface{}{%s}
+var %[3]s = []interface{}{%[4]s}
 
-func TestHyperrayKeep(t *testing.T) {
-	t.Log(hyperrayKeep)
+func %[5]s(t *%[6]s.T) {
+	t.Log(%[3]s)
 }
 `
 
@@ -54,28 +56,42 @@ func keepFilesFor(pkg module.Package, user, replace map[string]string, out strin
 	if err != nil {
 		return err
 	}
+	taken, err := DeclaredNames(pkg.Dir, ownFiles(pkg), user)
+	if err != nil {
+		return err
+	}
 	path := filepath.Join(out, fmt.Sprintf("keep_%d_test.go", index))
-	if err := writeKeepFile(pkg.Name, names, path); err != nil {
+	if err := writeKeepFile(pkg.Name, names, identsFor(taken), path); err != nil {
 		return err
 	}
 	replace[filepath.Join(pkg.Dir, freeName(pkg.Dir, replace))] = path
 	if len(pkg.XTestGoFiles) == 0 {
 		return nil
 	}
+	return keepExternalFile(pkg, user, replace, out, index)
+}
+
+// keepExternalFile writes the keep file of the package's external test package.
+func keepExternalFile(pkg module.Package, user, replace map[string]string, out string, index int) error {
 	external, err := ExternalTestNames(pkg, user)
 	if err != nil {
 		return err
 	}
-	path = filepath.Join(out, fmt.Sprintf("keep_%d_external_test.go", index))
-	if err := writeKeepFile(pkg.Name+"_test", external, path); err != nil {
+	taken, err := DeclaredNames(pkg.Dir, pkg.XTestGoFiles, user)
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(out, fmt.Sprintf("keep_%d_external_test.go", index))
+	if err := writeKeepFile(pkg.Name+"_test", external, identsFor(taken), path); err != nil {
 		return err
 	}
 	replace[filepath.Join(pkg.Dir, freeName(pkg.Dir, replace))] = path
 	return nil
 }
 
-func writeKeepFile(packageName string, names []string, path string) error {
-	text := fmt.Sprintf(keepFileText, packageName, strings.Join(names, ", "))
+func writeKeepFile(packageName string, names []string, idents keepIdents, path string) error {
+	text := fmt.Sprintf(keepFileText, packageName, idents.importLine(), idents.variable,
+		strings.Join(names, ", "), idents.test, idents.testing)
 	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
 		return record.Unreadable(path, err)
 	}

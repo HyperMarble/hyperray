@@ -43,7 +43,8 @@ func (pkg Package) fileLists() map[string][]string {
 
 // SourcesOf digests the files compiled into the package's program, or into
 // its test program when tests is set, in the order `go list` reports them.
-func SourcesOf(pkg Package, tests bool) ([]record.FileDigest, error) {
+// Each file is read the way the build reads it: through the user's overlay.
+func SourcesOf(pkg Package, tests bool, overlay map[string]string) ([]record.FileDigest, error) {
 	kinds := programFileKinds
 	if tests {
 		kinds = append(append([]string{}, kinds...), testFileKinds...)
@@ -51,7 +52,7 @@ func SourcesOf(pkg Package, tests bool) ([]record.FileDigest, error) {
 	lists := pkg.fileLists()
 	found := []record.FileDigest{}
 	for _, kind := range kinds {
-		digests, err := digestAll(pkg.Dir, lists[kind])
+		digests, err := digestAll(pkg.Dir, lists[kind], overlay)
 		if err != nil {
 			return nil, err
 		}
@@ -60,14 +61,27 @@ func SourcesOf(pkg Package, tests bool) ([]record.FileDigest, error) {
 	return found, nil
 }
 
-func digestAll(dir string, names []string) ([]record.FileDigest, error) {
+func digestAll(dir string, names []string, overlay map[string]string) ([]record.FileDigest, error) {
 	found := []record.FileDigest{}
 	for _, name := range names {
-		digest, err := record.DigestOf(filepath.Join(dir, name))
+		digest, err := digestThrough(filepath.Join(dir, name), overlay)
 		if err != nil {
 			return nil, err
 		}
 		found = append(found, digest)
 	}
 	return found, nil
+}
+
+// digestThrough hashes the bytes the build reads for path: the overlay's
+// backing file when the overlay maps the path, else the file itself. The
+// digest keeps the path go knows the file by.
+func digestThrough(path string, overlay map[string]string) (record.FileDigest, error) {
+	backing := overlay[path]
+	if backing == "" {
+		return record.DigestOf(path)
+	}
+	digest, err := record.DigestOf(backing)
+	digest.Path = path
+	return digest, err
 }

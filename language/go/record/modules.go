@@ -27,26 +27,11 @@ type BuildInfo struct {
 	Settings  []Setting `json:"settings"`
 }
 
-// Nested is a module inside another, built as its own.
-type Nested struct {
-	Dir    string       `json:"dir"`
-	Record *BuildRecord `json:"record"`
-}
-
 // LocalModule is one locally sourced module and the sources compiled from it.
 type LocalModule struct {
 	Path    string       `json:"path"`
 	Dir     string       `json:"dir"`
 	Sources []FileDigest `json:"sources"`
-}
-
-// Excluded is a folder with Go code that the build left out, with Go's own
-// reason, usually that build constraints exclude every file on this
-// machine, and the files it left out by hash.
-type Excluded struct {
-	Dir    string       `json:"dir"`
-	Reason string       `json:"reason"`
-	Files  []FileDigest `json:"files"`
 }
 
 // NotBuilt is a file the build was asked for and could not make, with Go's

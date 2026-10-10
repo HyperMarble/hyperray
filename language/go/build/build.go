@@ -36,15 +36,22 @@ func BuildAll(root, out string, choice record.Choice, packages []module.Package)
 		return nil, nil, err
 	}
 	theirs, _ := tool.FlagValue(flags, "overlay")
-	overlay, err := keep.WriteOverlay(packages, out, theirs)
+	overlay, err := keep.WriteOverlay(root, packages, out, theirs)
 	if err != nil {
 		return nil, nil, err
 	}
 	mode, _ := tool.FlagValue(flags, "buildmode")
+	user, err := tool.UserOverlayIn(root, flags)
+	if err != nil {
+		return nil, nil, err
+	}
 	files, notBuilt := []built{}, []record.NotBuilt{}
 	for index, pkg := range packages {
 		made, missing, err := buildOne(root, out, choice, overlay, mode, index, pkg)
 		if err != nil {
+			return nil, nil, err
+		}
+		if made, err = withSources(made, pkg, user); err != nil {
 			return nil, nil, err
 		}
 		files = append(files, made...)
@@ -68,11 +75,7 @@ func buildOne(root, out string, choice record.Choice, overlay, mode string, inde
 		if _, err := tool.Printed(root, "go", append(args, "-o", exe, pkg.ImportPath)...); err != nil {
 			return nil, nil, err
 		}
-		sources, err := module.SourcesOf(pkg, false)
-		if err != nil {
-			return nil, nil, err
-		}
-		files = append(files, built{programKind, pkg.ImportPath, exe, mode, sources})
+		files = append(files, built{programKind, pkg.ImportPath, exe, mode, nil})
 	}
 	test := filepath.Join(out, name+".test")
 	args := append([]string{"test"}, choice.Args()...)
@@ -82,9 +85,5 @@ func buildOne(root, out string, choice record.Choice, overlay, mode string, inde
 		// can still forbid linking a test program. That is recorded, not refused.
 		return files, []record.NotBuilt{{Kind: testProgramKind, Package: pkg.ImportPath, Reason: err.Error()}}, nil
 	}
-	sources, err := module.SourcesOf(pkg, true)
-	if err != nil {
-		return nil, nil, err
-	}
-	return append(files, built{testProgramKind, pkg.ImportPath, test, "", sources}), nil, nil
+	return append(files, built{testProgramKind, pkg.ImportPath, test, "", nil}), nil, nil
 }

@@ -20,16 +20,14 @@ type Artifact struct {
 	BuildInfo BuildInfo    `json:"build_info"`
 }
 
-// Toolchain is the go installation that built the module: the go command,
-// every tool in its tool directory, one hash over the standard library's
-// source, and the experiments switched on.
+// Toolchain is the go tool that built the module, as go reports it: its
+// version, host and experiments, and the go command by hash. Go stamps the
+// same version into every file it builds.
 type Toolchain struct {
-	Version     string       `json:"version"`
-	Host        string       `json:"host"`
-	Experiments string       `json:"experiments"`
-	Compiler    FileDigest   `json:"compiler"`
-	Tools       []FileDigest `json:"tools"`
-	StdSource   string       `json:"std_source"`
+	Version     string     `json:"version"`
+	Host        string     `json:"host"`
+	Experiments string     `json:"experiments"`
+	Compiler    FileDigest `json:"compiler"`
 }
 
 // EnvVar is one go tool setting; a hidden value is nil.
@@ -40,19 +38,16 @@ type EnvVar struct {
 
 // BuildRecord is everything needed to know exactly which code was built, and how.
 type BuildRecord struct {
-	Language       string        `json:"language"`
-	Artifacts      []Artifact    `json:"artifacts"`
-	Toolchain      Toolchain     `json:"toolchain"`
-	Settings       Settings      `json:"settings"`
-	Environment    []EnvVar      `json:"environment"`
-	NativeCode     []NativeCode  `json:"native_code"`
-	CToolchain     *CToolchain   `json:"c_toolchain"`
-	OsBuild        string        `json:"os_build"`
-	Nested         []Nested      `json:"nested"`
-	IgnoredModules []FileDigest  `json:"ignored_modules"`
-	LocalModules   []LocalModule `json:"local_modules"`
-	Excluded       []Excluded    `json:"excluded"`
-	NotBuilt       []NotBuilt    `json:"not_built"`
+	Language     string        `json:"language"`
+	Artifacts    []Artifact    `json:"artifacts"`
+	Toolchain    Toolchain     `json:"toolchain"`
+	Settings     Settings      `json:"settings"`
+	Environment  []EnvVar      `json:"environment"`
+	NativeCode   []NativeCode  `json:"native_code"`
+	CToolchain   *CToolchain   `json:"c_toolchain"`
+	OsBuild      string        `json:"os_build"`
+	LocalModules []LocalModule `json:"local_modules"`
+	NotBuilt     []NotBuilt    `json:"not_built"`
 }
 
 // Outcome is the adapter's answer: a build, or the reason there is none.

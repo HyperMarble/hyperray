@@ -39,10 +39,12 @@ func otherFolder(a, b string) bool {
 	return errA != nil || errB != nil || realA != realB
 }
 
-// LocalModules walks every package the build depends on and hashes the
-// sources of those that come from a local module, grouped by module.
+// LocalModules walks every package the build depends on, the test programs'
+// included (`-test`: a folder only a test imports is compiled into the test
+// program), and hashes the sources of those that come from a local module,
+// grouped by module.
 func LocalModules(root string, choice record.Choice) ([]record.LocalModule, error) {
-	args := append([]string{"list", "-deps", listedFields}, choice.Args()...)
+	args := append([]string{"list", "-deps", "-test", listedFields}, choice.Args()...)
 	text, err := tool.Printed(root, "go", append(args, "./...")...)
 	if err != nil {
 		return nil, err
@@ -51,17 +53,21 @@ func LocalModules(root string, choice record.Choice) ([]record.LocalModule, erro
 	if err != nil {
 		return nil, err
 	}
-	return groupLocal(packages, root)
+	user, err := tool.UserOverlay(root, choice)
+	if err != nil {
+		return nil, err
+	}
+	return groupLocal(packages, root, user)
 }
 
-func groupLocal(packages []Package, root string) ([]record.LocalModule, error) {
+func groupLocal(packages []Package, root string, user map[string]string) ([]record.LocalModule, error) {
 	found := []record.LocalModule{}
 	at := map[string]int{}
 	for _, pkg := range packages {
 		if !pkg.Module.isLocal(root) {
 			continue
 		}
-		sources, err := SourcesOf(pkg, false)
+		sources, err := SourcesOf(pkg, false, user)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +77,23 @@ func groupLocal(packages []Package, root string) ([]record.LocalModule, error) {
 			at[pkg.Module.Path] = index
 			found = append(found, record.LocalModule{Path: pkg.Module.Path, Dir: pkg.Module.Dir})
 		}
-		found[index].Sources = append(found[index].Sources, sources...)
+		found[index].Sources = withNew(found[index].Sources, sources)
 	}
 	return found, nil
+}
+
+// withNew adds the digests whose file the module's list does not have yet: a
+// package go lists twice, as it is and as a test program builds it, is
+// hashed once.
+func withNew(have, more []record.FileDigest) []record.FileDigest {
+	seen := map[string]bool{}
+	for _, digest := range have {
+		seen[digest.Path] = true
+	}
+	for _, digest := range more {
+		if !seen[digest.Path] {
+			have = append(have, digest)
+		}
+	}
+	return have
 }

@@ -1,34 +1,37 @@
-// Purpose: names every function and method in a package, its own test
-// files, and its external test package, that Go code can refer to by
-// value, so a generated test can keep each one linked with its own
+// Purpose: names every function, method and package-level variable in a
+// package, its own test files, and its external test package, that Go code
+// can refer to by value, so a generated test can keep each one linked with its own
 // machine code (Go's linker drops what nothing reaches, and the compiler
 // inlines small bodies away).
-// Never:   names what Go cannot take by value: init, main, generic functions
-// and methods of generic types. Those have machine code only where
-// they are used with concrete types, and that code is kept too.
+// Never:   names what Go cannot take by value: the init function, the blank
+// name, generic functions and methods of generic types. Those have machine
+// code only where they are used with concrete types, and that code is kept
+// too.
 package keep
 
 import (
 	"go/ast"
-	"go/parser"
-	"go/token"
-	"path/filepath"
 
 	"github.com/HyperMarble/hyperray/language/go/module"
-	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
 // KeptNames lists the package's functions as Go expressions: `f`, `T.m`
-// for a value receiver, `(*T).m` for a pointer receiver, from its Go and
+// for a value receiver, `(*T).m` for a pointer receiver, and `&v` for a
+// package-level variable, from its Go and
 // cgo files and its own test files, which the test program compiles too.
 // Each file is read the way the build reads it: through the user's
 // overlay when one maps it.
 func KeptNames(pkg module.Package, overlay map[string]string) ([]string, error) {
+	return namesInFiles(pkg.Dir, ownFiles(pkg), overlay)
+}
+
+// ownFiles are the files compiled into the package's own test program: its
+// Go and cgo files and its own test files.
+func ownFiles(pkg module.Package) []string {
 	files := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles)+len(pkg.TestGoFiles))
 	files = append(files, pkg.GoFiles...)
 	files = append(files, pkg.CgoFiles...)
-	files = append(files, pkg.TestGoFiles...)
-	return namesInFiles(pkg.Dir, files, overlay)
+	return append(files, pkg.TestGoFiles...)
 }
 
 // ExternalTestNames lists the functions of the package's external test
@@ -38,18 +41,13 @@ func ExternalTestNames(pkg module.Package, overlay map[string]string) ([]string,
 }
 
 func namesInFiles(dir string, files []string, overlay map[string]string) ([]string, error) {
-	set := token.NewFileSet()
+	parsed, err := parsedFiles(dir, files, overlay)
+	if err != nil {
+		return nil, err
+	}
 	names := []string{}
-	for _, file := range files {
-		path, present := throughOverlay(filepath.Join(dir, file), overlay)
-		if !present {
-			continue
-		}
-		parsed, err := parser.ParseFile(set, path, nil, 0)
-		if err != nil {
-			return nil, record.Unreadable(file, err)
-		}
-		names = append(names, namesIn(parsed)...)
+	for _, file := range parsed {
+		names = append(names, namesIn(file)...)
 	}
 	return names, nil
 }
@@ -70,6 +68,7 @@ func namesIn(file *ast.File) []string {
 		if name, ok := keptName(decl); ok {
 			names = append(names, name)
 		}
+		names = append(names, variableRefs(decl)...)
 	}
 	return names
 }
@@ -78,7 +77,7 @@ func namesIn(file *ast.File) []string {
 // or false when Go has no such expression for it.
 func keptName(decl ast.Decl) (string, bool) {
 	function, ok := decl.(*ast.FuncDecl)
-	if !ok || function.Type.TypeParams != nil || !referable(function.Name.Name) {
+	if !ok || function.Type.TypeParams != nil || !referable(function) {
 		return "", false
 	}
 	if function.Recv == nil {
@@ -88,6 +87,11 @@ func keptName(decl ast.Decl) (string, bool) {
 	return receiver + "." + function.Name.Name, ok
 }
 
-func referable(name string) bool {
-	return name != "init" && name != "main" && name != "_"
+// referable is false for the two things the compiler refuses to refer to by
+// value: the init function ("undefined: init") and the blank name ("cannot use
+// _ as value"). Everything else has an expression, including a function named
+// main and a method named init or main. A test asks the compiler.
+func referable(function *ast.FuncDecl) bool {
+	name := function.Name.Name
+	return name != "_" && (name != "init" || function.Recv != nil)
 }
