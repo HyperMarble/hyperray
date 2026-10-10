@@ -17,11 +17,12 @@ import (
 
 // WriteOverlay writes one keep file per package into out and returns the
 // path of the overlay that maps each into its package. Go takes one
-// overlay, so a user's overlay, when there is one, is merged in first.
-func WriteOverlay(packages []module.Package, out, userOverlay string) (string, error) {
+// overlay, so a user's overlay, when there is one, is merged in first,
+// its paths read from root, the folder go runs in.
+func WriteOverlay(root string, packages []module.Package, out, userOverlay string) (string, error) {
 	replace := map[string]string{}
 	if userOverlay != "" {
-		theirs, err := tool.ReadOverlay(userOverlay)
+		theirs, err := tool.ReadOverlayUnder(root, userOverlay)
 		if err != nil {
 			return "", err
 		}

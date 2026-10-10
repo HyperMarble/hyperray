@@ -68,7 +68,7 @@ func TestAPackageThatRedefinesBuiltinsStillGetsItsKeepFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := t.TempDir()
-	if _, err := WriteOverlay([]module.Package{{Name: "r", Dir: dir, GoFiles: []string{"r.go"}}}, out, ""); err != nil {
+	if _, err := WriteOverlay(dir, []module.Package{{Name: "r", Dir: dir, GoFiles: []string{"r.go"}}}, out, ""); err != nil {
 		t.Fatal(err)
 	}
 	text, err := os.ReadFile(filepath.Join(out, "keep_0_test.go"))

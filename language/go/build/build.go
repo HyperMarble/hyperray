@@ -36,7 +36,7 @@ func BuildAll(root, out string, choice record.Choice, packages []module.Package)
 		return nil, nil, err
 	}
 	theirs, _ := tool.FlagValue(flags, "overlay")
-	overlay, err := keep.WriteOverlay(packages, out, theirs)
+	overlay, err := keep.WriteOverlay(root, packages, out, theirs)
 	if err != nil {
 		return nil, nil, err
 	}
