@@ -1,6 +1,6 @@
-// Purpose: names every function and method in a package, its own test
-// files, and its external test package, that Go code can refer to by
-// value, so a generated test can keep each one linked with its own
+// Purpose: names every function, method and package-level variable in a
+// package, its own test files, and its external test package, that Go code
+// can refer to by value, so a generated test can keep each one linked with its own
 // machine code (Go's linker drops what nothing reaches, and the compiler
 // inlines small bodies away).
 // Never:   names what Go cannot take by value: the init function, the blank
@@ -16,7 +16,8 @@ import (
 )
 
 // KeptNames lists the package's functions as Go expressions: `f`, `T.m`
-// for a value receiver, `(*T).m` for a pointer receiver, from its Go and
+// for a value receiver, `(*T).m` for a pointer receiver, and `&v` for a
+// package-level variable, from its Go and
 // cgo files and its own test files, which the test program compiles too.
 // Each file is read the way the build reads it: through the user's
 // overlay when one maps it.
@@ -67,6 +68,7 @@ func namesIn(file *ast.File) []string {
 		if name, ok := keptName(decl); ok {
 			names = append(names, name)
 		}
+		names = append(names, variableRefs(decl)...)
 	}
 	return names
 }
