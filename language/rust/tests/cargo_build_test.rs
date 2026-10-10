@@ -1,12 +1,18 @@
-// Purpose: the project's own release build runs and its files are listed.
+// Purpose: the project's own default build runs and its files are listed.
 // Never:   reports a failed build as built, or lists metadata-only files.
 mod sample_project;
 
 use language_rust::blocked::Blocked;
-use language_rust::cargo_build::{build, Built};
-use language_rust::choice::Choice;
+use language_rust::cargo_build::{
+    build,
+    Built, //
+};
+use language_rust::cargo_request::Arguments;
 use language_rust::project::find;
-use sample_project::{create, Sample};
+use sample_project::{
+    create,
+    Sample, //
+};
 
 fn built(name: &str, file: &str, source: &str) -> Result<Result<Vec<Built>, Blocked>, String> {
     let root = create(&Sample {
@@ -16,7 +22,7 @@ fn built(name: &str, file: &str, source: &str) -> Result<Result<Vec<Built>, Bloc
         locked: true,
     })?;
     let project = find(&root).map_err(|blocked| blocked.to_string())?;
-    Ok(build(&project, &Choice::default()).map(|output| output.files))
+    Ok(build(&project, &Arguments::default()).map(|output| output.files))
 }
 
 #[test]

@@ -1,8 +1,18 @@
 // Purpose: one complete, made-up build record for the JSON shape checks.
 // Never:   stands in for a real build; real builds are checked elsewhere.
-use language_rust::build_facts::{CToolchain, Compiled, EnvVar, NativeCode};
-use language_rust::choice::Choice;
-use language_rust::record::{Artifact, BuildRecord, FileDigest, Settings, Toolchain};
+use language_rust::build_facts::{
+    CToolchain,
+    Compiled,
+    EnvVar,
+    NativeCode, //
+};
+use language_rust::record::{
+    Artifact,
+    BuildRecord,
+    FileDigest,
+    Settings,
+    Toolchain, //
+};
 
 pub fn digest(path: &str) -> FileDigest {
     FileDigest {
@@ -46,7 +56,6 @@ pub fn record() -> BuildRecord {
         compiler: digest("rustc"),
     };
     let settings = Settings {
-        requested: Choice::default(),
         lock_file: digest("Cargo.lock"),
         config_files: vec![digest(".cargo/config.toml")],
     };
@@ -57,6 +66,7 @@ pub fn record() -> BuildRecord {
     };
     BuildRecord {
         language: "rust".to_string(),
+        cargo_request: None,
         artifacts: vec![artifact()],
         toolchain,
         settings,

@@ -3,10 +3,20 @@
 // Never:   depends on the settings files of this machine's home folder.
 mod sample_project;
 
-use language_rust::build_record;
-use language_rust::record::{BuildRecord, Outcome};
-use sample_project::{create, Sample};
-use sha2::{Digest, Sha256};
+use language_rust::build_record_with;
+use language_rust::cargo_request::Arguments;
+use language_rust::record::{
+    BuildRecord,
+    Outcome, //
+};
+use sample_project::{
+    create,
+    Sample, //
+};
+use sha2::{
+    Digest,
+    Sha256, //
+};
 
 const SETTINGS: &str = "[profile.release]\noverflow-checks = true\n";
 
@@ -22,7 +32,11 @@ fn built(name: &str, settings: Option<&str>) -> Result<(BuildRecord, String), St
         std::fs::write(root.join(".cargo/config.toml"), text).map_err(|error| error.to_string())?;
     }
     let root = root.canonicalize().map_err(|error| error.to_string())?;
-    match build_record(&root) {
+    let supplied = Arguments {
+        build: vec!["--release".into()],
+        ..Arguments::default()
+    };
+    match build_record_with(&root, &supplied) {
         Outcome::Built(record) => Ok((*record, root.display().to_string())),
         Outcome::Blocked { reason } => Err(reason),
     }

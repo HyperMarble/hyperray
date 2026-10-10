@@ -41,8 +41,8 @@ name = "build_record_test"
 path = "tests/build_record_test.rs"
 
 [[test]]
-name = "choice_test"
-path = "tests/choice_test.rs"
+name = "cargo_defaults_test"
+path = "tests/cargo_defaults_test.rs"
 
 [[test]]
 name = "features_test"

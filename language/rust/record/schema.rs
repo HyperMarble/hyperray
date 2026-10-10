@@ -1,7 +1,11 @@
 // Purpose: the build record the adapter hands to the loader, as JSON.
 // Never:   holds a value that was not read from the build or the machine.
-use crate::build_facts::{CToolchain, Compiled, EnvVar, NativeCode};
-use crate::choice::Choice;
+use crate::build_facts::{
+    CToolchain,
+    Compiled,
+    EnvVar,
+    NativeCode, //
+};
 use serde::Serialize;
 
 /// A file named by the hash of its bytes.
@@ -31,11 +35,9 @@ pub struct Toolchain {
     pub compiler: FileDigest,
 }
 
-/// The project settings that decided how the code was built: what the user
-/// asked for, and the lock file that pinned every version.
+/// The project lock file and configuration files that shaped the build.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Settings {
-    pub requested: Choice,
     pub lock_file: FileDigest,
     /// Cargo's settings files for this build, deepest first (the project's
     /// own `.cargo/config.toml`, each parent folder's, the home one).
@@ -46,6 +48,7 @@ pub struct Settings {
 #[derive(Debug, PartialEq, Serialize)]
 pub struct BuildRecord {
     pub language: String,
+    pub cargo_request: Option<crate::cargo_observation::RequestEvidence>,
     pub artifacts: Vec<Artifact>,
     pub toolchain: Toolchain,
     pub settings: Settings,

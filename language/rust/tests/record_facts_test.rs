@@ -10,11 +10,6 @@ use language_rust::record::Outcome;
 fn how_the_code_was_built_reaches_the_json() -> Result<(), String> {
     let outcome = Outcome::Built(Box::new(sample_record::record()));
     let written = serde_json::to_value(&outcome).map_err(|error| error.to_string())?;
-    assert_eq!(written["settings"]["requested"]["profile"], "release");
-    assert_eq!(
-        written["settings"]["requested"]["features"]["kind"],
-        "default"
-    );
     assert_eq!(written["artifacts"][0]["features"][0], "fancy");
     assert_eq!(written["artifacts"][0]["compiled"]["overflow_checks"], true);
     assert_eq!(written["environment"][0]["name"], "RUSTFLAGS");

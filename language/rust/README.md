@@ -50,8 +50,8 @@ The other 134 programs never reached the adapter:
 ## Test programs
 
 A patch inside a `#[test]` function has machine code only in the test
-program (what `cargo test` builds). Ask for every target (`targets = all`,
-Cargo's `--all-targets`) and the record carries the test programs too, each
+program (what `cargo test` builds). Pass Cargo's `--all-targets` in the
+build argument list and the record carries the test programs too, each
 marked `compiled.test = true`.
 
 ## What the record holds
@@ -60,8 +60,21 @@ marked `compiled.test = true`.
   with (opt level, debug info, debug assertions, overflow checks), and its
   debug-info file when there is one
 - the compiler: version, host, hash
-- what was asked: profile and features; the lock file; Cargo's settings
-  files, deepest first
+- the executed Cargo request with native argument bytes; the lock file;
+  Cargo's settings files, deepest first
 - the environment variables that change a build (secret values hidden)
 - C code linked in by build scripts, and the C compiler and SDK used
 - the OS build
+
+## Build requests
+
+`cargo_request::Arguments` holds native argument lists for each Cargo command.
+The adapter passes build and metadata arguments directly to Cargo. Cargo
+owns profiles, features, package selection, and accepted options. An empty
+build list keeps Cargo's default profile. Pass `--release` to request a
+release build or `--profile NAME` to request a project profile.
+
+The adapter adds its lock-file and JSON-report requirements. The record
+retains the actual build request instead of a separate profile/features
+summary. Documentation arguments are used by the documentation compilation
+stage, added later in this development series.

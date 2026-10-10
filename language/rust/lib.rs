@@ -8,7 +8,8 @@ mod tool;
 pub use build::{
     cargo_build,
     cargo_messages,
-    choice,
+    cargo_observation,
+    cargo_request,
     debug_info, //
 };
 pub use project::config_files;
@@ -20,65 +21,28 @@ pub use tool::{
     c_toolchain,
     digest,
     environment,
+    native_argument,
     os,
+    process_evidence,
     run,
     toolchain, //
 };
 
-use blocked::Blocked;
-use choice::Choice;
-use digest::digest_of;
-use record::{Artifact, BuildRecord, Outcome, Settings};
+use cargo_request::Arguments;
+use record::Outcome;
 use std::path::Path;
 
-/// Builds the Cargo project at `root` the project's own default way (release
-/// profile, default features) and returns its build record, or the reason it
-/// could not be built.
+/// Builds the project with Cargo's default options and returns its record.
 pub fn build_record(root: &Path) -> Outcome {
-    build_record_with(root, &Choice::default())
+    build_record_with(root, &Arguments::default())
 }
 
-/// Builds the Cargo project at `root` the way `choice` asks (a profile and a
-/// feature setting) and returns its build record, or the reason it could
-/// not be built.
-pub fn build_record_with(root: &Path, choice: &Choice) -> Outcome {
-    match try_build_record(root, choice) {
+/// Passes the caller's native arguments to Cargo and returns the build record.
+pub fn build_record_with(root: &Path, supplied: &Arguments) -> Outcome {
+    match record::record_builder::build(root, supplied) {
         Ok(record) => Outcome::Built(Box::new(record)),
         Err(blocked) => Outcome::Blocked {
             reason: blocked.to_string(),
         },
     }
-}
-
-fn try_build_record(root: &Path, choice: &Choice) -> Result<BuildRecord, Blocked> {
-    let project = project::find(root)?;
-    let built = cargo_build::build(&project, choice)?;
-    let mut artifacts = Vec::new();
-    for file in built.files {
-        artifacts.push(Artifact {
-            kind: file.kind,
-            file: digest_of(&file.path)?,
-            features: file.features,
-            compiled: file.compiled,
-            debug_info: file
-                .debug_info
-                .as_deref()
-                .map(debug_info::dwarf_digest)
-                .transpose()?,
-        });
-    }
-    Ok(BuildRecord {
-        language: "rust".to_string(),
-        artifacts,
-        toolchain: toolchain::toolchain(root)?,
-        settings: Settings {
-            requested: choice.clone(),
-            lock_file: digest_of(&project.lock_file)?,
-            config_files: config_files::config_files(&project.root)?,
-        },
-        environment: environment::build_environment(std::env::vars()),
-        native_code: built.native_code,
-        c_toolchain: c_toolchain::c_toolchain(root)?,
-        os_build: os::os_build(root)?,
-    })
 }

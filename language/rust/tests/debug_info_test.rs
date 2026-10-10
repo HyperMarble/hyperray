@@ -4,9 +4,13 @@
 // Never:   drops debug information the build made, or blocks because of it.
 mod sample_project;
 
-use language_rust::build_record;
+use language_rust::build_record_with;
+use language_rust::cargo_request::Arguments;
 use language_rust::record::Outcome;
-use sample_project::{create, Sample};
+use sample_project::{
+    create,
+    Sample, //
+};
 use std::io::Write;
 
 /// Builds a small program whose release profile packs its debug information.
@@ -25,7 +29,11 @@ fn built_with_debug_info() -> Result<Outcome, String> {
         .map_err(|e| e.to_string())?;
     let profile = b"\n[profile.release]\ndebug = true\nsplit-debuginfo = \"packed\"\n";
     manifest.write_all(profile).map_err(|e| e.to_string())?;
-    Ok(build_record(&root))
+    let supplied = Arguments {
+        build: vec!["--release".into()],
+        ..Arguments::default()
+    };
+    Ok(build_record_with(&root, &supplied))
 }
 
 #[test]
