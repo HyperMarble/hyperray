@@ -10,12 +10,8 @@ package keep
 
 import (
 	"go/ast"
-	"go/parser"
-	"go/token"
-	"path/filepath"
 
 	"github.com/HyperMarble/hyperray/language/go/module"
-	"github.com/HyperMarble/hyperray/language/go/record"
 )
 
 // KeptNames lists the package's functions as Go expressions: `f`, `T.m`
@@ -24,11 +20,16 @@ import (
 // Each file is read the way the build reads it: through the user's
 // overlay when one maps it.
 func KeptNames(pkg module.Package, overlay map[string]string) ([]string, error) {
+	return namesInFiles(pkg.Dir, ownFiles(pkg), overlay)
+}
+
+// ownFiles are the files compiled into the package's own test program: its
+// Go and cgo files and its own test files.
+func ownFiles(pkg module.Package) []string {
 	files := make([]string, 0, len(pkg.GoFiles)+len(pkg.CgoFiles)+len(pkg.TestGoFiles))
 	files = append(files, pkg.GoFiles...)
 	files = append(files, pkg.CgoFiles...)
-	files = append(files, pkg.TestGoFiles...)
-	return namesInFiles(pkg.Dir, files, overlay)
+	return append(files, pkg.TestGoFiles...)
 }
 
 // ExternalTestNames lists the functions of the package's external test
@@ -38,18 +39,13 @@ func ExternalTestNames(pkg module.Package, overlay map[string]string) ([]string,
 }
 
 func namesInFiles(dir string, files []string, overlay map[string]string) ([]string, error) {
-	set := token.NewFileSet()
+	parsed, err := parsedFiles(dir, files, overlay)
+	if err != nil {
+		return nil, err
+	}
 	names := []string{}
-	for _, file := range files {
-		path, present := throughOverlay(filepath.Join(dir, file), overlay)
-		if !present {
-			continue
-		}
-		parsed, err := parser.ParseFile(set, path, nil, 0)
-		if err != nil {
-			return nil, record.Unreadable(file, err)
-		}
-		names = append(names, namesIn(parsed)...)
+	for _, file := range parsed {
+		names = append(names, namesIn(file)...)
 	}
 	return names, nil
 }
