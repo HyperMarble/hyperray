@@ -14,7 +14,6 @@ fn a_feature_switched_off_is_left_out_and_switched_on_is_built() -> Result<(), S
     let arguments = cargo_arguments::for_commands(
         &["--release", "--features", "fancy"],
         &["--features", "fancy"],
-        &["--release", "--features", "fancy"],
     );
     let on = project::build("features_on", arguments)?;
     assert!(!project::contains_fancy_function(&off)?);
@@ -32,13 +31,10 @@ fn a_feature_switched_off_is_left_out_and_switched_on_is_built() -> Result<(), S
 
 #[test]
 fn the_projects_own_profile_is_used_and_recorded() -> Result<(), String> {
-    let arguments = cargo_arguments::for_commands(&["--release"], &[], &["--release"]);
+    let arguments = cargo_arguments::for_commands(&["--release"], &[]);
     let release = project::build("profile_release", arguments)?;
-    let arguments = cargo_arguments::for_commands(
-        &["--profile", "dist", "--bin", "profile_dist"],
-        &[],
-        &["--profile", "dist"],
-    );
+    let arguments =
+        cargo_arguments::for_commands(&["--profile", "dist", "--bin", "profile_dist"], &[]);
     let dist = project::build("profile_dist", arguments)?;
     assert!(release
         .artifacts

@@ -3,10 +3,9 @@
 use language_rust::cargo_request::Arguments;
 use std::ffi::OsString;
 
-pub fn for_commands(build: &[&str], metadata: &[&str], doctests: &[&str]) -> Arguments {
+pub fn for_commands(build: &[&str], metadata: &[&str]) -> Arguments {
     Arguments {
         build: build.iter().map(OsString::from).collect(),
         metadata: metadata.iter().map(OsString::from).collect(),
-        doctests: doctests.iter().map(OsString::from).collect(),
     }
 }

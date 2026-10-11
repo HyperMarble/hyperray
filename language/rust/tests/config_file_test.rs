@@ -38,7 +38,7 @@ fn built(name: &str, settings: Option<&str>) -> Result<(BuildRecord, String), St
             .map_err(|error| error.to_string())?;
     }
     let root = root.canonicalize().map_err(|error| error.to_string())?;
-    let arguments = cargo_arguments::for_commands(&["--release"], &[], &["--release"]);
+    let arguments = cargo_arguments::for_commands(&["--release"], &[]);
     match build_record_with(&root, &arguments) {
         Outcome::Built(record) => Ok((*record, root.display().to_string())),
         Outcome::Blocked { reason, .. } => Err(reason),

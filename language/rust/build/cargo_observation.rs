@@ -1,7 +1,6 @@
 // Purpose: retains the exact request and both streams for a Cargo invocation.
 // Never: reports a rejected request as a successful build or drops its stdout.
 use crate::blocked::Blocked;
-use crate::cargo_request::Request;
 use std::ffi::OsString;
 use std::path::Path;
 use std::process::Command;
@@ -10,11 +9,6 @@ pub use crate::process_evidence::{
     Observation,
     RequestEvidence, //
 };
-
-pub fn observe(request: &Request) -> Result<Observation, Blocked> {
-    let arguments = request.arguments();
-    capture(&request.executable, &arguments, &request.directory)
-}
 
 pub fn capture(
     executable: &Path,

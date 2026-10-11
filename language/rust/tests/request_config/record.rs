@@ -18,8 +18,7 @@ pub fn build(root: &Path, arguments: Vec<OsString>) -> Result<Box<BuildRecord>, 
     ]);
     let request = Arguments {
         build,
-        metadata: configuration.clone(),
-        doctests: configuration,
+        metadata: configuration,
     };
     let outcome = language_rust::build_record_with(root, &request);
     let Outcome::Built(record) = outcome else {
