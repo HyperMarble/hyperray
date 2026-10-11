@@ -11,6 +11,7 @@ use crate::record::{
 use crate::{
     c_toolchain,
     cargo_build,
+    cargo_compiler,
     config_files,
     debug_info,
     environment,
@@ -23,6 +24,7 @@ use std::path::Path;
 pub(crate) fn build(root: &Path, supplied: &Arguments) -> Result<BuildRecord, Blocked> {
     let project = project::find(root)?;
     let built = cargo_build::build(&project, supplied)?;
+    let compiler = cargo_compiler::home(&project, supplied)?;
     let configuration = config_files::report_for_request(&project.root, &supplied.build)?;
     let mut artifacts = Vec::new();
     for file in built.files {
@@ -43,7 +45,7 @@ pub(crate) fn build(root: &Path, supplied: &Arguments) -> Result<BuildRecord, Bl
         cargo_request: built.request,
         artifacts,
         not_built: built.not_built,
-        toolchain: toolchain::toolchain(root)?,
+        toolchain: toolchain::toolchain(&compiler, root)?,
         settings: Settings {
             lock_file: digest_of(&project.lock_file)?,
             config_files: configuration.files,
