@@ -92,3 +92,7 @@ path = "tests/message_format_test.rs"
 [[test]]
 name = "owner_words_test"
 path = "tests/owner_words_test.rs"
+
+[[test]]
+name = "cargo_flags_test"
+path = "tests/cargo_flags_test.rs"
