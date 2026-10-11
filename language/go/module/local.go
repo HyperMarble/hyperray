@@ -39,17 +39,15 @@ func otherFolder(a, b string) bool {
 	return errA != nil || errB != nil || realA != realB
 }
 
-// LocalModules walks every package the build depends on, the test programs'
-// included (`-test`: a folder only a test imports is compiled into the test
-// program), and hashes the sources of those that come from a local module,
-// grouped by module.
-func LocalModules(root string, choice record.Choice) ([]record.LocalModule, error) {
-	args := append([]string{"list", "-deps", "-test", listedFields}, choice.Args()...)
-	text, err := tool.Printed(root, "go", append(args, "./...")...)
+// LocalModules checks production dependencies for the whole module and
+// hashes local ones. It lists test dependencies only for successful test
+// programs, because a rejected test can make `go list -test` fail.
+func LocalModules(root string, choice record.Choice, artifacts []record.Artifact) ([]record.LocalModule, error) {
+	packages, err := localDependencies(root, choice, []string{"./..."}, false)
 	if err != nil {
 		return nil, err
 	}
-	packages, err := DecodePackages(text)
+	testPackages, err := localDependencies(root, choice, successfulTestPackages(artifacts), true)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +55,7 @@ func LocalModules(root string, choice record.Choice) ([]record.LocalModule, erro
 	if err != nil {
 		return nil, err
 	}
-	return groupLocal(packages, root, user)
+	return groupLocal(append(packages, testPackages...), root, user)
 }
 
 func groupLocal(packages []Package, root string, user map[string]string) ([]record.LocalModule, error) {
