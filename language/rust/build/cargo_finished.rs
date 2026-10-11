@@ -2,7 +2,8 @@
 //          A library's own file (`.rlib`) still has places the linker has
 //          not filled; `cargo rustc --crate-type dylib` makes the linked one.
 //          It is built in a folder of its own, so it can never replace a
-//          file the owner's build made.
+//          file the owner's build made. A library Cargo will not link by
+//          itself goes through the wrapper.
 // Never:   links a library itself, or hides why Cargo would not.
 use crate::blocked::Blocked;
 use crate::build_facts::NotBuilt;
@@ -19,10 +20,11 @@ use std::ffi::OsString;
 use std::path::Path;
 
 /// What the record calls a finished library, as it calls nothing Cargo names.
-const KIND: &str = "finished library";
+pub(super) const KIND: &str = "finished library";
 
-/// Adds each library's finished file to `output`, built under `folder`, or
-/// Cargo's words for why there is none.
+/// Adds each library's finished file to `output`, built under `folder`.
+/// When Cargo will not link a library by itself, the wrapper is tried, and
+/// when that gives nothing either, the record gets the words for why.
 pub(super) fn add(
     project: &Project,
     supplied: &Arguments,
@@ -30,21 +32,23 @@ pub(super) fn add(
     output: &mut BuildOutput,
 ) -> Result<(), Blocked> {
     let mut libraries = output.libraries.clone();
-    libraries.dedup();
-    for package in libraries {
-        let arguments = arguments(supplied, &package, folder);
+    libraries.dedup_by(|one, other| one.package == other.package);
+    for library in libraries {
+        let arguments = arguments(supplied, &library.package, folder);
         let cargo = Path::new("cargo");
         let process = crate::cargo_observation::capture(cargo, &arguments, &project.root)?;
         if process.success {
-            output.files.extend(files(&process, &package)?);
-        } else {
-            let reason = super::cargo_refusal::refusal(&process);
-            let kind = KIND.to_string();
-            output.not_built.push(NotBuilt {
-                kind,
-                package,
-                reason,
-            });
+            output.files.extend(files(&process, &library.package)?);
+            continue;
+        }
+        let refused = super::cargo_refusal::refusal(&process);
+        match super::cargo_wrapper::finish(project, supplied, &library, folder)? {
+            Ok(found) => output.files.extend(found),
+            Err(why) => output.not_built.push(NotBuilt {
+                kind: KIND.to_string(),
+                package: library.package,
+                reason: refused + &why,
+            }),
         }
     }
     Ok(())

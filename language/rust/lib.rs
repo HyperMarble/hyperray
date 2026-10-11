@@ -7,6 +7,7 @@ mod tool;
 
 pub use build::{
     cargo_build,
+    cargo_library,
     cargo_messages,
     cargo_observation,
     cargo_request,

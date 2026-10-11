@@ -28,7 +28,7 @@ pub struct BuildOutput {
     pub request: Option<RequestEvidence>,
     pub files: Vec<Built>,
     pub native_code: Vec<NativeCode>,
-    /// The project's own libraries the build compiled, by package id.
-    pub libraries: Vec<String>,
+    /// The project's own libraries the build compiled.
+    pub libraries: Vec<super::cargo_library::Library>,
     pub not_built: Vec<NotBuilt>,
 }
