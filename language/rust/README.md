@@ -62,7 +62,7 @@ marked `compiled.test = true`.
 - the compiler: version, host, hash
 - the executed Cargo request with native argument bytes; the lock file;
   Cargo's settings files, deepest first
-- the environment variables that change a build (secret values hidden)
+- every inherited environment name in its native encoding and a hash of its value
 - C code linked in by build scripts, and the C compiler and SDK used
 - the OS build
 

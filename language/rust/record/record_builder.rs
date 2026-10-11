@@ -46,7 +46,7 @@ pub(crate) fn build(root: &Path, supplied: &Arguments) -> Result<BuildRecord, Bl
             lock_file: digest_of(&project.lock_file)?,
             config_files: config_files::config_files(&project.root)?,
         },
-        environment: environment::build_environment(std::env::vars()),
+        environment: environment::capture_environment()?,
         native_code: built.native_code,
         c_toolchain: c_toolchain::c_toolchain(root)?,
         os_build: os::os_build(root)?,

@@ -16,12 +16,13 @@ pub struct Compiled {
     pub test: bool,
 }
 
-/// One environment variable that can change the build. `value` is `None`
-/// when the name looks like a secret, so only the fact that it was set is kept.
+/// An environment variable is recorded by its native name and value hash.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct EnvVar {
-    pub name: String,
+    pub name: Option<String>,
+    pub name_encoded: Vec<u8>,
     pub value: Option<String>,
+    pub value_sha256: String,
 }
 
 /// Native (non-Rust) code a package's build script asked to link in, such as
