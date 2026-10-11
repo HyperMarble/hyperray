@@ -31,7 +31,7 @@ pub(super) fn finish(process: Observation, members: &[Value]) -> Result<BuildOut
     Ok(output)
 }
 
-pub(super) fn stdout(process: &Observation) -> Result<String, Blocked> {
+pub(crate) fn stdout(process: &Observation) -> Result<String, Blocked> {
     if !process.success {
         let output = text(&process.stderr, "cargo stderr")?;
         return Err(Blocked::ToolFailed {

@@ -59,8 +59,8 @@ fn compare(root: &Path) -> Result<(), String> {
         .map_err(|error| error.to_string())?;
     let captured = language_rust::config_files::report_for_request(root, &[]);
     assert_eq!(captured.is_ok(), owner.status.success(), "{captured:?}");
-    let project = language_rust::project::find(root).map_err(|error| error.to_string())?;
-    let built = language_rust::cargo_build::build(&project, &Arguments::default());
+    let built = language_rust::project::find(root)
+        .and_then(|project| language_rust::cargo_build::build(&project, &Arguments::default()));
     match (built, owner.status.success()) {
         (Err(Blocked::ToolFailed { output, .. }), false) => {
             assert_eq!(output.as_bytes(), owner.stderr);

@@ -1,6 +1,7 @@
 // Purpose: one call turns a project into a complete, checkable build record.
 // Never:   returns a record whose hashes do not match the files on disk.
 mod sample_project;
+mod sample_workspace;
 
 use language_rust::build_record;
 use language_rust::record::Outcome;
@@ -42,5 +43,17 @@ fn a_folder_that_is_not_a_project_gives_a_readable_reason() -> Result<(), String
         return Err("a folder without Cargo.toml was reported as built".to_string());
     };
     assert!(reason.contains("no Cargo.toml"));
+    Ok(())
+}
+
+#[test]
+fn a_workspace_member_becomes_a_record_with_the_workspace_lock_file() -> Result<(), String> {
+    let (top, member) = sample_workspace::create("member_record", true)?;
+    let Outcome::Built(record) = build_record(&member) else {
+        return Err("the workspace member was not built".to_string());
+    };
+    let lock_file = Path::new(&record.settings.lock_file.path);
+    assert_eq!(lock_file, top.join("Cargo.lock"));
+    assert!(!record.artifacts.is_empty());
     Ok(())
 }
