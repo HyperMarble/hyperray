@@ -20,12 +20,14 @@ pub fn build(project: &Project, supplied: &Arguments) -> Result<BuildOutput, Blo
     super::cargo_build_result::finish(process, &members)
 }
 
-/// `cargo build` with the owner's arguments as given, the lock file
-/// enforced, and Cargo's JSON messages switched on.
+/// `cargo build` with the owner's arguments, the lock file enforced, and
+/// Cargo's JSON messages switched on in place of any format the owner chose.
 fn arguments(supplied: &Arguments) -> Vec<OsString> {
     let mut arguments = vec![OsString::from("build")];
     arguments.extend(crate::cargo_request::locked(&supplied.build));
-    arguments.extend(supplied.build.iter().cloned());
+    arguments.extend(crate::cargo_request::without_message_format(
+        &supplied.build,
+    ));
     arguments.push(OsString::from("--message-format=json"));
     arguments
 }

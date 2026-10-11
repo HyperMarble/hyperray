@@ -84,3 +84,7 @@ path = "tests/test_programs_test.rs"
 [[test]]
 name = "target_kinds_test"
 path = "tests/target_kinds_test.rs"
+
+[[test]]
+name = "message_format_test"
+path = "tests/message_format_test.rs"

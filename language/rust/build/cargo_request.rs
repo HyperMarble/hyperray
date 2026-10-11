@@ -15,3 +15,24 @@ pub(crate) fn locked(given: &[OsString]) -> Option<OsString> {
     let absent = !given.iter().any(|argument| argument == "--locked");
     absent.then(|| OsString::from("--locked"))
 }
+
+/// The owner's arguments without `--message-format`. It only chooses how
+/// Cargo prints, never what it builds, and the adapter needs Cargo's JSON
+/// messages to learn the files.
+pub(crate) fn without_message_format(given: &[OsString]) -> Vec<OsString> {
+    let mut kept = Vec::new();
+    let mut words = given.iter();
+    while let Some(word) = words.next() {
+        if word == "--message-format" {
+            words.next();
+        } else if !joined_message_format(word) {
+            kept.push(word.clone());
+        }
+    }
+    kept
+}
+
+fn joined_message_format(word: &OsString) -> bool {
+    let text = word.to_str().unwrap_or_default();
+    text.starts_with("--message-format=")
+}
