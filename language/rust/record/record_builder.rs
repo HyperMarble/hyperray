@@ -49,7 +49,7 @@ pub(crate) fn build(root: &Path, supplied: &Arguments) -> Result<BuildRecord, Bl
             config_files: configuration.files,
             missing_optional_config_files: configuration.missing_optional,
         },
-        environment: environment::capture_environment()?,
+        environment: environment::capture_environment(),
         native_code: built.native_code,
         c_toolchain: c_toolchain::c_toolchain(root)?,
         os_build: os::os_build(root)?,

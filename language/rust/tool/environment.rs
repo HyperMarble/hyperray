@@ -1,6 +1,5 @@
 // Purpose: records every native environment value that may shape a build.
 // Never:   writes arbitrary or credential-like values into the build record.
-use crate::blocked::Blocked;
 use crate::build_facts::EnvVar;
 use sha2::{
     Digest,
@@ -9,16 +8,11 @@ use sha2::{
 use std::ffi::OsString;
 
 /// Captures the current environment without panicking on non-Unicode values.
-pub fn capture_environment() -> Result<Vec<EnvVar>, Blocked> {
-    Ok(native_environment(std::env::vars_os()))
+pub fn capture_environment() -> Vec<EnvVar> {
+    native_environment(std::env::vars_os())
 }
 
 /// Hashes every value and never copies plaintext into the record.
-pub fn build_environment(vars: impl Iterator<Item = (String, String)>) -> Vec<EnvVar> {
-    let native = vars.map(|(name, value)| (OsString::from(name), OsString::from(value)));
-    native_environment(native)
-}
-
 pub fn native_environment(vars: impl Iterator<Item = (OsString, OsString)>) -> Vec<EnvVar> {
     let mut found: Vec<EnvVar> = vars
         .map(|(name, value)| EnvVar {
