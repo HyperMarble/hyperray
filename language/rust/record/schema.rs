@@ -16,13 +16,17 @@ pub struct FileDigest {
     pub sha256: String,
 }
 
-/// One file the build produced, every kind of the target that made it, and how.
+/// One file handed to the loader: a file the build produced, with every
+/// kind of the target that made it and how, or a library the compiler ships
+/// ready made that one of those files loads at run time.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Artifact {
     pub kind: Vec<String>,
     pub file: FileDigest,
     pub features: Vec<String>,
-    pub compiled: Compiled,
+    /// How Cargo compiled the file. A library the compiler ships has none:
+    /// this build did not compile it.
+    pub compiled: Option<Compiled>,
     /// The file's debug information (names and source lines, no code), when
     /// the build made it: the one file inside Apple's `.dSYM` bundle.
     pub debug_info: Option<FileDigest>,

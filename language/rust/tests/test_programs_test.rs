@@ -6,6 +6,7 @@ mod sample_project;
 use language_rust::build_record_with;
 use language_rust::cargo_request::Arguments;
 use language_rust::record::{
+    Artifact,
     BuildRecord,
     Outcome, //
 };
@@ -44,22 +45,28 @@ fn built(name: &str, arguments: &[&str]) -> Result<BuildRecord, String> {
     }
 }
 
+/// True when Cargo compiled the file in test mode.
+fn is_test_program(file: &Artifact) -> bool {
+    let compiled = file.compiled.as_ref();
+    compiled.is_some_and(|settings| settings.test)
+}
+
 #[test]
 fn every_target_includes_the_test_program() -> Result<(), String> {
     let record = built("with_test_program", &["--all-targets"])?;
     let test_programs: Vec<_> = record
         .artifacts
         .iter()
-        .filter(|a| a.compiled.test)
+        .filter(|a| is_test_program(a))
         .collect();
     assert_eq!(test_programs.len(), 1, "{:?}", record.artifacts);
-    assert!(record.artifacts.iter().any(|a| !a.compiled.test));
+    assert!(record.artifacts.iter().any(|a| !is_test_program(a)));
     Ok(())
 }
 
 #[test]
 fn the_default_build_makes_no_test_program() -> Result<(), String> {
     let record = built("without_test_program", &[])?;
-    assert!(record.artifacts.iter().all(|a| !a.compiled.test));
+    assert!(record.artifacts.iter().all(|a| !is_test_program(a)));
     Ok(())
 }

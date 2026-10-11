@@ -7,6 +7,13 @@ mod project;
 mod sample_project;
 
 use language_rust::cargo_request::Arguments;
+use language_rust::record::Artifact;
+
+/// True when Cargo compiled the file with overflow checks on.
+fn has_overflow_checks(file: &Artifact) -> bool {
+    let compiled = file.compiled.as_ref();
+    compiled.is_some_and(|settings| settings.overflow_checks)
+}
 
 #[test]
 fn a_feature_switched_off_is_left_out_and_switched_on_is_built() -> Result<(), String> {
@@ -39,11 +46,11 @@ fn the_projects_own_profile_is_used_and_recorded() -> Result<(), String> {
     assert!(release
         .artifacts
         .iter()
-        .all(|artifact| { !artifact.compiled.overflow_checks }));
+        .all(|artifact| { !has_overflow_checks(artifact) }));
     assert!(dist
         .artifacts
         .iter()
-        .all(|artifact| { artifact.compiled.overflow_checks }));
+        .all(|artifact| { has_overflow_checks(artifact) }));
     let request = dist.cargo_request.as_ref().ok_or("no Cargo request")?;
     let arguments: Vec<_> = request
         .arguments

@@ -58,7 +58,8 @@ fn the_projects_settings_file_is_applied_and_recorded() -> Result<(), String> {
         record.settings.missing_optional_config_files,
         [format!("{root}/.cargo/missing.toml")]
     );
-    assert!(record.artifacts[0].compiled.overflow_checks);
+    let compiled = record.artifacts[0].compiled.as_ref();
+    assert!(compiled.is_some_and(|settings| settings.overflow_checks));
     Ok(())
 }
 
@@ -72,6 +73,7 @@ fn a_project_without_a_settings_file_lists_none_of_its_own() -> Result<(), Strin
         .filter(|file| file.path.starts_with(&root))
         .collect();
     assert!(own.is_empty(), "{own:?}");
-    assert!(!record.artifacts[0].compiled.overflow_checks);
+    let compiled = record.artifacts[0].compiled.as_ref();
+    assert!(compiled.is_some_and(|settings| !settings.overflow_checks));
     Ok(())
 }
