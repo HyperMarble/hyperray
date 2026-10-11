@@ -7,10 +7,14 @@ mod tool;
 
 pub use build::{
     cargo_build,
+    cargo_compiler,
+    cargo_handover,
     cargo_library,
+    cargo_loaded_libraries,
     cargo_messages,
     cargo_observation,
     cargo_request,
+    cargo_settings,
     debug_info, //
 };
 pub use project::config_files;

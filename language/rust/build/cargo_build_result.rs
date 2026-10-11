@@ -2,6 +2,7 @@
 // Never: reports a refused Cargo command as a built program.
 use crate::blocked::Blocked;
 use crate::cargo_build::BuildOutput;
+use crate::cargo_handover::is_handed_over;
 use crate::cargo_messages::{
     files_of,
     is_local,
@@ -24,11 +25,8 @@ pub(super) fn finish(process: Observation) -> Result<BuildOutput, Blocked> {
     };
     for line in messages.lines().filter(|line| line.starts_with('{')) {
         let message = parse(line, "cargo build output")?;
-        if message["reason"] == "compiler-artifact" && is_local(&message) {
-            output.files.extend(files_of(&message)?);
-            output
-                .libraries
-                .extend(super::cargo_library::library_of(&message));
+        if message["reason"] == "compiler-artifact" {
+            add_compiled(&message, &mut output)?;
         }
         if message["reason"] == "build-script-executed" {
             output.native_code.extend(native_code_of(&message));
@@ -38,6 +36,19 @@ pub(super) fn finish(process: Observation) -> Result<BuildOutput, Blocked> {
         return Err(Blocked::NoArtifact);
     }
     Ok(output)
+}
+
+/// Adds what one compiled-file message reports: its files when they are
+/// handed over, and its library when the crate is the project's own.
+fn add_compiled(message: &Value, output: &mut BuildOutput) -> Result<(), Blocked> {
+    if is_handed_over(message) {
+        output.files.extend(files_of(message)?);
+    }
+    if is_local(message) {
+        let library = super::cargo_library::library_of(message);
+        output.libraries.extend(library);
+    }
+    Ok(())
 }
 
 pub(crate) fn stdout(process: &Observation) -> Result<String, Blocked> {

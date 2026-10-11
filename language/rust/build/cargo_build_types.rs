@@ -21,8 +21,9 @@ pub struct Built {
     pub debug_info: Option<PathBuf>,
 }
 
-/// Everything one build reported: the project's own files, and the native
-/// code any package's build script linked in (dependencies' too).
+/// Everything one build reported: the project's own files, any dynamic
+/// library a program loads at run time, and the native code any package's
+/// build script linked in (dependencies' too).
 #[derive(Debug, PartialEq)]
 pub struct BuildOutput {
     pub request: Option<RequestEvidence>,

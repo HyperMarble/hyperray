@@ -3,88 +3,57 @@
 Builds a Cargo project the project's own way, records every file the build
 made and what made it that way, and hands the files to the loader.
 
+## What it does
+
+1. Runs the project's own build: `cargo build` with the owner's flags as
+   the owner wrote them. It adds `--locked`, so the build uses the versions
+   the lock file pins, and asks Cargo for its JSON messages.
+2. Picks up the machine code: every file Cargo reports for the project, and
+   every file one of those loads at run time.
+3. Names each file by the hash of its bytes, and notes the compiler and the
+   settings that made it.
+4. Hands one record to the loader. When there is no build, the record holds
+   the reason, in Cargo's own words when Cargo gave it.
+
 It never looks inside the code. The compiler turns every Rust shape into
-machine code; the adapter picks that machine code up. So "does the adapter
-handle generics?" means "does the compiler build generics into a program,
-and does the adapter hand that program over?"
+machine code, and the adapter picks that machine code up.
 
-## Coverage of Rust shapes
+## Added
 
-Proof: the Rust team's own test suite (`tests/ui` at commit `50d54098`,
-18 Sept 2026), every test that builds into a program on an ARM Mac, built
-with nightly Rust (`db8f076d2`, 3 Oct 2026). 4,328 programs.
+- [x] Every kind of file Cargo builds: program, `lib`, `rlib`, `dylib`,
+      `cdylib`, `staticlib`, proc macro, build script. A file carries every
+      kind Cargo reports for it.
+- [x] Every flag `cargo build --help` names, given to Cargo as written.
+      `--message-format` is the one left out: the adapter needs the JSON.
+- [x] A workspace member, built with the workspace's lock file.
+- [x] A crate the project depends on by path, outside its workspace.
+- [x] The finished form of each library. An `.rlib` still has places the
+      linker has not filled, so Cargo is asked for the linked one.
+- [x] A library without the standard library, finished through a small
+      crate of the adapter's own.
+- [x] A dylib crate from outside the project. The program loads it at run
+      time, so its code is in no other file.
+- [x] A library the compiler ships that a built file loads at run time,
+      such as Rust's standard library as a shared file.
+- [x] Test programs, when the owner asks for every target (`--all-targets`).
+- [x] Each file's debug-info file, when the build made one.
+- [x] The compiler Cargo really runs, also when the project pins one or
+      the owner names another with `RUSTC` or `build.rustc`, and the chip
+      `--target` names.
+- [x] The lock file and every Cargo settings file that shaped the build,
+      with the files they include.
+- [x] Every environment variable, by its name and the hash of its value.
+- [x] C code a build script links in, with the C compiler and SDK used.
+- [x] The OS build.
+- [x] A build Cargo refuses, handed back with Cargo's own words.
 
-Every program the compiler built, the adapter handed over: 4,194 of 4,194.
+## Left
 
-Counts per shape are "handed over / compiler built". A shape is checked
-when the adapter missed none of the programs the compiler built for it.
-
-- [x] Structs, enums, unions, tuples: 175 / 175
-- [x] Arrays, slices, strings, boxes, unsized values: 139 / 139
-- [x] Layout and representation (`repr`, packed, never type, transmute): 75 / 75
-- [x] Generics (const generics, associated types, `impl Trait`, inference): 311 / 311
-- [x] Traits (bounds, coherence, specialization, `dyn`, coercion, casts): 562 / 562
-- [x] Functions, methods, closures, function pointers: 279 / 279
-- [x] Macros, attributes, derives, proc macros: 309 / 309
-- [x] Async, coroutines, pinning: 171 / 171
-- [x] Unsafe, raw pointers, inline assembly, C calls: 167 / 167
-- [x] Statics, thread locals, allocators, `no_std`: 55 / 55
-- [x] Control flow, patterns, expressions: 385 / 385
-- [x] Ownership, borrowing, lifetimes, drop: 316 / 316
-- [x] Const evaluation: 264 / 264
-- [x] Numbers, iterators, collections, std: 275 / 275
-- [x] Modules, crates, editions, linking: 208 / 208
-- [x] Threads, processes, panics, runtime: 200 / 200
-- [x] Code generation settings, SIMD, LTO, debug info: 303 / 303
-
-The other 134 programs never reached the adapter:
-
-- 95 could not be set up by the lab's wrapper (helper libraries, revision
-  names, placeholders). Lab work, not the compiler and not the adapter.
-- 38 the compiler refused: 20 use nightly features removed after the tests
-  were written, 7 need checkers Rust does not ship for Mac, 6 are marked
-  broken by the Rust team, 1 is x86 only, 1 crashed the compiler, 3 other.
-- 1 only exists as a test program (`compile-flags: --test`); the adapter
-  builds test programs when asked for every target, see below.
-
-## Test programs
-
-A patch inside a `#[test]` function has machine code only in the test
-program (what `cargo test` builds). Pass Cargo's `--all-targets` in the
-build argument list and the record carries the test programs too, each
-marked `compiled.test = true`.
-
-## What the record holds
-
-- every file the build made: kind, hash, features, settings it was compiled
-  with (opt level, debug info, debug assertions, overflow checks), and its
-  debug-info file when there is one
-- the compiler: version, host, hash
-- the executed Cargo request with native argument bytes; the lock file;
-  Cargo's settings files, deepest first
-- every inherited environment name in its native encoding and a hash of its value
-- C code linked in by build scripts, and the C compiler and SDK used
-- the OS build
-
-## Build requests
-
-`cargo_request::Arguments` holds native argument lists for each Cargo command.
-The adapter passes build and metadata arguments directly to Cargo. Cargo
-owns profiles, features, package selection, and accepted options. An empty
-build list keeps Cargo's default profile. Pass `--release` to request a
-release build or `--profile NAME` to request a project profile.
-
-The adapter adds its lock-file and JSON-report requirements. The record
-retains the actual build request instead of a separate profile/features
-summary. Documentation arguments are used by the documentation compilation
-stage, added later in this development series.
-
-## Configuration capture
-
-Cargo applies the supplied configuration. The record lists the configuration
-files selected by `--config`, their recursive includes, and missing optional
-includes. TOML reads the owner-defined file syntax. Required missing files,
-malformed includes, and include cycles return an explicit error.
-
-Environment values are hashed. The adapter keeps every native name instead
-of a fixed list of variable names or prefixes. Plaintext values are omitted.
+- [ ] `--manifest-path` naming another project. Cargo builds it, the
+      adapter refuses it.
+- [ ] `--features` naming a feature one crate of the project lacks. That
+      crate's finished library is not made, and the record says so.
+- [ ] A library without the standard library in a project that sets its own
+      profile, patch or replace. Its finished library is not made, and the
+      record says so.
+- [ ] Linux. Not run yet.
