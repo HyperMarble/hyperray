@@ -1,7 +1,12 @@
 // Purpose: the build record the adapter hands to the loader, as JSON.
 // Never:   holds a value that was not read from the build or the machine.
-use crate::build_facts::{CToolchain, Compiled, EnvVar, NativeCode};
-use crate::choice::Choice;
+use crate::build_facts::{
+    CToolchain,
+    Compiled,
+    EnvVar,
+    NativeCode,
+    NotBuilt, //
+};
 use serde::Serialize;
 
 /// A file named by the hash of its bytes.
@@ -11,10 +16,10 @@ pub struct FileDigest {
     pub sha256: String,
 }
 
-/// One file the build produced, what kind of target made it, and how.
+/// One file the build produced, every kind of the target that made it, and how.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Artifact {
-    pub kind: String,
+    pub kind: Vec<String>,
     pub file: FileDigest,
     pub features: Vec<String>,
     pub compiled: Compiled,
@@ -31,22 +36,23 @@ pub struct Toolchain {
     pub compiler: FileDigest,
 }
 
-/// The project settings that decided how the code was built: what the user
-/// asked for, and the lock file that pinned every version.
+/// The project lock file and configuration files that shaped the build.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Settings {
-    pub requested: Choice,
     pub lock_file: FileDigest,
     /// Cargo's settings files for this build, deepest first (the project's
     /// own `.cargo/config.toml`, each parent folder's, the home one).
     pub config_files: Vec<FileDigest>,
+    pub missing_optional_config_files: Vec<String>,
 }
 
 /// Everything needed to know exactly which code was built, and how.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct BuildRecord {
     pub language: String,
+    pub cargo_request: Option<crate::cargo_observation::RequestEvidence>,
     pub artifacts: Vec<Artifact>,
+    pub not_built: Vec<NotBuilt>,
     pub toolchain: Toolchain,
     pub settings: Settings,
     pub environment: Vec<EnvVar>,

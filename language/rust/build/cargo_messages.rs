@@ -18,7 +18,7 @@ const DEBUG_BUNDLE: &str = ".dSYM";
 /// The compiled files of one artifact message, each with its debug-info
 /// bundle when Cargo reports one.
 pub fn files_of(message: &Value) -> Result<Vec<Built>, Blocked> {
-    let kind = message["target"]["kind"][0].as_str().unwrap_or("unknown");
+    let kind = names(&message["target"]["kind"]);
     let features = names(&message["features"]);
     let files = names(&message["filenames"]);
     let bundles: Vec<&String> = files.iter().filter(|f| f.ends_with(DEBUG_BUNDLE)).collect();
@@ -29,7 +29,7 @@ pub fn files_of(message: &Value) -> Result<Vec<Built>, Blocked> {
     {
         let bundle = format!("{path}{DEBUG_BUNDLE}");
         found.push(Built {
-            kind: kind.to_string(),
+            kind: kind.clone(),
             path: PathBuf::from(path),
             features: features.clone(),
             compiled: compiled(&message["profile"])?,
@@ -37,6 +37,14 @@ pub fn files_of(message: &Value) -> Result<Vec<Built>, Blocked> {
         });
     }
     Ok(found)
+}
+
+/// True when Cargo says the package comes from a folder on this machine:
+/// the project's own crates, and any crate it depends on by path, inside
+/// its workspace or outside it. A crate from a registry or from git is not.
+pub fn is_local(message: &Value) -> bool {
+    let package = message["package_id"].as_str().unwrap_or_default();
+    package.contains("path+file://")
 }
 
 /// The native libraries one build script asked to link, if it asked for any.

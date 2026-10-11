@@ -4,9 +4,12 @@ mod sample_project;
 
 use language_rust::blocked::Blocked;
 use language_rust::cargo_build::build;
-use language_rust::choice::Choice;
+use language_rust::cargo_request::Arguments;
 use language_rust::project::find;
-use sample_project::{create, Sample};
+use sample_project::{
+    create,
+    Sample, //
+};
 use std::io::Write;
 
 #[test]
@@ -33,9 +36,27 @@ fn a_stale_lock_file_blocks_the_build_and_stays_unchanged() -> Result<(), String
         .write_all(added.as_bytes())
         .map_err(|error| error.to_string())?;
     let project = find(&root).map_err(|blocked| blocked.to_string())?;
-    let result = build(&project, &Choice::default());
+    let result = build(&project, &Arguments::default());
     assert!(matches!(result, Err(Blocked::ToolFailed { .. })));
     let lock_after = std::fs::read(root.join("Cargo.lock")).map_err(|error| error.to_string())?;
     assert_eq!(lock_before, lock_after);
+    Ok(())
+}
+
+#[test]
+fn an_owner_who_passes_locked_still_gets_a_build() -> Result<(), String> {
+    let root = create(&Sample {
+        name: "sample_owner_locked",
+        file: "lib.rs",
+        source: "pub fn one() -> u8 { 1 }\n",
+        locked: true,
+    })?;
+    let project = find(&root).map_err(|blocked| blocked.to_string())?;
+    let supplied = Arguments {
+        build: vec!["--locked".into()],
+        metadata: vec!["--locked".into()],
+    };
+    let output = build(&project, &supplied).map_err(|blocked| blocked.to_string())?;
+    assert!(!output.files.is_empty());
     Ok(())
 }

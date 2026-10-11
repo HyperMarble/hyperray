@@ -1,14 +1,19 @@
-// Purpose: the build-relevant environment is recorded, everything else is
-//          left out, and a secret's value never reaches the record.
-// Never:   writes the value of a variable whose name marks it as a secret.
-use language_rust::environment::build_environment;
+// Purpose: every environment input is represented by a value hash.
+// Never:   copies any inherited environment value into the record.
+use language_rust::environment::native_environment;
+use std::ffi::OsString;
 
-fn var(name: &str, value: &str) -> (String, String) {
-    (name.to_string(), value.to_string())
+use sha2::{
+    Digest,
+    Sha256, //
+};
+
+fn var(name: &str, value: &str) -> (OsString, OsString) {
+    (OsString::from(name), OsString::from(value))
 }
 
 #[test]
-fn build_variables_are_kept_and_secrets_hidden() {
+fn every_environment_value_is_hashed_and_hidden() {
     let vars = [
         var("HOME", "/Users/someone"),
         var("RUSTFLAGS", "-C target-cpu=native"),
@@ -17,17 +22,26 @@ fn build_variables_are_kept_and_secrets_hidden() {
         var("CARGO_REGISTRY_TOKEN", "do-not-record"),
         var("PATH", "/usr/bin"),
     ];
-    let found = build_environment(vars.into_iter());
-    let names: Vec<&str> = found.iter().map(|v| v.name.as_str()).collect();
+    let found = native_environment(vars.into_iter());
+    let names: Vec<Option<&str>> = found.iter().map(|v| v.name.as_deref()).collect();
     assert_eq!(
         names,
         [
-            "CARGO_REGISTRY_TOKEN",
-            "CC",
-            "CFLAGS_aarch64_apple_darwin",
-            "RUSTFLAGS"
+            Some("CARGO_REGISTRY_TOKEN"),
+            Some("CC"),
+            Some("CFLAGS_aarch64_apple_darwin"),
+            Some("HOME"),
+            Some("PATH"),
+            Some("RUSTFLAGS")
         ]
     );
-    assert_eq!(found[0].value, None, "a secret's value was recorded");
-    assert_eq!(found[3].value.as_deref(), Some("-C target-cpu=native"));
+    assert!(found.iter().all(|item| item.value.is_none()));
+    assert_eq!(
+        found[0].value_sha256,
+        format!("{:x}", Sha256::digest("do-not-record"))
+    );
+    assert_eq!(
+        found[5].value_sha256,
+        format!("{:x}", Sha256::digest("-C target-cpu=native"))
+    );
 }

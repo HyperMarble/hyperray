@@ -10,6 +10,7 @@ path = "lib.rs"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
+toml = "=1.1.6"
 
 
 [[test]]
@@ -41,8 +42,8 @@ name = "build_record_test"
 path = "tests/build_record_test.rs"
 
 [[test]]
-name = "choice_test"
-path = "tests/choice_test.rs"
+name = "cargo_defaults_test"
+path = "tests/cargo_defaults_test.rs"
 
 [[test]]
 name = "features_test"
@@ -79,3 +80,31 @@ path = "tests/config_file_test.rs"
 [[test]]
 name = "test_programs_test"
 path = "tests/test_programs_test.rs"
+
+[[test]]
+name = "target_kinds_test"
+path = "tests/target_kinds_test.rs"
+
+[[test]]
+name = "message_format_test"
+path = "tests/message_format_test.rs"
+
+[[test]]
+name = "owner_words_test"
+path = "tests/owner_words_test.rs"
+
+[[test]]
+name = "cargo_flags_test"
+path = "tests/cargo_flags_test.rs"
+
+[[test]]
+name = "finished_library_test"
+path = "tests/finished_library_test.rs"
+
+[[test]]
+name = "picking_flags_test"
+path = "tests/picking_flags_test.rs"
+
+[[test]]
+name = "outside_dependency_test"
+path = "tests/outside_dependency_test.rs"
