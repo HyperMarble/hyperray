@@ -11,8 +11,9 @@ pub(super) fn workspace_members(
     project: &Project,
     supplied: &Arguments,
 ) -> Result<Vec<Value>, Blocked> {
-    let words = ["metadata", "--no-deps", "--locked", "--format-version", "1"];
+    let words = ["metadata", "--no-deps", "--format-version", "1"];
     let mut arguments: Vec<OsString> = words.into_iter().map(OsString::from).collect();
+    arguments.extend(crate::cargo_request::locked(&supplied.metadata));
     arguments.extend(supplied.metadata.iter().cloned());
     let process = crate::cargo_observation::capture(Path::new("cargo"), &arguments, &project.root)?;
     let text = super::cargo_build_result::stdout(&process)?;

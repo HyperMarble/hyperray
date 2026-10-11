@@ -8,3 +8,10 @@ pub struct Arguments {
     pub build: Vec<OsString>,
     pub metadata: Vec<OsString>,
 }
+
+/// `--locked` for a Cargo command, unless the owner's arguments already
+/// hold it: Cargo refuses the same flag given twice.
+pub(crate) fn locked(given: &[OsString]) -> Option<OsString> {
+    let absent = !given.iter().any(|argument| argument == "--locked");
+    absent.then(|| OsString::from("--locked"))
+}
