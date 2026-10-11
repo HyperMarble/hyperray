@@ -88,3 +88,7 @@ path = "tests/target_kinds_test.rs"
 [[test]]
 name = "message_format_test"
 path = "tests/message_format_test.rs"
+
+[[test]]
+name = "owner_words_test"
+path = "tests/owner_words_test.rs"

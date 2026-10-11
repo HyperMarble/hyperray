@@ -4,10 +4,11 @@ use crate::blocked::Blocked;
 use std::path::Path;
 
 /// The `--config` value as an inline table, or nothing when it names a file
-/// that exists, which Cargo then loads as a config file.
+/// that exists, which Cargo then loads as a config file. A value that cannot
+/// be a file name at all is not a file, as Cargo treats it.
 pub(crate) fn inline_table(root: &Path, value: &str) -> Result<Option<toml::Table>, Blocked> {
     let file = root.join(value);
-    let exists = file.try_exists().map_err(invalid)?;
+    let exists = file.try_exists().unwrap_or(false);
     if !value.is_empty() && exists {
         return Ok(None);
     }
