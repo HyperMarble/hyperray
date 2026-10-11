@@ -14,12 +14,12 @@ pub use super::cargo_build_types::{
 /// Builds the caller's request with Cargo's lock-file and JSON requirements,
 /// then asks Cargo for the finished form of each library that build made.
 pub fn build(project: &Project, supplied: &Arguments) -> Result<BuildOutput, Blocked> {
-    let workspace = super::cargo_members::workspace(project, supplied)?;
+    let target = super::cargo_target::directory(project, supplied)?;
     let arguments = arguments(supplied);
     let cargo = Path::new("cargo");
     let process = crate::cargo_observation::capture(cargo, &arguments, &project.root)?;
-    let mut output = super::cargo_build_result::finish(process, &workspace.members)?;
-    let finished = workspace.target.join("hyperray-finished");
+    let mut output = super::cargo_build_result::finish(process)?;
+    let finished = target.join("hyperray-finished");
     super::cargo_finished::add(project, supplied, &finished, &mut output)?;
     Ok(output)
 }

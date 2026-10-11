@@ -39,6 +39,14 @@ pub fn files_of(message: &Value) -> Result<Vec<Built>, Blocked> {
     Ok(found)
 }
 
+/// True when Cargo says the package comes from a folder on this machine:
+/// the project's own crates, and any crate it depends on by path, inside
+/// its workspace or outside it. A crate from a registry or from git is not.
+pub fn is_local(message: &Value) -> bool {
+    let package = message["package_id"].as_str().unwrap_or_default();
+    package.contains("path+file://")
+}
+
 /// True when the message is for a Rust library target built for use, not
 /// for its tests: the file Cargo makes for it is an `.rlib`.
 pub fn is_library(message: &Value) -> bool {

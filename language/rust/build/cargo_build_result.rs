@@ -5,12 +5,13 @@ use crate::cargo_build::BuildOutput;
 use crate::cargo_messages::{
     files_of,
     is_library,
+    is_local,
     native_code_of, //
 };
 use crate::cargo_observation::Observation;
 use serde_json::Value;
 
-pub(super) fn finish(process: Observation, members: &[Value]) -> Result<BuildOutput, Blocked> {
+pub(super) fn finish(process: Observation) -> Result<BuildOutput, Blocked> {
     if !process.success {
         return Err(super::cargo_refusal::refused(&process));
     }
@@ -24,7 +25,7 @@ pub(super) fn finish(process: Observation, members: &[Value]) -> Result<BuildOut
     };
     for line in messages.lines().filter(|line| line.starts_with('{')) {
         let message = parse(line, "cargo build output")?;
-        if message["reason"] == "compiler-artifact" && members.contains(&message["package_id"]) {
+        if message["reason"] == "compiler-artifact" && is_local(&message) {
             output.files.extend(files_of(&message)?);
             output.libraries.extend(library_of(&message));
         }

@@ -104,3 +104,7 @@ path = "tests/finished_library_test.rs"
 [[test]]
 name = "picking_flags_test"
 path = "tests/picking_flags_test.rs"
+
+[[test]]
+name = "outside_dependency_test"
+path = "tests/outside_dependency_test.rs"
