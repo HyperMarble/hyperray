@@ -6,7 +6,8 @@ exclude: '(^|/)(target|fixtures)/|/tests/sources/'
 repos:
   - repo: local
     hooks:
-      # Shape: file and function length, nesting depth, no hidden failures.
+      # Shape: file and function length, nesting depth, no hidden failures,
+      # no squeezed Rust.
       - id: shape
         name: shape rules
         language: python

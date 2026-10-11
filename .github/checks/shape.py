@@ -8,6 +8,7 @@ from pathlib import Path
 import shape_rules as rules
 from shape_measure import code_lines, forbidden_rust, function_problems
 from shape_rules import Language
+from shape_squeezed import squeezed_rust
 from tree_sitter import Language as Grammar
 from tree_sitter import Node, Parser
 
@@ -20,15 +21,27 @@ def walk(node: Node) -> list[Node]:
     return found
 
 
+def rust_problems(node: Node) -> list[str]:
+    """What only Rust is checked for: a hidden failure, and squeezed code."""
+    row = node.start_point.row + 1
+    problems = []
+    banned = forbidden_rust(node)
+    if banned:
+        problems.append(f"{row}: {banned} hides a failure")
+    squeezed = squeezed_rust(node)
+    if squeezed:
+        problems.append(f"{row}: {squeezed}")
+    return problems
+
+
 def tree_problems(root: Node, language: Language) -> list[str]:
-    """Function and forbidden-construct problems anywhere in the tree."""
+    """Function, forbidden-construct and squeezed-code problems in the tree."""
     problems = []
     for node in walk(root):
         if node.type in language.functions:
             problems.extend(function_problems(node, language))
-        banned = forbidden_rust(node) if language is rules.RUST else None
-        if banned:
-            problems.append(f"{node.start_point.row + 1}: {banned} hides a failure")
+        if language is rules.RUST:
+            problems.extend(rust_problems(node))
     return problems
 
 
