@@ -12,6 +12,29 @@ use sample_project::{
 use std::process::Command;
 
 #[test]
+fn a_compile_error_reaches_the_reason_in_cargos_words() -> Result<(), String> {
+    let root = create(&Sample {
+        name: "owner_words_error",
+        file: "lib.rs",
+        source: "pub fn bad() -> u32 { \"no\" }\n",
+        locked: true,
+    })?;
+    let owner = Command::new("cargo")
+        .args(["build", "--locked", "--offline"])
+        .current_dir(&root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    let shown = String::from_utf8_lossy(&owner.stderr).into_owned();
+    let Outcome::Blocked { reason } = language_rust::build_record(&root) else {
+        return Err("a build Cargo refuses was recorded as built".to_string());
+    };
+    for line in shown.lines().filter(|line| line.starts_with("error")) {
+        assert!(reason.contains(line), "missing from the reason: {line}");
+    }
+    Ok(())
+}
+
+#[test]
 fn a_long_config_value_cargo_accepts_is_built() -> Result<(), String> {
     let root = create(&Sample {
         name: "owner_words_long_config",

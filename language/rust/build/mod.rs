@@ -6,5 +6,6 @@ mod cargo_build_types;
 mod cargo_members;
 pub mod cargo_messages;
 pub mod cargo_observation;
+mod cargo_refusal;
 pub mod cargo_request;
 pub mod debug_info;

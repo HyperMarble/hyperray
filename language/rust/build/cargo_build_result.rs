@@ -10,6 +10,9 @@ use crate::cargo_observation::Observation;
 use serde_json::Value;
 
 pub(super) fn finish(process: Observation, members: &[Value]) -> Result<BuildOutput, Blocked> {
+    if !process.success {
+        return Err(super::cargo_refusal::refused(&process));
+    }
     let messages = stdout(&process)?;
     let mut output = BuildOutput {
         request: Some(process.request),
