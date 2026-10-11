@@ -36,7 +36,10 @@ Rust crate you changed.
 - No code golf. Our checks keep files and functions short, but the goal is
   code that's easy to read, not code squeezed onto fewer lines. If a check
   says something is too long, split it into clear pieces. Pull requests
-  that cram code to pass the checks will be closed.
+  that cram code to pass the checks will be closed. For Rust the shape
+  check also fails the usual squeezed forms: a closure kept in a variable,
+  a closure inside a closure, `.for_each()`, and a chain of more than
+  three method calls.
 
 ## Commit messages
 

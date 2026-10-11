@@ -74,3 +74,8 @@ BY_SUFFIX = {".rs": RUST, ".py": PYTHON, ".go": GO}
 # Rust constructs that hide a failure; the code must return the error.
 FORBIDDEN_RUST_METHODS = frozenset({"unwrap", "expect"})
 FORBIDDEN_RUST_MACROS = frozenset({"panic"})
+
+# Rust squeezed onto fewer lines instead of written to be read. A chain is
+# method calls one after another; a loop method is one a `for` loop replaces.
+MAX_CHAIN_CALLS = 3
+LOOP_METHODS = frozenset({"for_each"})
