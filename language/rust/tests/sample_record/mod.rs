@@ -58,6 +58,7 @@ pub fn record() -> BuildRecord {
         language: "rust".to_string(),
         cargo_request: None,
         artifacts: vec![artifact()],
+        not_built: Vec::new(),
         toolchain: Toolchain {
             version: "1.98.1".to_string(),
             host: "aarch64-apple-darwin".to_string(),

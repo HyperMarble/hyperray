@@ -2,7 +2,8 @@
 // Never: invents a file that Cargo did not report.
 use crate::build_facts::{
     Compiled,
-    NativeCode, //
+    NativeCode,
+    NotBuilt, //
 };
 use crate::cargo_observation::RequestEvidence;
 use std::path::PathBuf;
@@ -27,4 +28,7 @@ pub struct BuildOutput {
     pub request: Option<RequestEvidence>,
     pub files: Vec<Built>,
     pub native_code: Vec<NativeCode>,
+    /// The project's own libraries the build compiled, by package id.
+    pub libraries: Vec<String>,
+    pub not_built: Vec<NotBuilt>,
 }

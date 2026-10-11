@@ -4,6 +4,7 @@ use crate::blocked::Blocked;
 use crate::cargo_build::BuildOutput;
 use crate::cargo_messages::{
     files_of,
+    is_library,
     native_code_of, //
 };
 use crate::cargo_observation::Observation;
@@ -18,11 +19,14 @@ pub(super) fn finish(process: Observation, members: &[Value]) -> Result<BuildOut
         request: Some(process.request),
         files: Vec::new(),
         native_code: Vec::new(),
+        libraries: Vec::new(),
+        not_built: Vec::new(),
     };
     for line in messages.lines().filter(|line| line.starts_with('{')) {
         let message = parse(line, "cargo build output")?;
         if message["reason"] == "compiler-artifact" && members.contains(&message["package_id"]) {
             output.files.extend(files_of(&message)?);
+            output.libraries.extend(library_of(&message));
         }
         if message["reason"] == "build-script-executed" {
             output.native_code.extend(native_code_of(&message));
@@ -32,6 +36,12 @@ pub(super) fn finish(process: Observation, members: &[Value]) -> Result<BuildOut
         return Err(Blocked::NoArtifact);
     }
     Ok(output)
+}
+
+/// The package id of a library the message reports, when it reports one.
+fn library_of(message: &Value) -> Option<String> {
+    let package = message["package_id"].as_str()?;
+    is_library(message).then(|| package.to_string())
 }
 
 pub(crate) fn stdout(process: &Observation) -> Result<String, Blocked> {

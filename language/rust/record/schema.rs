@@ -4,7 +4,8 @@ use crate::build_facts::{
     CToolchain,
     Compiled,
     EnvVar,
-    NativeCode, //
+    NativeCode,
+    NotBuilt, //
 };
 use serde::Serialize;
 
@@ -51,6 +52,7 @@ pub struct BuildRecord {
     pub language: String,
     pub cargo_request: Option<crate::cargo_observation::RequestEvidence>,
     pub artifacts: Vec<Artifact>,
+    pub not_built: Vec<NotBuilt>,
     pub toolchain: Toolchain,
     pub settings: Settings,
     pub environment: Vec<EnvVar>,

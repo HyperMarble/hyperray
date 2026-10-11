@@ -42,6 +42,7 @@ pub(crate) fn build(root: &Path, supplied: &Arguments) -> Result<BuildRecord, Bl
         language: "rust".to_string(),
         cargo_request: built.request,
         artifacts,
+        not_built: built.not_built,
         toolchain: toolchain::toolchain(root)?,
         settings: Settings {
             lock_file: digest_of(&project.lock_file)?,

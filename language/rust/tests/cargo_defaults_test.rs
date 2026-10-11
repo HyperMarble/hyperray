@@ -24,7 +24,11 @@ fn the_default_build_keeps_cargos_profile() -> Result<(), String> {
     let build = language_rust::cargo_build::build(&project, &Arguments::default())
         .map_err(|error| error.to_string())?;
     assert!(!build.files.is_empty());
-    for file in &build.files {
+    let owners = build
+        .files
+        .iter()
+        .filter(|file| file.kind != ["finished library"]);
+    for file in owners {
         let path = serde_json::to_value(&file.path).map_err(|error| error.to_string())?;
         let message = owner
             .iter()

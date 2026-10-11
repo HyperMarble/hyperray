@@ -41,3 +41,12 @@ pub struct CToolchain {
     pub sdk_path: Option<String>,
     pub sdk_version: Option<String>,
 }
+
+/// A file the adapter asked Cargo for and Cargo did not make, with Cargo's
+/// own words for why.
+#[derive(Debug, PartialEq, Serialize)]
+pub struct NotBuilt {
+    pub kind: String,
+    pub package: String,
+    pub reason: String,
+}

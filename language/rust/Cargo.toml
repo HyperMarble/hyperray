@@ -96,3 +96,7 @@ path = "tests/owner_words_test.rs"
 [[test]]
 name = "cargo_flags_test"
 path = "tests/cargo_flags_test.rs"
+
+[[test]]
+name = "finished_library_test"
+path = "tests/finished_library_test.rs"

@@ -11,13 +11,16 @@ pub use super::cargo_build_types::{
     Built, //
 };
 
-/// Builds the caller's request with Cargo's lock-file and JSON requirements.
+/// Builds the caller's request with Cargo's lock-file and JSON requirements,
+/// then asks Cargo for the finished form of each library that build made.
 pub fn build(project: &Project, supplied: &Arguments) -> Result<BuildOutput, Blocked> {
     let members = super::cargo_members::workspace_members(project, supplied)?;
     let arguments = arguments(supplied);
     let cargo = Path::new("cargo");
     let process = crate::cargo_observation::capture(cargo, &arguments, &project.root)?;
-    super::cargo_build_result::finish(process, &members)
+    let mut output = super::cargo_build_result::finish(process, &members)?;
+    super::cargo_finished::add(project, supplied, &mut output)?;
+    Ok(output)
 }
 
 /// `cargo build` with the owner's arguments, the lock file enforced, and

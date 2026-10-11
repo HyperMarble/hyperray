@@ -27,9 +27,39 @@ fn a_target_with_two_kinds_keeps_both_on_each_file() -> Result<(), String> {
     };
     let record = serde_json::to_value(&record).map_err(|error| error.to_string())?;
     let artifacts = record["artifacts"].as_array().ok_or("no artifacts")?;
-    assert_eq!(artifacts.len(), 2);
-    for artifact in artifacts {
+    let finished = json!(["finished library"]);
+    let owners: Vec<_> = artifacts
+        .iter()
+        .filter(|file| file["kind"] != finished)
+        .collect();
+    assert_eq!(owners.len(), 2);
+    for artifact in owners {
         assert_eq!(artifact["kind"], json!(["cdylib", "rlib"]));
     }
+    Ok(())
+}
+
+#[test]
+fn a_build_script_is_not_called_a_finished_library() -> Result<(), String> {
+    let root = create(&Sample {
+        name: "finished_with_script",
+        file: "lib.rs",
+        source: "pub fn one() -> u8 { 1 }\n",
+        locked: true,
+    })?;
+    std::fs::write(root.join("build.rs"), "fn main() {}\n").map_err(|error| error.to_string())?;
+    let Outcome::Built(record) = build_record(&root) else {
+        return Err("the library with a build script was not built".to_string());
+    };
+    let record = serde_json::to_value(&record).map_err(|error| error.to_string())?;
+    let artifacts = record["artifacts"].as_array().ok_or("no artifacts")?;
+    let finished = artifacts
+        .iter()
+        .filter(|file| file["kind"] == json!(["finished library"]));
+    let names: Vec<&str> = finished
+        .filter_map(|file| file["file"]["path"].as_str())
+        .collect();
+    assert_eq!(names.len(), 1, "{names:?}");
+    assert!(!names[0].contains("build-script"), "{names:?}");
     Ok(())
 }

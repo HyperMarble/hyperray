@@ -39,6 +39,14 @@ pub fn files_of(message: &Value) -> Result<Vec<Built>, Blocked> {
     Ok(found)
 }
 
+/// True when the message is for a Rust library target built for use, not
+/// for its tests: the file Cargo makes for it is an `.rlib`.
+pub fn is_library(message: &Value) -> bool {
+    let types = names(&message["target"]["crate_types"]);
+    let rust_library = types.iter().any(|kind| kind == "lib" || kind == "rlib");
+    rust_library && message["profile"]["test"] == false
+}
+
 /// The native libraries one build script asked to link, if it asked for any.
 pub fn native_code_of(message: &Value) -> Option<NativeCode> {
     let linked_libs = names(&message["linked_libs"]);
