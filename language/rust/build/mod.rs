@@ -4,6 +4,7 @@ pub mod cargo_build;
 pub(crate) mod cargo_build_result;
 mod cargo_build_types;
 mod cargo_finished;
+pub mod cargo_handover;
 pub mod cargo_library;
 pub mod cargo_messages;
 pub mod cargo_observation;
