@@ -100,3 +100,7 @@ path = "tests/cargo_flags_test.rs"
 [[test]]
 name = "finished_library_test"
 path = "tests/finished_library_test.rs"
+
+[[test]]
+name = "picking_flags_test"
+path = "tests/picking_flags_test.rs"

@@ -36,3 +36,51 @@ fn joined_message_format(word: &OsString) -> bool {
     let text = word.to_str().unwrap_or_default();
     text.starts_with("--message-format=")
 }
+
+/// The flags that pick what a build makes or where it goes, each with
+/// whether a value follows it: the ones `cargo build --help` lists under
+/// "Package Selection" and "Target Selection", and `--target-dir`. A test
+/// reads Cargo's own help against this list.
+pub const PICKS: &[(&str, bool)] = &[
+    ("--package", true),
+    ("-p", true),
+    ("--workspace", false),
+    ("--exclude", true),
+    ("--all", false),
+    ("--lib", false),
+    ("--bins", false),
+    ("--bin", true),
+    ("--examples", false),
+    ("--example", true),
+    ("--tests", false),
+    ("--test", true),
+    ("--benches", false),
+    ("--bench", true),
+    ("--all-targets", false),
+    ("--target-dir", true),
+];
+
+/// The owner's arguments without the picking flags and their values, for a
+/// request that names one library and its own folder itself.
+pub(crate) fn without_picks(given: &[OsString]) -> Vec<OsString> {
+    let mut kept = Vec::new();
+    let mut words = given.iter().peekable();
+    while let Some(word) = words.next() {
+        let text = word.to_str().unwrap_or_default();
+        match PICKS.iter().find(|(flag, _)| text == *flag) {
+            Some((_, true)) => drop(words.next_if(|next| !next.to_string_lossy().starts_with('-'))),
+            Some(_) => {}
+            None if joined_pick(text) => {}
+            None => kept.push(word.clone()),
+        }
+    }
+    kept
+}
+
+/// True for a picking flag written with its value attached, as in
+/// `--bin=name` or `-pname`.
+fn joined_pick(text: &str) -> bool {
+    let attached = |flag: &str| text.starts_with(&format!("{flag}="));
+    PICKS.iter().any(|(flag, _)| attached(flag))
+        || (text.starts_with("-p") && !text.starts_with("-p="))
+}

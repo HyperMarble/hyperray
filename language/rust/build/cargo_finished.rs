@@ -51,15 +51,15 @@ pub(super) fn add(
 }
 
 /// `cargo rustc` for one package's library as a linked dynamic library,
-/// with the owner's own arguments and the lock file enforced, built under
-/// `folder`.
+/// built under `folder`, with the lock file enforced and the owner's own
+/// arguments, except the ones that pick what to build or where: this
+/// request names its one library and its folder itself.
 fn arguments(supplied: &Arguments, package: &str, folder: &Path) -> Vec<OsString> {
     let words = ["rustc", "-p", package, "--lib", "--crate-type", "dylib"];
     let mut arguments: Vec<OsString> = words.into_iter().map(OsString::from).collect();
     arguments.extend(crate::cargo_request::locked(&supplied.build));
-    arguments.extend(crate::cargo_request::without_message_format(
-        &supplied.build,
-    ));
+    let owners = crate::cargo_request::without_message_format(&supplied.build);
+    arguments.extend(crate::cargo_request::without_picks(&owners));
     arguments.push(OsString::from("--target-dir"));
     arguments.push(folder.as_os_str().to_owned());
     arguments.push(OsString::from("--message-format=json"));
