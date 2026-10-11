@@ -23,6 +23,7 @@ use std::path::Path;
 pub(crate) fn build(root: &Path, supplied: &Arguments) -> Result<BuildRecord, Blocked> {
     let project = project::find(root)?;
     let built = cargo_build::build(&project, supplied)?;
+    let configuration = config_files::report_for_request(&project.root, &supplied.build)?;
     let mut artifacts = Vec::new();
     for file in built.files {
         artifacts.push(Artifact {
@@ -44,7 +45,8 @@ pub(crate) fn build(root: &Path, supplied: &Arguments) -> Result<BuildRecord, Bl
         toolchain: toolchain::toolchain(root)?,
         settings: Settings {
             lock_file: digest_of(&project.lock_file)?,
-            config_files: config_files::config_files(&project.root)?,
+            config_files: configuration.files,
+            missing_optional_config_files: configuration.missing_optional,
         },
         environment: environment::capture_environment()?,
         native_code: built.native_code,

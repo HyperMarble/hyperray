@@ -42,6 +42,7 @@ pub struct Settings {
     /// Cargo's settings files for this build, deepest first (the project's
     /// own `.cargo/config.toml`, each parent folder's, the home one).
     pub config_files: Vec<FileDigest>,
+    pub missing_optional_config_files: Vec<String>,
 }
 
 /// Everything needed to know exactly which code was built, and how.

@@ -66,6 +66,7 @@ pub fn record() -> BuildRecord {
         settings: Settings {
             lock_file: digest("Cargo.lock"),
             config_files: vec![digest(".cargo/config.toml")],
+            missing_optional_config_files: Vec::new(),
         },
         environment: vec![EnvVar {
             name: Some("RUSTFLAGS".to_string()),

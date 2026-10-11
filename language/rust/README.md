@@ -78,3 +78,13 @@ The adapter adds its lock-file and JSON-report requirements. The record
 retains the actual build request instead of a separate profile/features
 summary. Documentation arguments are used by the documentation compilation
 stage, added later in this development series.
+
+## Configuration capture
+
+Cargo applies the supplied configuration. The record lists the configuration
+files selected by `--config`, their recursive includes, and missing optional
+includes. TOML reads the owner-defined file syntax. Required missing files,
+malformed includes, and include cycles return an explicit error.
+
+Environment values are hashed. The adapter keeps every native name instead
+of a fixed list of variable names or prefixes. Plaintext values are omitted.

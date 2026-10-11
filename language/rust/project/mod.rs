@@ -1,9 +1,13 @@
 // Purpose: finds a Cargo project and the lock file that pins its versions.
 // Never:   builds a folder whose settings the project itself did not choose.
 pub mod config_files;
+mod config_include_io;
 
 use crate::blocked::Blocked;
-use std::path::{Path, PathBuf};
+use std::path::{
+    Path,
+    PathBuf, //
+};
 
 /// A Cargo project whose dependency versions are pinned.
 #[derive(Debug, PartialEq)]
