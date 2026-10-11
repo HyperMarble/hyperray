@@ -23,7 +23,7 @@ fn a_built_outcome_carries_every_part_of_the_record() -> Result<(), String> {
     let outcome = Outcome::Built(Box::new(sample_record::record()));
     let written = serde_json::to_value(&outcome).map_err(|error| error.to_string())?;
     assert_eq!(written["status"], "built");
-    assert_eq!(written["artifacts"][0]["kind"], "lib");
+    assert_eq!(written["artifacts"][0]["kind"], serde_json::json!(["lib"]));
     assert_eq!(written["toolchain"]["host"], "aarch64-apple-darwin");
     assert_eq!(written["settings"]["lock_file"]["path"], "Cargo.lock");
     assert_eq!(written["os_build"], "macOS 27.0 (25A123)");

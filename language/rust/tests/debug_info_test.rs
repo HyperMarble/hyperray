@@ -51,7 +51,7 @@ fn a_build_with_debug_information_is_recorded() -> Result<(), String> {
     let program = record
         .artifacts
         .iter()
-        .find(|a| a.kind == "bin")
+        .find(|a| a.kind == ["bin"])
         .ok_or("no program")?;
     let debug = program
         .debug_info

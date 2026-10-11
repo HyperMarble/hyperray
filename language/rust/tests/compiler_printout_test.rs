@@ -43,6 +43,6 @@ fn text_printed_by_the_compiler_does_not_block_the_record() -> Result<(), String
             "the compiler's printout blocked the record: {outcome:?}"
         ));
     };
-    assert!(record.artifacts.iter().any(|a| a.kind == "bin"));
+    assert!(record.artifacts.iter().any(|a| a.kind == ["bin"]));
     Ok(())
 }

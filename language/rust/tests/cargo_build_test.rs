@@ -31,7 +31,7 @@ fn a_library_build_lists_its_compiled_library() -> Result<(), String> {
         .map_err(|blocked| blocked.to_string())?;
     assert!(files
         .iter()
-        .any(|file| file.kind == "lib" && file.path.is_file()));
+        .any(|file| file.kind == ["lib"] && file.path.is_file()));
     assert!(files
         .iter()
         .all(|file| !file.path.to_string_lossy().ends_with(".rmeta")));
@@ -44,7 +44,7 @@ fn a_binary_build_lists_its_executable() -> Result<(), String> {
         built("sample_bin", "main.rs", "fn main() {}\n")?.map_err(|blocked| blocked.to_string())?;
     assert!(files
         .iter()
-        .any(|file| file.kind == "bin" && file.path.is_file()));
+        .any(|file| file.kind == ["bin"] && file.path.is_file()));
     Ok(())
 }
 

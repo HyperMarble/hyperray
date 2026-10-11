@@ -32,7 +32,7 @@ fn artifact() -> Artifact {
         test: false,
     };
     Artifact {
-        kind: "lib".to_string(),
+        kind: vec!["lib".to_string()],
         file: digest("libsample.rlib"),
         features: vec!["fancy".to_string()],
         compiled,

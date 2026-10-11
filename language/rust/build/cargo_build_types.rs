@@ -7,10 +7,11 @@ use crate::build_facts::{
 use crate::cargo_observation::RequestEvidence;
 use std::path::PathBuf;
 
-/// One file the build made, with the kind of target that made it and how.
+/// One file the build made, with every kind Cargo reports for the target
+/// that made it, and how.
 #[derive(Debug, PartialEq)]
 pub struct Built {
-    pub kind: String,
+    pub kind: Vec<String>,
     pub path: PathBuf,
     /// The features Cargo reports this file was built with.
     pub features: Vec<String>,

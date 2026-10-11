@@ -18,7 +18,7 @@ const DEBUG_BUNDLE: &str = ".dSYM";
 /// The compiled files of one artifact message, each with its debug-info
 /// bundle when Cargo reports one.
 pub fn files_of(message: &Value) -> Result<Vec<Built>, Blocked> {
-    let kind = message["target"]["kind"][0].as_str().unwrap_or("unknown");
+    let kind = names(&message["target"]["kind"]);
     let features = names(&message["features"]);
     let files = names(&message["filenames"]);
     let bundles: Vec<&String> = files.iter().filter(|f| f.ends_with(DEBUG_BUNDLE)).collect();
@@ -29,7 +29,7 @@ pub fn files_of(message: &Value) -> Result<Vec<Built>, Blocked> {
     {
         let bundle = format!("{path}{DEBUG_BUNDLE}");
         found.push(Built {
-            kind: kind.to_string(),
+            kind: kind.clone(),
             path: PathBuf::from(path),
             features: features.clone(),
             compiled: compiled(&message["profile"])?,

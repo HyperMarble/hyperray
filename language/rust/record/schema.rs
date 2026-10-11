@@ -15,10 +15,10 @@ pub struct FileDigest {
     pub sha256: String,
 }
 
-/// One file the build produced, what kind of target made it, and how.
+/// One file the build produced, every kind of the target that made it, and how.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Artifact {
-    pub kind: String,
+    pub kind: Vec<String>,
     pub file: FileDigest,
     pub features: Vec<String>,
     pub compiled: Compiled,

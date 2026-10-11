@@ -61,7 +61,7 @@ pub fn contains_fancy_function(record: &BuildRecord) -> Result<bool, String> {
     let program = record
         .artifacts
         .iter()
-        .find(|artifact| artifact.kind == "bin")
+        .find(|artifact| artifact.kind == ["bin"])
         .ok_or("no program")?;
     let bytes = std::fs::read(&program.file.path).map_err(|error| error.to_string())?;
     Ok(bytes.windows(11).any(|window| window == b"fancy_total"))
